@@ -159,6 +159,7 @@ limits_config:
 # --
 ```
 - Pushing Logs to Loki Without Using Promtail (https://medium.com/geekculture/pushing-logs-to-loki-without-using-promtail-fc31dfdde3c6, https://github.com/sleleko/devops-kb/blob/master/python/push-to-loki.py)
+- Pushing Logs to Loki with "python-logging-loki"
 ```bash
 pip install python-logging-loki
 
