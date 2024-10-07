@@ -1,0 +1,8 @@
+{
+    "thread_interval" : 60,
+    "localhost": {
+        "mail_list": "a@test.com",
+        "env": "localhost",
+        "is_mailing": true
+    }
+}

@@ -1,0 +1,17 @@
+# /kafka/kafka_2.11-0.11.0.0/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --topic test_queue --broker-list localhost1:9092, localhost2:9092, localhost3:9092
+test_queue:8:143781807
+test_queue:11:141141695
+test_queue:2:139917210
+test_queue:5:140227186
+test_queue:14:136752316
+test_queue:13:139761749
+test_queue:4:146394042
+test_queue:7:138834978
+test_queue:10:145440660
+test_queue:1:139529940
+test_queue:9:142337437
+test_queue:12:138779893
+test_queue:3:146899694
+test_queue:15:141068101
+test_queue:6:143136826
+test_queue:0:136668369

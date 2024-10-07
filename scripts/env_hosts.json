@@ -1,0 +1,12 @@
+{
+    "localhost" : {
+        "supplychain-logging-localhost-node-1" : "localhost",
+        "supplychain-logging-localhost-node-2" : "localhost",
+        "supplychain-logging-localhost-node-3" : "localhost",
+        "supplychain-logging-localhost-node-4" : "localhost",
+        "supplychain-logging-kafka-node-1" : "localhost",
+        "supplychain-logging-kafka-node-2" : "localhost",
+        "supplychain-logging-kafka-node-3" : "localhost",
+        "env" : "localhost"
+    }
+}

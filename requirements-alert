@@ -1,0 +1,13 @@
+
+#### Alert Design
+```bash
+Sorry for receiving many text alerts due to the recent disk usage shortage. We have several alert cases, and currently, if any of them occurs, it will be sent every 10 minutes until it is resolved. Because of this problem, we need to think about how to set the conditions (criiteria).
+
+As someone said, we send the first alert as text and mail, and check every 10 minutes, and if the alert is the same, we do not send it. After 60 minutes, we send a text alert and calculate the time again. We need to calculate the difference between the new alert occurrence time and the previous alert occurrence time again.
+
+The simplest thing is to have the same condition for all cases.
+
+For example, if one of the ES Nodes goes down, if the alert is the same, it will be sent again after 60 minutes. After that, we calculate the time difference again. In other words, if the alert is the same, we will receive an alert every hour.
+
+-- Kafka Offset check is not currently implemented. How much threshold should we compare the EDITTS field time for each partition number?
+```

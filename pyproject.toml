@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "python-prometheus-export"
+version = "0.1.0"
+description = ""
+authors = ["marieuig@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+prometheus-client = "^0.20.0"
+kafka-healthcheck = "^0.0.1"
+psutil = "^5.9.8"
+pytz = "^2024.1"
+jpype1 = "^1.5.0"
+psycopg2-binary = "^2.9.9"
+jaydebeapi = "^1.2.3"
+python-dotenv = "^1.0.1"
+paramiko = "^3.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
