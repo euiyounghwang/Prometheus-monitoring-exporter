@@ -36,6 +36,11 @@ schema_config:
 ruler:
   alertmanager_url: http://localhost:9093
 
+
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 24h
+
 limits_config:
     enforce_metric_name: false
     ingestion_burst_size_mb: 20

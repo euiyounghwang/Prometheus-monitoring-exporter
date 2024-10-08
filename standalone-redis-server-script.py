@@ -86,6 +86,10 @@ def work():
         
         except Exception as e:
             logging.error(e)
+            logger.error("Prometheus-Alert-Service",
+                extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
+            )
+
 
 
     def get_mapping_host_config():
@@ -101,6 +105,9 @@ def work():
         
         except Exception as e:
            logging.error(e)
+           logger.error("Prometheus-Alert-Service",
+                extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
+           )
 
 
     def transform_json(mapping_host_dict, configuration_data, key, alert_bool_option):
@@ -129,6 +136,9 @@ def work():
 
         except Exception as e:
             logging.error(e)
+            logger.error("Prometheus-Alert-Service",
+                extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
+            )
 
     
     def retry_connnection():
@@ -191,7 +201,7 @@ def work():
 
                 key = key.decode('utf-8')
                 logger.info("Prometheus-Alert-Service",
-                    extra={"tags": {"service": "prometheus-alert-service", "message" : "{} : {}".format(key, redis_client.Get_Memory_dict(key)["alert"])}},
+                    extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, message : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
                 )
 
                 ''' delete key'''

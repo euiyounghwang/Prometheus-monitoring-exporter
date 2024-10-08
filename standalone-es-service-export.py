@@ -35,6 +35,22 @@ load_dotenv() # will search for .env file in local folder and load variables
 
 # logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+""" ---------------- """
+""" Grafana Loki """
+"""
+import logging
+import logging_loki
+logging_loki.emitter.LokiEmitter.level_tag = "level"
+# assign to a variable named handler 
+handler = logging_loki.LokiHandler(
+   url="http://{}:3100/loki/api/v1/push".format(os.getenv("LOKI_HOST")),
+   version="1",
+)
+# create a new logger instance, name it whatever you want
+logger = logging.getLogger("prometheus-logger")
+logger.addHandler(handler)
+"""
+
 # Initialize & Inject with only one instance
 logging = create_log()
 
@@ -1875,6 +1891,18 @@ def get_metrics_all_envs(monitoring_metrics):
         """
         ''' ----------------------'''
 
+        """
+        # Grafana-Loki Log
+        logger.info("Prometheus-Monitoring-Service",
+                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}, WMx_threads_db_active : {}, OMx_threads_db_active : {}".format(
+                        global_env_name,
+                        saved_thread_alert,
+                        WMx_threads_db_active,
+                        OMx_threads_db_active
+                        )}},
+                )
+        """
+
     except Exception as e:
         logging.error(e)
 
@@ -2641,7 +2669,7 @@ def alert_work(db_http_host):
 
             logging.info(f"saved_thread_alert - {saved_thread_alert}")
             # logging.info(f"saved_thread_alert_message - {saved_thread_alert_message}")
-            
+
             ''' every one day to send an alert email'''
             # time.sleep(60*60*24)
             
