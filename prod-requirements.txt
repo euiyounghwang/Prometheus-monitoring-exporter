@@ -1,0 +1,13 @@
+certifi==2024.2.2
+charset-normalizer==3.3.2
+idna==3.7
+JayDeBeApi==1.2.3
+JPype1==1.5.0
+packaging==24.0
+prometheus_client==0.20.0
+python-dotenv==1.0.1
+python-logging-loki==0.3.1
+pytz==2024.1
+requests==2.32.2
+rfc3339==6.2
+urllib3==1.26.18
