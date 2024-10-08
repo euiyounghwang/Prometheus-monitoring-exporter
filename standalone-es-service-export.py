@@ -37,7 +37,6 @@ load_dotenv() # will search for .env file in local folder and load variables
 
 """ ---------------- """
 """ Grafana Loki """
-"""
 import logging
 import logging_loki
 logging_loki.emitter.LokiEmitter.level_tag = "level"
@@ -49,7 +48,8 @@ handler = logging_loki.LokiHandler(
 # create a new logger instance, name it whatever you want
 logger = logging.getLogger("prometheus-logger")
 logger.addHandler(handler)
-"""
+""" ---------------- """
+
 
 # Initialize & Inject with only one instance
 logging = create_log()
@@ -2666,6 +2666,20 @@ def alert_work(db_http_host):
                         alert_to_text(data, get_es_config_interface_api_host_key, sms_list, saved_status_dict)
                 ''' ----------------------'''
             
+            """ Grafana-Loki Log """
+            if saved_thread_alert:
+                ''' out of 00:00 time range for some issue from the db and sent alert again after 1 hour'''
+                ''' it will be sent alert log regardless of alert option'''
+                if is_sent_alert and is_resent_if_alert_need_to:
+                    message = ", ".join(saved_thread_alert_message)
+                    message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
+                    logger.error("Prometheus-Monitoring-Service - {}".format(message),
+                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}, issues : {}".format(
+                                        global_env_name,
+                                        saved_thread_alert,
+                                        message_status
+                                        )}},
+                    )
 
             logging.info(f"saved_thread_alert - {saved_thread_alert}")
             # logging.info(f"saved_thread_alert_message - {saved_thread_alert_message}")
