@@ -490,7 +490,6 @@ def get_metrics_all_envs(monitoring_metrics):
                                 ''' Except from audit message'''
                                 saved_failure_tasks_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
 
-                            
                             ''' tasks are empty on only base node'''
                             if node_lists_loop == 0:
                                 all_listeners_is_empty.append(True)
@@ -598,9 +597,8 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
             saved_failure_dict.update({node : "Spark cluster - http://{}:8080/json API do not reachable".format(master_node)})
             logging.error(e)
-            
-        finally:
             return []
+            
 
 
     def get_Process_Id():
