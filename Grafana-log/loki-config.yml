@@ -17,11 +17,24 @@ common:
       store: inmemory
 
 query_range:
+  split_queries_by_interval: 0
+  parallelise_shardable_queries: true
+  cache_results: true
   results_cache:
     cache:
       embedded_cache:
         enabled: true
         max_size_mb: 100
+
+
+querier:
+  max_concurrent: 2048
+
+
+frontend:
+  max_outstanding_per_tenant: 4096
+  compress_responses: true
+
 
 schema_config:
   configs:
@@ -33,9 +46,8 @@ schema_config:
         prefix: index_
         period: 24h
 
-ruler:
-  alertmanager_url: http://localhost:9093
-
+#ruler:
+#  alertmanager_url: http://localhost:9093
 
 table_manager:
   retention_deletes_enabled: true
