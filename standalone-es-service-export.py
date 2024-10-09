@@ -1343,10 +1343,10 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info('type : {}, get_all_envs_status"s value - {} -> merged list : {}'.format(types, value, all_env_status))
         try:
             if types == 'kafka':
-                if value == 3:
+                if value >= 2:
                     ''' green'''
                     all_env_status.append(1)
-                elif value > 0 and value <3:
+                elif value > 0 and value <1:
                     ''' yellow'''
                     all_env_status.append(0)
                 else:
@@ -1899,7 +1899,19 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"current_alert_message : {saved_thread_alert_message}")
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
-        
+        logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
+
+        ''' Service are back online and push them into Grafana-Loki '''
+        if saved_thread_green_alert:
+            """ # Grafana-Loki Log """
+            logger.info("Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name),
+                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}".format(
+                                        global_env_name,
+                                        saved_thread_alert
+                                        )}},
+                    )
+           
+
         ''' ----------------------'''
         ''' SMS alert imediately'''
         ''' Send sms alerts to our team when the usage of CPU/JVM is over 85% for 5 minutes or (ES Service/Data pipeline has at least Yellow)'''
@@ -1914,18 +1926,7 @@ def get_metrics_all_envs(monitoring_metrics):
             saved_critcal_sms_alert = False
         """
         ''' ----------------------'''
-
-        """
-        # Grafana-Loki Log
-        logger.info("Prometheus-Monitoring-Service",
-                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}, WMx_threads_db_active : {}, OMx_threads_db_active : {}".format(
-                        global_env_name,
-                        saved_thread_alert,
-                        WMx_threads_db_active,
-                        OMx_threads_db_active
-                        )}},
-                )
-        """
+      
 
     except Exception as e:
         logging.error(e)
