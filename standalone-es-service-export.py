@@ -316,10 +316,11 @@ def transform_prometheus_txt_to_Json(response, metrics):
 
 
 ''' save failure nodes into dict'''
-saved_failure_dict = {}
+saved_failure_dict, saved_failure_tasks_dict = {}, {}
 ''' expose this metric to see maximu disk space among ES/Kafka nodes'''
 max_disk_used, max_es_disk_used, max_kafka_disk_used = 0, 0, 0
 each_es_instance_cpu_history, each_es_instance_jvm_history = {}, {}
+
 
 def get_metrics_all_envs(monitoring_metrics):
     ''' get metrics from custom export for the health of kafka cluster'''
@@ -393,6 +394,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     }
               ]
         '''
+        global saved_failure_tasks_dict
+
+        ''' clear '''
+        saved_failure_tasks_dict.clear()
+
         try:
             if not node_list_str:
                 return None, False
@@ -476,8 +482,15 @@ def get_metrics_all_envs(monitoring_metrics):
                         if len(list(resp_tasks.json().get('tasks'))) < 1:
                             ''' save failure node with a reason into saved_failure_dict'''
                             logging.info(f"no [tasks] : {resp_tasks.json().get('tasks')}")
-                            saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
-                            # failure_check = True
+                            
+                            ''' It works find if the status of listeners in base node is green'''
+                            if node_lists_loop == 0:
+                                saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
+                            else:
+                                ''' Except from audit message'''
+                                saved_failure_tasks_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
+
+                            
                             ''' tasks are empty on only base node'''
                             if node_lists_loop == 0:
                                 all_listeners_is_empty.append(True)
@@ -1339,10 +1352,10 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' red'''
                     all_env_status.append(-1)
             elif types == 'zookeeper':
-                if value >= 2:
+                if value == 3:
                     ''' green'''
                     all_env_status.append(1)
-                elif value > 0 and value < 2:
+                elif value > 0 and value <3:
                     ''' yellow'''
                     all_env_status.append(0)
                 else:
@@ -1734,13 +1747,12 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' update server active status for Zookeeper'''
         MAX_NUMBERS = len(monitoring_metrics.get("zookeeper_url").split(","))
         all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["zookeeper_url"]["GREEN_CNT"]), types='zookeeper')
-        MAX_NUMBERS = MAX_NUMBERS-1
         
         ''' save service_status_dict for alerting on all serivces'''
         ''' two of zookeepr can support the service'''
-        if int(response_dict["zookeeper_url"]["GREEN_CNT"]) >= MAX_NUMBERS:
+        if int(response_dict["zookeeper_url"]["GREEN_CNT"]) == MAX_NUMBERS:
             zookeeper_status = 'Green' 
-        elif 0 < int(response_dict["zookeeper_url"]["GREEN_CNT"]) < MAX_NUMBERS-1:
+        elif 0 < int(response_dict["zookeeper_url"]["GREEN_CNT"]) < MAX_NUMBERS:
             zookeeper_status = 'Yellow' 
         else:
             zookeeper_status = 'Red'
@@ -1771,7 +1783,7 @@ def get_metrics_all_envs(monitoring_metrics):
         if list(set(all_env_status_memory_list)) == [1]:
             ''' green '''
             all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(1)
-            global_service_active = True
+            # global_service_active = True
         
         elif list(set(all_env_status_memory_list)) == [-1]:
             ''' red '''
@@ -1805,14 +1817,25 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Warning logs clear'''
         es_service_jobs_failure_gauge_g._metrics.clear()
 
-        ''' metric threads'''
+        """ create alert audit message"""        
         failure_message = []
         for k, v in saved_failure_dict.items():
             es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host=remove_special_char(k), reason=v).set(0)
             ''' remove waring logs for the alert if our service is online'''
+            """
             if not global_service_active:
                 failure_message.append(v)
+            """
+            failure_message.append(v)
        
+        
+        """ Update log metrics"""
+        ''' merge'''
+        saved_failure_dict.update(saved_failure_tasks_dict)
+        for k, v in saved_failure_dict.items():
+            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host=remove_special_char(k), reason=v).set(0)
+        
+
         ''' db threads for kafka offset'''
         # for k, v in saved_failure_db_kafka_dict.items():
         #     ''' host_ remove'''
