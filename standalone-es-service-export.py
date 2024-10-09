@@ -1905,7 +1905,7 @@ def get_metrics_all_envs(monitoring_metrics):
         if saved_thread_green_alert:
             """ # Grafana-Loki Log """
             logger.info("Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name),
-                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}".format(
+                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, alert : {}".format(
                                         global_env_name,
                                         saved_thread_alert
                                         )}},
@@ -2699,7 +2699,7 @@ def alert_work(db_http_host):
                     message = ", ".join(saved_thread_alert_message)
                     message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
                     logger.error("Prometheus-Monitoring-Service - {}".format(message),
-                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], saved_thread_alert : {}, issues : {}".format(
+                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}], alert : {}, issues : {}".format(
                                         global_env_name,
                                         saved_thread_alert,
                                         message_status
