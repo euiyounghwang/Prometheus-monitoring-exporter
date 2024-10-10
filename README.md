@@ -194,7 +194,7 @@ logger.warning(
 wget https://github.com/grafana/loki/releases/download/v2.8.0/promtail-linux-amd64.zip
 unzip promtail-linux-amd64.zip
 nohup ./promtail-linux-amd64 -config.file=promtail-config.yaml 2>&1 &
-
+- How to use : https://kbcoding.tistory.com/122
 # --
 server:
   http_listen_port: 9080
