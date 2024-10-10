@@ -9,15 +9,24 @@ clients:
   - url: http://모니터링서버ip:3100/loki/api/v1/push
 
 scrape_configs:
-- job_name: was1
-  static_configs:
-  - targets:
-      - localhost
-    labels:
-      job: was1_app
-      __path__: /home/bkwinners/MARU_APP/logs/root.txt
-  - targets:
-      - localhost
-    labels:
-      job: was1_pay
-      __path__: /home/bkwinners/MARU_PAY/logs/root.txt
+  - job_name: info
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: test_info_logs
+          __path__: /logs/*/info-*.log
+  - job_name: warn
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: test_warn_logs
+          __path__: /logs/*/warn-*.log
+  - job_name: error
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: test_error_logs
+          __path__: /logs/*/error-*.log
