@@ -14,6 +14,15 @@ scrape_configs:
       - targets:
           - localhost
         labels:
+          app: DEV_Kafka_Node_#1
+          env: DEV
+          job: zookeeper_logs
+          __path__: /apps/kafka_2.11-0.11.0.0/logs/zookeeper.out
+  - job_name: info
+    static_configs:
+      - targets:
+          - localhost
+        labels:
           job: test_info_logs
           __path__: /logs/*/info-*.log
   - job_name: warn

@@ -9,7 +9,7 @@ case "$1" in
         # Start daemon.
         echo "Starting $SERVICE_NAME";
         # nohup $LOKI_PATH/promtail-linux-amd64 --config.file=$LOKI_PATH/promtail-config.yaml &> /dev/null &
-        $LOKI_PATH/promtail-linux-amd64 --config.file=$LOKI_PATH/promtail-config.yaml
+        $LOKI_PATH/promtail-linux-amd64 --config.file=$LOKI_PATH/promtail-config.yml
         ;;
   stop)
         # Stop daemons.
