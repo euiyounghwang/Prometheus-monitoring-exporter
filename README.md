@@ -390,6 +390,19 @@ H2, the Java SQL database. The main features of H2(https://www.h2database.com/ht
 
 sudo netstat -nlp | grep :8082
 
+# h2.sh
+# --
+#!/bin/sh
+
+JAVA_HOME='/home/devuser/monitoring/openlogic-openjdk-11.0.23+9-linux-x64'
+export PATH=$JAVA_HOME/bin:$PATH
+export JAVA_HOME
+echo $PATH
+
+dir=$(dirname "$0")
+java -cp "$dir/h2-2.3.232.jar:$H2DRIVERS:$CLASSPATH" org.h2.tools.Console "$@"
+
+# --
 # start.sh
 --
 #!/bin/bash
@@ -398,7 +411,7 @@ SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Web/TCP
 nohup $SCRIPTDIR/h2.sh -webAllowOthers -tcp -tcpAllowOthers -tcpPort 9092 &> /dev/null &
-#nohup $SCRIPTDIR/h2.sh -webExternalNames localhost,tsgvm00876 -webAllowOthers -tcp -tcpAllowOthers -tcpPort 9092 &> /dev/null &
+#nohup $SCRIPTDIR/h2.sh -webExternalNames localhost -webAllowOthers -tcp -tcpAllowOthers -tcpPort 9092 &> /dev/null &
 
 ''' http://localhost:8082/ '''
 #- Embedded (Delete all when stopping the service)

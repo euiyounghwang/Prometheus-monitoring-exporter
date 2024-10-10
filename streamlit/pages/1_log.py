@@ -43,80 +43,79 @@ def work():
     ''' Main work func'''
     resp_alert = get_alert_api(os.getenv('API_HOST'), _type="alert")
     st.subheader('Alert logs.. (10 records based on the latest date)')
-    df_alert = pd.DataFrame(resp_alert)
-    st.table(df_alert.head(10))
+    
+    if resp_alert:
+        df_alert = pd.DataFrame(resp_alert)
+        st.table(df_alert.head(10))
 
-    # df = df_alert.groupby(pd.Grouper(key='CREATE_DATE', axis=0, freq='M')).sum()
-    # df_alert.groupby(pd.Grouper(key='CREATE_DATE',freq='1D'))["col1"].mean().dropna().plot(kind="line")
+        df_alert['CREATE_DATE'] = pd.to_datetime(df_alert['CREATE_DATE'])
+        df1 = df_alert['CREATE_DATE'].dt.date.value_counts().sort_index().reset_index()
+        df1.columns = ['CREATE_DATE','Count']
 
-    # st.line_chart(df_alert)
+        list_date = df1["CREATE_DATE"].tolist()
+        new_list_date = []
+        for element in list_date:
+            new_list_date.append(element.strftime('%m/%d/%Y'))
 
-    df_alert['CREATE_DATE'] = pd.to_datetime(df_alert['CREATE_DATE'])
-    df1 = df_alert['CREATE_DATE'].dt.date.value_counts().sort_index().reset_index()
-    df1.columns = ['CREATE_DATE','Count']
+        df_alert_grape = df1
+        df1 = df1.sort_values(by='CREATE_DATE',ascending=False)
+        st.write(df1.head(5))
 
-    list_date = df1["CREATE_DATE"].tolist()
-    new_list_date = []
-    for element in list_date:
-        new_list_date.append(element.strftime('%m/%d/%Y'))
+        chart_data = pd.DataFrame(
+            {
+                # "x": ['2024-01-01','2024-01-02', '2024-01-03'],
+                "date" : new_list_date,
+                "Freq": df_alert_grape["Count"].astype(str).values.tolist()
+                # "y": ['14', '11', '2']
+            }
+        )
 
-    df_alert_grape = df1
-    df1 = df1.sort_values(by='CREATE_DATE',ascending=False)
-    st.write(df1.head(5))
-
-    chart_data = pd.DataFrame(
-        {
-            # "x": ['2024-01-01','2024-01-02', '2024-01-03'],
-            "date" : new_list_date,
-            "Freq": df_alert_grape["Count"].astype(str).values.tolist()
-            # "y": ['14', '11', '2']
-        }
-    )
-
-    st.line_chart(
-        chart_data,
-        x="date",
-        y="Freq",
-    )
-    # chart = alt.Chart(chart_data).mark_line().encode(
-    #     x='date',
-    #     y='Freq'
-    # )
-    # st.altair_chart(chart, theme="streamlit", use_container_width=True)
+        st.line_chart(
+            chart_data,
+            x="date",
+            y="Freq",
+        )
+        # chart = alt.Chart(chart_data).mark_line().encode(
+        #     x='date',
+        #     y='Freq'
+        # )
+        # st.altair_chart(chart, theme="streamlit", use_container_width=True)
     
 
     resp_monitoring = get_alert_api(os.getenv('API_HOST'), _type="monitoring")
     st.subheader('Script logs.. (10 records based on the latest date)')
-    df_monitoring = pd.DataFrame(resp_monitoring)
-    st.table(df_monitoring.head(10))
+    
+    if resp_monitoring:
+        df_monitoring = pd.DataFrame(resp_monitoring)
+        st.table(df_monitoring.head(10))
 
-    df_monitoring['CREATE_DATE'] = pd.to_datetime(df_monitoring['CREATE_DATE'])
-    df_groups = df_monitoring['CREATE_DATE'].dt.date.value_counts().sort_index().reset_index()
-    df_groups.columns = ['CREATE_DATE','Count']
+        df_monitoring['CREATE_DATE'] = pd.to_datetime(df_monitoring['CREATE_DATE'])
+        df_groups = df_monitoring['CREATE_DATE'].dt.date.value_counts().sort_index().reset_index()
+        df_groups.columns = ['CREATE_DATE','Count']
 
-    list_date = df_groups["CREATE_DATE"].tolist()
-    new_list_date = []
-    for element in list_date:
-        new_list_date.append(element.strftime('%m/%d/%Y'))
+        list_date = df_groups["CREATE_DATE"].tolist()
+        new_list_date = []
+        for element in list_date:
+            new_list_date.append(element.strftime('%m/%d/%Y'))
 
-    df_monitoring_grape = df_groups
-    df_groups = df_groups.sort_values(by='CREATE_DATE',ascending=False)
-    st.write(df_groups.head(5))
+        df_monitoring_grape = df_groups
+        df_groups = df_groups.sort_values(by='CREATE_DATE',ascending=False)
+        st.write(df_groups.head(5))
 
-    chart_data = pd.DataFrame(
-        {
-            # "x": ['2024-01-01','2024-01-02', '2024-01-03'],
-            "date" : new_list_date,
-            "Freq": df_monitoring_grape["Count"].astype(str).values.tolist()
-            # "y": ['14', '11', '2']
-        }
-    )
+        chart_data = pd.DataFrame(
+            {
+                # "x": ['2024-01-01','2024-01-02', '2024-01-03'],
+                "date" : new_list_date,
+                "Freq": df_monitoring_grape["Count"].astype(str).values.tolist()
+                # "y": ['14', '11', '2']
+            }
+        )
 
-    st.line_chart(
-        chart_data,
-        x="date",
-        y="Freq",
-    )
+        st.line_chart(
+            chart_data,
+            x="date",
+            y="Freq",
+        )
    
 
 if __name__ == '__main__':

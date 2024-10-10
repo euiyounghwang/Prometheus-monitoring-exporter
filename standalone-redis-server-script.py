@@ -34,7 +34,7 @@ handler = logging_loki.LokiHandler(
    version="1",
 )
 # create a new logger instance, name it whatever you want
-logger = logging.getLogger("my-logger")
+logger = logging.getLogger("alert-logger")
 logger.addHandler(handler)
 
 
@@ -200,8 +200,9 @@ def work():
                 transform_json(mapping_host_dict, configuration_data, key, redis_client.Get_Memory_dict(key)["alert"])
 
                 key = key.decode('utf-8')
-                logger.info("Prometheus-Alert-Service",
-                    extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, message : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
+                message = "[{}] Alert : {}, {}".format(str(key).upper(), redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"]),
+                logger.info("Prometheus-Alert-Service - {}".format(message),
+                    extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
                 )
 
                 ''' delete key'''
@@ -219,7 +220,8 @@ def work():
 
     except (KeyboardInterrupt, SystemExit) as e:
         logging.info("#Interrupted..")
-        logger.error("Prometheus-Alert-Service",
+        message = "[{}]".format(str(key).upper()),
+        logger.error("Prometheus-Alert-Service {}".format(message),
                     extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
                 )
 
