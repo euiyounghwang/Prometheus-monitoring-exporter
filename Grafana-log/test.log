@@ -1,0 +1,35 @@
+24/10/11 12:35:22 INFO myLogger: 2024-10-11 12:35:22.075 DB Execute for TableName : Test
+24/10/11 12:35:38 ERROR Executor: Exception in task 1.98 in stage 0.0 (TID 107)
+java.lang.OutOfMemoryError: Java heap space
+        at java.util.Arrays.copyOf(Arrays.java:3332)
+        at java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:124)
+        at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:596)
+        at java.lang.StringBuffer.append(StringBuffer.java:367)
+        at java.io.StringWriter.write(StringWriter.java:94)
+        at oracle.jdbc.driver.ClobAccessor.getStringNoPrefetch(ClobAccessor.java:479)
+        at oracle.jdbc.driver.ClobAccessor.getString(ClobAccessor.java:456)
+        at oracle.jdbc.driver.OracleCallableStatement.getString(OracleCallableStatement.java:652)
+        at oracle.jdbc.driver.OracleCallableStatementWrapper.getString(OracleCallableStatementWrapper.java:860)
+        at org.apache.commons.dbcp2.DelegatingCallableStatement.getString(DelegatingCallableStatement.java:87)
+24/10/11 12:35:38 ERROR SparkUncaughtExceptionHandler: Uncaught exception in thread Thread[Executor task launch worker for task 107,5,main]
+java.lang.OutOfMemoryError: Java heap space
+        at java.util.Arrays.copyOf(Arrays.java:3332)
+        at java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:124)
+        at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:596)
+        at java.lang.StringBuffer.append(StringBuffer.java:367)
+        at java.io.StringWriter.write(StringWriter.java:94)
+        at oracle.jdbc.driver.ClobAccessor.getStringNoPrefetch(ClobAccessor.java:479)
+        at oracle.jdbc.driver.ClobAccessor.getString(ClobAccessor.java:456)
+        at oracle.jdbc.driver.OracleCallableStatement.getString(OracleCallableStatement.java:652)
+        at oracle.jdbc.driver.OracleCallableStatementWrapper.getString(OracleCallableStatementWrapper.java:860)
+        at org.apache.commons.dbcp2.DelegatingCallableStatement.getString(DelegatingCallableStatement.java:87)
+        at org.apache.commons.dbcp2.DelegatingCallableStatement.getString(DelegatingCallableStatement.java:87)
+        at com.gxo.archive.stream.ArchiveProcess$$anonfun$main$2$$anonfun$apply$1$$anonfun$apply$4$$anonfun$7$$anonfun$8$$anonfun$9.apply(ArchiveProcess.scala:272)
+        at scala.util.Try$.apply(Try.scala:192)
+        at com.gxo.archive.stream.ArchiveProcess$$anonfun$main$2$$anonfun$apply$1$$anonfun$apply$4$$anonfun$7$$anonfun$8.apply(ArchiveProcess.scala:256)
+        at com.gxo.archive.stream.ArchiveProcess$$anonfun$main$2$$anonfun$apply$1$$anonfun$apply$4$$anonfun$7$$anonfun$8.apply(ArchiveProcess.scala:239)
+        at scalikejdbc.DBConnection$$anonfun$3.apply(DBConnection.scala:342)
+        at scalikejdbc.DBConnection$class.scalikejdbc$DBConnection$$rollbackIfThrowable(DBCo
+        24/10/11 12:35:38 INFO DiskBlockManager: Shutdown hook called
+24/10/11 12:35:38 INFO ShutdownHookManager: Shutdown hook called
+24/10/11 12:35:40 INFO SecurityManager: Changing modify a
