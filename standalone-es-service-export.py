@@ -1863,7 +1863,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Issue has occured and now the issue was resolved '''
             if save_thread_alert_history == [True, False]:
                 saved_thread_green_alert = True
-            else:
+            elif save_thread_alert_history == [False, False]:
                 saved_thread_green_alert = False
             
             save_thread_alert_history.pop(0)
@@ -1908,7 +1908,9 @@ def get_metrics_all_envs(monitoring_metrics):
                                     extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}".format(
                                         global_env_name,
                                         saved_thread_alert
-                                        )}},
+                                        ), 
+                                        "env" : "{}".format(global_env_name), 
+                                        }},
                     )
            
 
@@ -2703,7 +2705,9 @@ def alert_work(db_http_host):
                                         global_env_name,
                                         saved_thread_alert,
                                         message_status
-                                        )}},
+                                        ),
+                                        "env" : "{}".format(global_env_name), 
+                                        }},
                     )
 
             logging.info(f"saved_thread_alert - {saved_thread_alert}")
