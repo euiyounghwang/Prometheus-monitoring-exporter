@@ -17,8 +17,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        # nohup python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_loki_script.py --path $path --filename $logging_file_list --hostname $hostname &> /dev/null &
-        python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_loki_script.py --path $path --filename $logging_file_list --hostname $hostname
+        # nohup python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_loki_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR &> /dev/null &
+        python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_loki_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR
         ;;
   stop)
         # Stop daemons.

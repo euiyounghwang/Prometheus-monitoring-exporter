@@ -37,7 +37,7 @@ def get_error(line, buffer):
     print(buffer)
     
 
-def follow(thefile):
+def follow(thefile, logs):
     '''generator function that yields new lines in a file
     '''
     # seek the end of the file
@@ -64,25 +64,26 @@ def follow(thefile):
         # get_error(line, buffer)
         ''' return only ERROR wrap log'''
         ''' get_error(line, buffer) '''
-        if 'ERROR' in line:
-            if len(buffer) > 0:
-                yield ",".join(buffer)
-                buffer = []
-            buffer.append(line)
-        else:
-            if 'INFO' not in line:
+        if logs == 'ERROR':
+            if 'ERROR' in line:
+                if len(buffer) > 0:
+                    yield ",".join(buffer)
+                    buffer = []
                 buffer.append(line)
-        
-        ''' return all wrap log'''
-        ''' get_info_error'''
-        # if 'INFO' in line or 'ERROR' in line:
-        #     if len(buffer) > 0:
-        #         yield "".join(buffer)
-        #         buffer = []
-        #     buffer.append(line)
-        # else:
-        #     buffer.append(line)
-        # yield line
+            else:
+                if 'INFO' not in line:
+                    buffer.append(line)
+        else:
+            ''' return all wrap log'''
+            ''' get_info_error'''
+            if 'INFO' in line or 'ERROR' in line:
+                if len(buffer) > 0:
+                    yield "".join(buffer)
+                    buffer = []
+                buffer.append(line)
+            else:
+                buffer.append(line)
+            yield line
 
 
 def push_to_log_via_api(log_status, hostname, filename, message):
@@ -113,20 +114,25 @@ def push_to_log_via_api(log_status, hostname, filename, message):
         logging.error(e)
 
     
-def work(path, log_filename, hostname):
+def work(path, log_filename, hostname, logs):
     ''' main job'''
 
     ''' Readline with INFO/ERROR with Seek Offset'''
-    logfile = open("{}/{}".format(path, log_filename),"r")
-    loglines = follow(logfile)
-    # iterate over the generator
-    for line in loglines:
-        print(line)
-        ''' send logs to inteface api for saving them in Grafana-loki'''
-        log_status = "INFO"
-        if 'ERROR' in line:
-            log_status = "ERROR"
-        push_to_log_via_api(log_status, hostname, log_filename, line)
+    try:
+        logfile = open("{}/{}".format(path, log_filename),"r")
+        loglines = follow(logfile, logs)
+        # iterate over the generator
+        for line in loglines:
+            print(line)
+            ''' send logs to inteface api for saving them in Grafana-loki'''
+            log_status = "INFO"
+            if 'ERROR' in line:
+                log_status = "ERROR"
+            push_to_log_via_api(log_status, hostname, log_filename, line)
+    
+    except Exception as e:
+        # logging.error(e)
+        pass
 
 
 
@@ -138,6 +144,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--path', dest='path', default="/home/devuser", help='path for log')
     parser.add_argument('-f', '--filename', dest='filename', default="test1.log,test2.log", help='filename for log')
     parser.add_argument('-t', '--hostname', dest='hostname', default="hostname", help='hostname')
+    parser.add_argument('-l', '--logs', dest='logs', default="all", help='logs')
     args = parser.parse_args()
     
     if args.path:
@@ -149,6 +156,9 @@ if __name__ == '__main__':
     if args.hostname:
         hostname = args.hostname
 
+    if args.logs:
+        logs = args.logs
+
     # print(socket.gethostname())
 
     T = []
@@ -159,7 +169,7 @@ if __name__ == '__main__':
     # --
     try:
         for collect_log in log_filename.split(","):
-            th1 = Thread(target=work, args=(path, collect_log, hostname,  ))
+            th1 = Thread(target=work, args=(path, collect_log, hostname, logs, ))
             th1.daemon = True
             th1.start()
             T.append(th1)
