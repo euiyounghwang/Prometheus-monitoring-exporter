@@ -1,5 +1,5 @@
 #!/bin/sh
-LOGGING_SERVICE_ALL_EXPORT_PATH=/home/biadmin/monitoring/log_to_loki
+LOGGING_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/log_to_loki
 PATH=$PATH:$LOGGING_SERVICE_ALL_EXPORT_PATH/bin
 SERVICE_NAME=grafana-logging-to-loki-service-all-service
 

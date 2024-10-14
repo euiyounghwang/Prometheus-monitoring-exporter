@@ -64,24 +64,24 @@ def follow(thefile):
         # get_error(line, buffer)
         ''' return only ERROR wrap log'''
         ''' get_error(line, buffer) '''
-        # if 'ERROR' in line:
-        #     if len(buffer) > 0:
-        #         yield ",".join(buffer)
-        #         buffer = []
-        #     buffer.append(line)
-        # else:
-        #     if 'INFO' not in line:
-        #         buffer.append(line)
-        
-        ''' return all wrap log'''
-        ''' get_info_error'''
-        if 'INFO' in line or 'ERROR' in line:
+        if 'ERROR' in line:
             if len(buffer) > 0:
-                yield "".join(buffer)
+                yield ",".join(buffer)
                 buffer = []
             buffer.append(line)
         else:
-            buffer.append(line)
+            if 'INFO' not in line:
+                buffer.append(line)
+        
+        ''' return all wrap log'''
+        ''' get_info_error'''
+        # if 'INFO' in line or 'ERROR' in line:
+        #     if len(buffer) > 0:
+        #         yield "".join(buffer)
+        #         buffer = []
+        #     buffer.append(line)
+        # else:
+        #     buffer.append(line)
         # yield line
 
 
