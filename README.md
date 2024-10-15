@@ -92,8 +92,12 @@ or you can run this shell script `./create_virtual_env.sh` to make an environmen
 
 
 ### Architecture
-- Prometheus, Loki, Promtail, Grafana, Collector as export app (Exports data in the Prometheus format, which allows it to be scraped by a Prometheus server.)
+- Prometheus, Loki(https://github.com/grafana/loki, API : https://grafana.com/docs/loki/latest/reference/loki-http-api/), Promtail, Grafana, Collector as export app (Exports data in the Prometheus format, which allows it to be scraped by a Prometheus server.)
 - Promtail(https://github.com/grafana/loki/releases/) is an agent which ships the contents of local logs to a private Grafana Loki. Loki is a horizontally scalable, highly available, multi-tenant log aggregation system inspired by Prometheus and developed by Grafana Labs. Loki(https://github.com/grafana/loki/releases/) aims to simplify effective and user-friendly collection and storage of logs.
+- A Loki-based logging stack consists of 3 components:
+  - promtail is the agent, responsible for gathering logs and sending them to Loki.
+  - loki is the main server, responsible for storing logs and processing queries.
+  - Grafana for querying and displaying the logs.
 - Flow (./architecure/Data_Flow.PNG)
 - https://rulyox.blog/2021-10-24-Prometheus-Loki-Grafana%EB%A5%BC-%EC%9D%B4%EC%9A%A9%ED%95%9C-%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EA%B5%AC%EC%B6%95/
 - Installation : https://m.blog.naver.com/setopia1112/223123551825

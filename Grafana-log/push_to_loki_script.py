@@ -71,7 +71,7 @@ def follow(thefile, logs):
                     buffer = []
                 buffer.append(line)
             else:
-                if 'INFO' not in line and 'WARN' not in line:
+                if 'INFO' not in line or 'WARN' not in line:
                     buffer.append(line)
         else:
             ''' return all wrap log'''
