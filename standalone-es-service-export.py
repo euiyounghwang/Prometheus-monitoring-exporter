@@ -92,6 +92,9 @@ es_configuration_instance_gauge_g = Gauge("es_configuration_writing_job_health_m
 es_configuration_api_instance_gauge_g = Gauge("es_configuration_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
 log_db_instance_gauge_g = Gauge("log_db_health_metric", 'Metrics scraped from localhost', ["server_job"])
 alert_monitoring_ui_gauge_g = Gauge("alert_monitoring_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
+loki_ui_gauge_g = Gauge("loki_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
+loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
+loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 alert_state_instance_gauge_g = Gauge("alert_state_metric", 'Metrics scraped from localhost', ["server_job"])
 logstash_instance_gauge_g = Gauge("logstash_health_metric", 'Metrics scraped from localhost', ["server_job"])
 spark_jobs_gauge_g = Gauge("spark_jobs_running_metrics", 'Metrics scraped from localhost', ["server_job", "id", "cores", "memoryperslave", "submitdate", "duration", "activeapps", "state"])
@@ -1500,6 +1503,9 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' The error indicator is 0 if the operation succeeded, otherwise the value of the errno variable. '''
         ''' Kafka/Kafka connect/Spark/Kibana'''
         response_dict = get_service_port_alive(monitoring_metrics_cp)
+        print('\n\n\n\n\n')
+        print(response_dict)
+        print('\n\n\n\n\n')
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
@@ -1555,6 +1561,34 @@ def get_metrics_all_envs(monitoring_metrics):
             if active_cnt < 1:
                 active_cnt = 2
             alert_monitoring_ui_gauge_g.labels(socket.gethostname()).set(active_cnt)
+
+        # ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
+        # if 'loki_url' in monitoring_metrics:
+        #     active_cnt = int(response_dict["loki_url"]["GREEN_CNT"])
+        #     ''' Red is 2'''
+        #     if active_cnt < 1:
+        #         active_cnt = 2
+        #     loki_ui_gauge_g.labels(socket.gethostname()).set(active_cnt)
+
+        # ''' Update the status of Loki interface API service by using socket.connect_ex only Dev'''
+        # if 'loki_api_url' in monitoring_metrics:
+        #     active_cnt = int(response_dict["loki_api_url"]["GREEN_CNT"])
+        #     ''' Red is 2'''
+        #     if active_cnt < 1:
+        #         active_cnt = 2
+        #     loki_api_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+
+        # ''' Update the status of loki_custom_promtail_agent_url agent by using socket.connect_ex only Dev'''
+        # if 'loki_custom_promtail_agent_url' in monitoring_metrics:
+        #     active_cnt = int(response_dict["loki_custom_promtail_agent_url"]["GREEN_CNT"])
+        #     ''' 'loki_custom_promtail_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
+        #     ''' expose each max disk usage'''
+        #     ''' loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
+        #     loki_agent_instance_gauge_g.clear()
+        #     for k, v in response_dict["loki_custom_promtail_agent_url"].items():
+        #         if k != 'GREEN_CNT':
+        #             loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+
        
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         ''' To receive spark job lists, JSON results are returned from master node 8080 port. ''' 
@@ -1900,7 +1934,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
-
+        
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
             """ # Grafana-Loki Log """
@@ -2936,6 +2970,11 @@ if __name__ == '__main__':
     parser.add_argument('--es_configuration_api_url', dest='es_configuration_api_url', default="", help='es_configuration_api_url hosts')
     parser.add_argument('--log_db_url', dest='log_db_url', default="", help='log_db_url')
     parser.add_argument('--alert_monitoring_url', dest='alert_monitoring_url', default="", help='alert_monitoring_url')
+    # ''' loki url : http://localhost:3100'''
+    # parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
+    # ''' loki REST API url : http://localhost:8010'''
+    # parser.add_argument('--loki_api_url', dest='loki_api_url', default="", help='loki_url')
+    # parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
     parser.add_argument('--interface', dest='interface', default="db", help='db or http')
@@ -2986,8 +3025,7 @@ if __name__ == '__main__':
     if args.kibana_url:
         kibana_url = args.kibana_url
 
-    
-    redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url = None, None, None, None, None
+    redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url = None, None, None, None, None, None, None, None
 
     ''' Redis port checking'''
     if args.redis_url:
@@ -3008,6 +3046,18 @@ if __name__ == '__main__':
     ''' alert_monitoring_url '''
     if args.alert_monitoring_url:
         alert_monitoring_url = args.alert_monitoring_url
+
+    # ''' loki_url for text logs from the agent '''
+    # if args.loki_url:
+    #     loki_url = args.loki_url
+
+    # ''' loki_api_url as interface api for text logs from the agent '''
+    # if args.loki_api_url:
+    #     loki_api_url = args.loki_api_url
+
+    # ''' loki_agent for text logs '''
+    # if args.loki_custom_promtail_agent_url:
+    #     loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
 
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
@@ -3076,6 +3126,19 @@ if __name__ == '__main__':
     if alert_monitoring_url:
         monitoring_metrics.update({"alert_monitoring_url" : alert_monitoring_url})
 
+    ''' loki_url checking '''
+    if loki_url:
+        monitoring_metrics.update({"loki_url" : loki_url})
+
+    ''' loki_api_url checking '''
+    if loki_api_url:
+        monitoring_metrics.update({"loki_api_url" : loki_api_url})
+
+    ''' loki_custom_promtail_agent_url checking '''
+    if loki_custom_promtail_agent_url:
+        monitoring_metrics.update({"loki_custom_promtail_agent_url" : loki_custom_promtail_agent_url})
+
+        
     logging.info(json.dumps(monitoring_metrics, indent=2))
     logging.info(interval)
 

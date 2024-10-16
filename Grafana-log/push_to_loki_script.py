@@ -7,8 +7,13 @@ from threading import Thread
 import requests
 import logging
 import socket
+from json import dumps
+# import logging
+import sys
 import warnings
 warnings.filterwarnings("ignore")
+
+# logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 
@@ -71,7 +76,7 @@ def follow(thefile, logs):
                     buffer = []
                 buffer.append(line)
             else:
-                if 'INFO' not in line or 'WARN' not in line:
+                if 'INFO' not in line and 'WARN' not in line:
                     buffer.append(line)
         else:
             ''' return all wrap log'''
@@ -99,7 +104,6 @@ def push_to_log_via_api(log_status, hostname, filename, message):
             "message": message
         }
         
-        logging.info("push_to_log_via_api")
         http_urls = "http://{}:8010/log/push_to_loki".format(os.environ["LOKI_RESTAPI_HOST"])
         resp = requests.post(url=http_urls, json=request_body, timeout=600)
                         
@@ -136,6 +140,39 @@ def work(path, log_filename, hostname, logs):
 
 
 
+def server_listen():
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    port = 2000
+    serversocket.bind(("0.0.0.0", 2000))
+    serversocket.listen(5) # become a server socket, maximum 5 connections
+
+    print("Wating a session..via PORT {}".format(str(port)))
+
+
+    while True:
+        # print("Waiting for connection")
+        connection, client = serversocket.accept()
+        
+        try:
+            # print("Connected to client IP: {}".format(client))
+                
+            # Receive and print data 1024 bytes at a time, as long as the client is sending something
+            while True:
+                data = connection.recv(1024)
+                # print("Received data: {}".format(data))
+
+                ''' get df -h /apps/ '''
+            
+                if not data:
+                    break
+
+        except Exception as e:
+            print("# Interrupted..")
+
+        finally:
+            connection.close()
+
+
 if __name__ == '__main__':
     '''
     (.venv) ➜  python ./push_to_loki_script.py --path /home/devuser --filename test1.log --hostname Data_Transfer_Node_#1
@@ -168,6 +205,12 @@ if __name__ == '__main__':
     # 'Multiprocessing' is that we can use for running with multiple process
     # --
     try:
+        ''' socket server for checking the status'''
+        socket_th = Thread(target=server_listen)
+        socket_th.daemon = True
+        socket_th.start()
+        T.append(socket_th)
+
         for collect_log in log_filename.split(","):
             th1 = Thread(target=work, args=(path, collect_log, hostname, logs, ))
             th1.daemon = True
