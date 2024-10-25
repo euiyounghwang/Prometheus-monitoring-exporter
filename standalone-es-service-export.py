@@ -81,6 +81,7 @@ es_nodes_basic_info_indices_gauge_g = Gauge("es_node_basic_indices_metric", 'Met
 es_nodes_health_gauge_g = Gauge("es_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_nodes_gauge_g = Gauge("kafka_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_connect_nodes_gauge_g = Gauge("kafka_connect_nodes_metric", 'Metrics scraped from localhost', ["server_job"])
+kafka_connect_nodes_health_gauge_g = Gauge("kafka_connect_nodes_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_connect_listeners_gauge_g = Gauge("kafka_connect_listeners_metric", 'Metrics scraped from localhost', ["server_job", "host", "name", "running"])
 kafka_connect_health_gauge_g = Gauge("kafka_connect_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_isr_list_gauge_g = Gauge("kafka_isr_list_metric", 'Metrics scraped from localhost', ["server_job", "topic", "partition", "leader", "replicas", "isr"])
@@ -97,7 +98,7 @@ loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped fro
 loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 alert_state_instance_gauge_g = Gauge("alert_state_metric", 'Metrics scraped from localhost', ["server_job"])
 logstash_instance_gauge_g = Gauge("logstash_health_metric", 'Metrics scraped from localhost', ["server_job"])
-spark_jobs_gauge_g = Gauge("spark_jobs_running_metrics", 'Metrics scraped from localhost', ["server_job", "id", "cores", "memoryperslave", "submitdate", "duration", "activeapps", "state"])
+spark_jobs_gauge_g = Gauge("spark_jobs_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "id", "cores", "memoryperslave", "submitdate", "duration", "activeapps", "state"])
 # db_jobs_gauge_g = Gauge("db_jobs_running_metrics", 'Metrics scraped from localhost', ["server_job", "processname", "cnt", "status", "addts", "dbid", "db_info"])
 db_jobs_gauge_wmx_g = Gauge("db_jobs_wmx_running_metrics", 'Metrics scraped from localhost', ["server_job", "processname", "cnt", "status", "addts", "dbid", "db_info"])
 db_jobs_gauge_kafka_offset_wmx_g = Gauge("db_jobs_wmx_kafka_offset_running_metrics", 'Metrics scraped from localhost', ["server_job", "topic",  "partition_num", "offset", "addts", "addwho", "editts", "editwho", "dbid"])
@@ -1347,7 +1348,8 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info('type : {}, get_all_envs_status"s value - {} -> merged list : {}'.format(types, value, all_env_status))
         try:
             if types == 'kafka':
-                if value >= 2:
+                # if value >= 2:
+                if value == 3:
                     ''' green'''
                     all_env_status.append(1)
                 elif value > 0 and value <1:
@@ -1511,7 +1513,38 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
+        '''
+        # printout Kafka_Connect
+        response_dict["kafka_connect_url"]  {'localhost1:8083': 'OK', 'GREEN_CNT': 3, 'localhost2:8083': 'OK', 'localhost3:8083': 'OK'}
+        '''
+        ''' extract master node from kafka hosts'''
+        master_kafka = monitoring_metrics.get("kafka_url").split(",")[0]
+        master_kafka = master_kafka.split(':')[0]
+        is_flag_active_primary_node_for_kafka_connect = True
+        ''' Get the status of primary node from the Kafka connect such as OK or FAIL'''
+        if "{}:8083".format(master_kafka) in response_dict["kafka_connect_url"]:
+            master_kafka_active = response_dict["kafka_connect_url"]["{}:8083".format(master_kafka)]
+        else:
+            master_kafka_active = "FAIL"
+            is_flag_active_primary_node_for_kafka_connect = False
+
+        # print('\n\n\n\n')
+        # print('response_dict["kafka_connect_url"] ', response_dict["kafka_connect_url"])
+        # print('Master of Kafka connect : {}'.format(master_kafka_active))
+        # print('\n\n\n\n')
+
+        ''' Kafka connect node update'''
+        ''' As long as Kafka Connect is running on the primary node, this is fine since it’s not mandatory for Connect to be running on nodes 2,3.'''
         kafka_connect_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+        ''' update health of Kafka connect'''
+        if master_kafka_active == "OK":
+            ''' If Kafka Connect is not running on node #2 or node #3 or a combination of both nodes #2 and #3, then the color code check should show as yellow if Kafka Connect is running on the primary node (node 1).'''
+            kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+        else:
+            ''' If Kafka Connect is not running on the primary node, then the color code check should show as “red” since this means data is not being processed for our ES pipeline queue for WMx and OMx. '''
+            kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
+
+        ''' zookeeper node update'''
         zookeeper_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["zookeeper_url"]["GREEN_CNT"]))
         
         ''' Update the status of kibana instance by using socket.connect_ex'''
@@ -1607,6 +1640,10 @@ def get_metrics_all_envs(monitoring_metrics):
         custom_apps = [each_apps_json.get("name") for each_apps_json in response_spark_jobs]
         service_status_dict.update({"spark_custom_apps_list" : ",".join(custom_apps) if custom_apps else ""})
 
+        ''' extract master node from spark hosts'''
+        master_spark = monitoring_metrics.get("kafka_url").split(",")[0]
+        master_spark = master_spark.split(':')[0]
+
         ''' update a list of spark custom apps to table grid in grafana'''
         spark_jobs_gauge_g._metrics.clear()
         if response_spark_jobs: 
@@ -1618,9 +1655,9 @@ def get_metrics_all_envs(monitoring_metrics):
                 for k, v in each_job.items():
                     if k  == 'state':
                         if v.upper() == 'RUNNING':
-                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(1)
+                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(1)
                         else:
-                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(0)
+                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(0)
                     
         else:
             ''' all envs update for current server active'''
@@ -1724,6 +1761,8 @@ def get_metrics_all_envs(monitoring_metrics):
 
 
         '''  kafka Connect health Set if listeners are working on all nodes with state of RUNNING'''
+        '''  Kafka_Health : [1, 1, 1, 1, 1, 1] '''
+        """
         logging.info(f"Kafka_Health : {kafka_state_list}")
         if list(set(kafka_state_list)) == [1]:
             kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(3)
@@ -1731,7 +1770,7 @@ def get_metrics_all_envs(monitoring_metrics):
             kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(0)
         else:
             kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(1)
-
+        """
 
         ''' get Kafka ISR metrics'''
         # get_kafka_ISR_metrics()
@@ -1773,8 +1812,10 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' save service_status_dict for alerting on all serivces'''
         if int(response_dict["kafka_connect_url"]["GREEN_CNT"]) == MAX_NUMBERS:
             kafka_connect_status = 'Green' 
-        elif 0 < int(response_dict["kafka_connect_url"]["GREEN_CNT"]) < MAX_NUMBERS:
+        elif 0 < int(response_dict["kafka_connect_url"]["GREEN_CNT"]) < MAX_NUMBERS and is_flag_active_primary_node_for_kafka_connect:
             kafka_connect_status = 'Yellow' 
+        elif 0 < int(response_dict["kafka_connect_url"]["GREEN_CNT"]) < MAX_NUMBERS and not is_flag_active_primary_node_for_kafka_connect:
+            kafka_connect_status = 'Red' 
         else:
             kafka_connect_status = 'Red'
         service_status_dict.update({"kafka_connect" : kafka_connect_status})
@@ -2185,6 +2226,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
   
     ''' db main process with sleep five mintues'''
     global saved_status_dict, saved_failure_db_dict, WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active
+    global global_env_name
     time_difference_to_hours = 0.0
 
     while True:
@@ -2285,6 +2327,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             elif db_info == "OMx":
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
 
+            
             ''' response same format with list included dicts'''   
             logging.info(f"db-job: result_json_value : {result_json_value}")
             # db_jobs_gauge_g._metrics.clear()
@@ -2296,9 +2339,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     
                     ''' updat metrics'''
                     if db_info == "WMx":
-                        db_jobs_gauge_wmx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info=db_info).set(1)
+                        db_jobs_gauge_wmx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
                     elif db_info == "OMx":
-                        db_jobs_gauge_omx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info=db_info).set(1)
+                        db_jobs_gauge_omx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
 
                     if 'PROCESSNAME' in element_each_json:
                         is_exist_process = True
