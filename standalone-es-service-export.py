@@ -364,7 +364,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
                     response_sub_dict.update({"GREEN_CNT" : totalcount})
                     ''' save failure node with a reason into saved_failure_dict'''
-                    if 'redis' not in str(k) and 'configuration' not in str(k):
+                    if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k):
                         saved_failure_dict.update({each_urls[0] : "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                 sock.close()
             response_dict.update({k : response_sub_dict})
@@ -420,7 +420,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 try:
                     # -- make a call to master node to get the information of activeapps
                     logging.info(each_node)
-                    resp = requests.get(url="http://{}:8083/connectors".format(each_node), timeout=5)
+                    resp = requests.get(url="http://{}:8083/connectors".format(each_node), timeout=5, verify=False)
                         
                     # logging.info(f"activeapps - {resp}, {resp.status_code}, {resp.json()}")
                     logging.info(f"activeconnectors/listeners - {resp}, {resp.status_code}")
@@ -476,7 +476,7 @@ def get_metrics_all_envs(monitoring_metrics):
                             ''' save failure node with a reason into saved_failure_dict'''
                             saved_failure_dict.update({"{}_{}".format(node, str(loop)) : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
                         """
-                        resp_tasks = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=5)
+                        resp_tasks = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=5, verify=False)
                         
                         if not (resp_tasks.status_code == 200):
                             continue
@@ -502,13 +502,14 @@ def get_metrics_all_envs(monitoring_metrics):
                             if node_lists_loop == 0:
                                 all_listeners_is_empty.append(False)
 
-                        resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=5)
+                        resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=5, verify=False)
                         listeners_list.append(resp_listener.json())
                         
                         loop +=1
                     except Exception as e:
                         ''' save failure node with a reason into saved_failure_dict'''
-                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status API do not reachable".format(node, listener)})
+                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status json API do not reachable".format(node, listener)})
+                        # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status API{}".format(node, listener, str(e))})
                         ''' master kafka connect is runnning correctly, it doesn't matter'''
                         if loop > 1:
                             failure_check = True
@@ -586,12 +587,12 @@ def get_metrics_all_envs(monitoring_metrics):
             if resp_working_job:
                 logging.info(f"activeapps - {resp_working_job}")
                 if len(resp_working_job)  < 1:
-                    saved_failure_dict.update({node : "Spark cluster - No Data Pipelines".format(master_node)})   
+                    saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - No Spark Custom Apps".format(master_node)})   
                 logging.info(f"get_active_jobs [Yes] {resp_working_job}") 
                 return resp_working_job
             else:
                 logging.info(f"get_active_jobs [No] {resp_working_job}") 
-                saved_failure_dict.update({node : "Spark cluster - http://{}:8080/json, no active jobs".format(master_node)})
+                saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - http://{}:8080/json, no active jobs. Please run 'Spark Custom Apps'".format(master_node)})
 
             # return resp.json().get("completedapps", "")
             return []
@@ -897,9 +898,9 @@ def get_metrics_all_envs(monitoring_metrics):
                                 get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
 
                             if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
-                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host=get_host_name, name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                             else:
-                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host=get_host_name, name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
 
                             if k == "diskUsedPercent":
                                 logging.info(f"ES Disk Used : {get_float_number(v)}")
@@ -1058,9 +1059,9 @@ def get_metrics_all_envs(monitoring_metrics):
                         get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
 
                     if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
-                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host=get_host_name, name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                     else:
-                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host=get_host_name, name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
 
                     if k == "diskUsedPercent":
                         logging.info(f"Kafka Disk Used : {get_float_number(v)}")
@@ -1404,6 +1405,7 @@ def get_metrics_all_envs(monitoring_metrics):
         global saved_thread_alert, saved_thread_alert_message, save_thread_alert_history, saved_thread_green_alert
         global saved_status_dict, saved_failure_db_dict, saved_failure_db_kafka_dict
         global ALERT_RESENT
+        global global_env_name
 
         ES_CLUSTER_RED = False
 
@@ -1503,9 +1505,9 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' The error indicator is 0 if the operation succeeded, otherwise the value of the errno variable. '''
         ''' Kafka/Kafka connect/Spark/Kibana'''
         response_dict = get_service_port_alive(monitoring_metrics_cp)
-        print('\n\n\n\n\n')
-        print(response_dict)
-        print('\n\n\n\n\n')
+        # print('\n\n\n\n\n')
+        # print(response_dict)
+        # print('\n\n\n\n\n')
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
@@ -1578,16 +1580,16 @@ def get_metrics_all_envs(monitoring_metrics):
         #         active_cnt = 2
         #     loki_api_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
 
-        # ''' Update the status of loki_custom_promtail_agent_url agent by using socket.connect_ex only Dev'''
-        # if 'loki_custom_promtail_agent_url' in monitoring_metrics:
-        #     active_cnt = int(response_dict["loki_custom_promtail_agent_url"]["GREEN_CNT"])
-        #     ''' 'loki_custom_promtail_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
-        #     ''' expose each max disk usage'''
-        #     ''' loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
-        #     loki_agent_instance_gauge_g.clear()
-        #     for k, v in response_dict["loki_custom_promtail_agent_url"].items():
-        #         if k != 'GREEN_CNT':
-        #             loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+        ''' Update the status of loki_custom_promtail_agent_url agent by using socket.connect_ex only Dev'''
+        if 'loki_custom_promtail_agent_url' in monitoring_metrics:
+            active_cnt = int(response_dict["loki_custom_promtail_agent_url"]["GREEN_CNT"])
+            ''' 'loki_custom_promtail_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
+            ''' expose each max disk usage'''
+            ''' loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
+            loki_agent_instance_gauge_g.clear()
+            for k, v in response_dict["loki_custom_promtail_agent_url"].items():
+                if k != 'GREEN_CNT':
+                    loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
 
        
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
@@ -1674,10 +1676,10 @@ def get_metrics_all_envs(monitoring_metrics):
                             if element['tasks'][0]['state'].upper() == 'RUNNING':
                                 kafka_state_list.append(1)
                                 is_running_one_of_kafka_listner = True
-                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host=host, name=element.get('name',''), running=element['tasks'][0]['state']).set(1)
+                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(1)
                             else:
                                 kafka_state_list.append(-1)
-                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host=host, name=element.get('name',''), running=element['tasks'][0]['state']).set(0)
+                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(0)
                                 ''' add tracking logs'''
                                 if 'trace' in  element['tasks'][0]:
                                     saved_failure_dict.update({"{}_{}".format(host, str(loop)) : "http://{}:8083 - ".format(host) + element.get('name','') + "," + element['tasks'][0]['trace']})
@@ -1854,21 +1856,27 @@ def get_metrics_all_envs(monitoring_metrics):
 
         """ create alert audit message"""        
         failure_message = []
+        # for k, v in saved_failure_dict.items():
+        #     es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(global_env_name, remove_special_char(k)), reason=v).set(0)
+        #     ''' remove waring logs for the alert if our service is online'''
+        #     """
+        #     if not global_service_active:
+        #         failure_message.append(v)
+        #     """
+        #     failure_message.append(v)
+       
+        
+        """ create alert audit message & Update log metrics"""
+        ''' merge'''
+        saved_failure_dict.update(saved_failure_tasks_dict)
         for k, v in saved_failure_dict.items():
-            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host=remove_special_char(k), reason=v).set(0)
+            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(str(global_env_name).lower(), remove_special_char(k)), reason=v).set(0)
             ''' remove waring logs for the alert if our service is online'''
             """
             if not global_service_active:
                 failure_message.append(v)
             """
             failure_message.append(v)
-       
-        
-        """ Update log metrics"""
-        ''' merge'''
-        saved_failure_dict.update(saved_failure_tasks_dict)
-        for k, v in saved_failure_dict.items():
-            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host=remove_special_char(k), reason=v).set(0)
         
 
         ''' db threads for kafka offset'''
@@ -1919,6 +1927,10 @@ def get_metrics_all_envs(monitoring_metrics):
             saved_thread_alert = False
             ''' add history for alerting '''
             save_thread_alert_history.append(False)
+
+            ''' Update thread_alert_message if save_thread_alert is green'''
+            # tracking_failure_dict.update({"alert_sent_time" : "1900-01-01 00:00:00"})
+
         ''' ------------------------------------------------------'''
       
         # logging.info(f"saved_thread_alert - {saved_thread_alert}, saved_critcal_sms_alert - {saved_critcal_sms_alert}")
@@ -2974,7 +2986,7 @@ if __name__ == '__main__':
     # parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
     # ''' loki REST API url : http://localhost:8010'''
     # parser.add_argument('--loki_api_url', dest='loki_api_url', default="", help='loki_url')
-    # parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
+    parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
     parser.add_argument('--interface', dest='interface', default="db", help='db or http')
@@ -3056,8 +3068,8 @@ if __name__ == '__main__':
     #     loki_api_url = args.loki_api_url
 
     # ''' loki_agent for text logs '''
-    # if args.loki_custom_promtail_agent_url:
-    #     loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
+    if args.loki_custom_promtail_agent_url:
+        loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
 
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''

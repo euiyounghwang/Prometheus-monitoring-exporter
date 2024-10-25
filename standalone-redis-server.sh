@@ -6,6 +6,8 @@
 #redis-cli --cluster create 127.0.0.1:6379 127.0.0.1:6479 127.0.0.1:6579
 #redis-cli --cluster create --replicas  1 127.0.0.1:6379 127.0.0.1:6479 127.0.0.1:6579
 
+SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
 # -- Batch 
 
 #!/bin/sh
@@ -17,7 +19,7 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        source .venv/bin/activate
+        source $SCRIPTDIR/.venv/bin/activate
         nohup python $ES_REDIS_CONFIGURATION_WRITE_PATH/standalone-redis-server-script.py &> /dev/null &
         #python $ES_REDIS_CONFIGURATION_WRITE_PATH/standalone-redis-server-script.py
         ;;
