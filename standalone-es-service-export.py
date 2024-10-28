@@ -464,6 +464,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 loop = 1
                 for listener in active_listner_connect:
                     try:
+                        # loop +=1
                         """
                         resp_each_listener = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=5)
                         # logging.info(f"len(resp_each_listener['tasks']) - {node} -> { len(list(resp_each_listener.json()['tasks']))}")
@@ -509,7 +510,8 @@ def get_metrics_all_envs(monitoring_metrics):
                         loop +=1
                     except Exception as e:
                         ''' save failure node with a reason into saved_failure_dict'''
-                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status json API do not reachable".format(node, listener)})
+                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/[listeners]/status json API do not reachable".format(node, listener)})
+                        # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status json API do not reachable".format(node, listener)})
                         # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status API{}".format(node, listener, str(e))})
                         ''' master kafka connect is runnning correctly, it doesn't matter'''
                         if loop > 1:
@@ -1861,7 +1863,7 @@ def get_metrics_all_envs(monitoring_metrics):
         if list(set(all_env_status_memory_list)) == [1]:
             ''' green '''
             all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(1)
-            # global_service_active = True
+            global_service_active = True
         
         elif list(set(all_env_status_memory_list)) == [-1]:
             ''' red '''
@@ -1897,15 +1899,6 @@ def get_metrics_all_envs(monitoring_metrics):
 
         """ create alert audit message"""        
         failure_message = []
-        # for k, v in saved_failure_dict.items():
-        #     es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(global_env_name, remove_special_char(k)), reason=v).set(0)
-        #     ''' remove waring logs for the alert if our service is online'''
-        #     """
-        #     if not global_service_active:
-        #         failure_message.append(v)
-        #     """
-        #     failure_message.append(v)
-       
         
         """ create alert audit message & Update log metrics"""
         ''' merge'''
@@ -1913,11 +1906,9 @@ def get_metrics_all_envs(monitoring_metrics):
         for k, v in saved_failure_dict.items():
             es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(str(global_env_name).lower(), remove_special_char(k)), reason=v).set(0)
             ''' remove waring logs for the alert if our service is online'''
-            """
             if not global_service_active:
                 failure_message.append(v)
-            """
-            failure_message.append(v)
+            # failure_message.append(v)
         
 
         ''' db threads for kafka offset'''

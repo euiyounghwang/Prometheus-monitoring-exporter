@@ -47,7 +47,7 @@ def follow(thefile, logs):
     '''generator function that yields new lines in a file
     '''
     # seek the end of the file
-    thefile.seek(0, os.SEEK_END)
+    # thefile.seek(0, os.SEEK_END)
     
     buffer = []
     # start infinite loop
@@ -77,7 +77,8 @@ def follow(thefile, logs):
                     buffer = []
                 buffer.append(line)
             else:
-                if 'INFO' not in line and 'WARN' not in line:
+                # if 'ERROR' in line:
+                if 'INFO' not in line or 'WARN' in line:
                     buffer.append(line)
         else:
             ''' return all wrap log'''
@@ -89,7 +90,7 @@ def follow(thefile, logs):
                 buffer.append(line)
             else:
                 buffer.append(line)
-            yield line
+            # yield line
 
 
 def push_to_logstash(log_status, hostname, filename, message):
@@ -154,10 +155,10 @@ def work(path, log_filename, hostname, logs):
             log_status = "INFO"
             if 'ERROR' in line:
                 log_status = "ERROR"
-            push_to_logstash(log_status, hostname, log_filename, line)
+            # push_to_logstash(log_status, hostname, log_filename, line)
     
     except Exception as e:
-        # logging.error(e)
+        logging.error(e)
         pass
 
 
@@ -197,13 +198,15 @@ def server_listen():
 
 if __name__ == '__main__':
     '''
-    (.venv) ➜  python ./push_to_loki_script.py --path /home/devuser --filename test1.log --hostname Data_Transfer_Node_#1
+    (.venv) ➜  python ./Grafana-log/push_to_loki_script.py --path /home/devuser --filename test1.log --hostname Data_Transfer_Node_#1
+    (.venv) ➜  python ./Grafana-log/push_to_logstash_script.py --path ./Grafana-log --filename test.log --hostname Data_Transfer_Node_#1
     '''
     parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
     parser.add_argument('-p', '--path', dest='path', default="/home/devuser", help='path for log')
     parser.add_argument('-f', '--filename', dest='filename', default="test1.log,test2.log", help='filename for log')
     parser.add_argument('-t', '--hostname', dest='hostname', default="hostname", help='hostname')
-    parser.add_argument('-l', '--logs', dest='logs', default="all", help='logs')
+    # parser.add_argument('-l', '--logs', dest='logs', default="all", help='logs')
+    parser.add_argument('-l', '--logs', dest='logs', default="ERROR", help='logs')
     args = parser.parse_args()
     
     if args.path:
@@ -219,7 +222,7 @@ if __name__ == '__main__':
         logs = args.logs
 
     # print(socket.gethostname())
-
+    
     T = []
         
     # --
