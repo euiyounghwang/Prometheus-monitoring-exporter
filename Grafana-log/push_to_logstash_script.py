@@ -43,11 +43,12 @@ def get_error(line, buffer):
     print(buffer)
     
 
-def follow(thefile, logs):
+def follow(thefile, logs, is_end_seek=True):
     '''generator function that yields new lines in a file
     '''
-    # seek the end of the file
-    # thefile.seek(0, os.SEEK_END)
+    if is_end_seek:
+        # seek the end of the file
+        thefile.seek(0, os.SEEK_END)
     
     buffer = []
     # start infinite loop
@@ -99,13 +100,14 @@ def push_to_logstash(log_status, hostname, filename, message):
     SOCEKT_PORT = 5950
 
     # Monitoring
+    ''' "message" => "{'message': '[test.log] [Dev] 24/10/29 00:00:01 INFO myLogger: 2024-10-29 00:00:01.803 Elastic INSERT START for queueid: 123456\\n'}", '''
     extra = {
-        "log_status": log_status,
-        "env": os.environ["ENV"],
-        "host": socket.gethostname().split(".")[0],
-        "host_name": hostname,
-        "log_filename": filename,
-        "message": message
+        # "log_status": log_status,
+        # # "env": os.environ["ENV"],
+        # "host": socket.gethostname().split(".")[0],
+        # "host_name": hostname,
+        # "log_filename": filename,
+        "message": "[{}] [{}] {}".format(log_filename, "Dev", message)
     }
     
     """:
@@ -123,7 +125,7 @@ def push_to_logstash(log_status, hostname, filename, message):
 
     test_logger = logging.getLogger('python-logstash-logger')
     test_logger.setLevel(logging.INFO)
-    test_logger.addHandler(logstash.LogstashHandler(host, SOCEKT_PORT, version=1))
+    '''test_logger.addHandler(logstash.LogstashHandler(host, SOCEKT_PORT, version=1))'''
     test_logger.addHandler(logstash.TCPLogstashHandler(host, SOCEKT_PORT, version=1))
     # test_logger.addHandler(logstash.UDPLogstashHandler(host, SOCEKT_PORT, version=1))
 
@@ -142,20 +144,22 @@ def work(path, log_filename, hostname, logs):
     However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.
     So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.
     -- ./push_to_logstash.sh start (This script will be run as agent to send text logs to logstash using TCP socket)
-    Then, The Grafana dashboard will read the ES log index and show ERROR logs in near real time.
+    Then, The Grafana dashboard will read the ES log index in ES cluster and show ERROR logs in near real time.
     '''
     ''' Readline with INFO/ERROR with Seek Offset'''
     try:
         logfile = open("{}/{}".format(path, log_filename),"r")
-        loglines = follow(logfile, logs)
+        # loglines = follow(logfile, logs)
+        loglines = follow(logfile, logs, is_end_seek=False)
         # iterate over the generator
         for line in loglines:
+            # line = str(line).replace("\n", "")
             print(line)
             ''' send logs to inteface api for saving them in Grafana-loki'''
             log_status = "INFO"
             if 'ERROR' in line:
                 log_status = "ERROR"
-            # push_to_logstash(log_status, hostname, log_filename, line)
+            push_to_logstash(log_status, hostname, log_filename, line)
     
     except Exception as e:
         logging.error(e)
@@ -198,7 +202,6 @@ def server_listen():
 
 if __name__ == '__main__':
     '''
-    (.venv) ➜  python ./Grafana-log/push_to_loki_script.py --path /home/devuser --filename test1.log --hostname Data_Transfer_Node_#1
     (.venv) ➜  python ./Grafana-log/push_to_logstash_script.py --path ./Grafana-log --filename test.log --hostname Data_Transfer_Node_#1
     '''
     parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
@@ -248,8 +251,8 @@ if __name__ == '__main__':
                 t.join(0.5)
 
     except (KeyboardInterrupt, SystemExit):
-        logging.info("# Interrupted..")
+        print("# Interrupted..")
         
     except Exception as e:
-        logging.error(e)
+        print(e)
     

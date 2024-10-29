@@ -1,3 +1,4 @@
 ./Playbook
 .venv/
 scripts/output/
+Grafana-log/logstash-output

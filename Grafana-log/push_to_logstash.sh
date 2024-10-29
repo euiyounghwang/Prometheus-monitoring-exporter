@@ -1,7 +1,7 @@
 #!/bin/sh
 LOGGING_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/log_to_logstash
 PATH=$PATH:$LOGGING_SERVICE_ALL_EXPORT_PATH/bin
-SERVICE_NAME=python-logging-to-logstash-service-all-service
+SERVICE_NAME=python-logging-to-logstash-sparklogs
 
 export LOGSTASH_HOST="localhost"
 export ENV="Dev"

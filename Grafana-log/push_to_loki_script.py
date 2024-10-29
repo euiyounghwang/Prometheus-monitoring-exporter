@@ -175,6 +175,7 @@ def server_listen():
 
 if __name__ == '__main__':
     '''
+    install loki library ➜ python-logging-loki==0.3.1
     (.venv) ➜  python ./push_to_loki_script.py --path /home/devuser --filename test1.log --hostname Data_Transfer_Node_#1
     '''
     parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
