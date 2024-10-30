@@ -35,6 +35,6 @@ fi
 
 #--
 #** Script for Log Agent Restart **
-*/5 * * * * /home/devuser/monitoring/log_to_logstash/push_to_logstash.sh start
+#*/5 * * * * /home/devuser/monitoring/log_to_logstash/push_to_logstash.sh start
 #** ---------------------- **
 
