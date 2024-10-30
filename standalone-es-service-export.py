@@ -96,6 +96,7 @@ alert_monitoring_ui_gauge_g = Gauge("alert_monitoring_ui_health_metric", 'Metric
 loki_ui_gauge_g = Gauge("loki_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
+log_agent_instance_gauge_g = Gauge("log_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 alert_state_instance_gauge_g = Gauge("alert_state_metric", 'Metrics scraped from localhost', ["server_job"])
 logstash_instance_gauge_g = Gauge("logstash_health_metric", 'Metrics scraped from localhost', ["server_job"])
 spark_jobs_gauge_g = Gauge("spark_jobs_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "id", "cores", "memoryperslave", "submitdate", "duration", "activeapps", "state"])
@@ -1616,15 +1617,25 @@ def get_metrics_all_envs(monitoring_metrics):
         #     loki_api_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
 
         ''' Update the status of loki_custom_promtail_agent_url agent by using socket.connect_ex only Dev'''
-        if 'loki_custom_promtail_agent_url' in monitoring_metrics:
-            active_cnt = int(response_dict["loki_custom_promtail_agent_url"]["GREEN_CNT"])
-            ''' 'loki_custom_promtail_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
-            ''' expose each max disk usage'''
-            ''' loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
-            loki_agent_instance_gauge_g.clear()
-            for k, v in response_dict["loki_custom_promtail_agent_url"].items():
+        # if 'loki_custom_promtail_agent_url' in monitoring_metrics:
+        #     active_cnt = int(response_dict["loki_custom_promtail_agent_url"]["GREEN_CNT"])
+        #     ''' 'loki_custom_promtail_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
+        #     ''' expose each max disk usage'''
+        #     ''' loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
+        #     loki_agent_instance_gauge_g.clear()
+        #     for k, v in response_dict["loki_custom_promtail_agent_url"].items():
+        #         if k != 'GREEN_CNT':
+        #             loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+
+        ''' Update the status of log_aggregation_agent_url agent by using socket.connect_ex only Dev'''
+        if 'log_aggregation_agent_url' in monitoring_metrics:
+            active_cnt = int(response_dict["log_aggregation_agent_url"]["GREEN_CNT"])
+            ''' 'log_aggregation_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
+            ''' log_agent_instance_gauge_g = Gauge("log_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
+            log_agent_instance_gauge_g.clear()
+            for k, v in response_dict["log_aggregation_agent_url"].items():
                 if k != 'GREEN_CNT':
-                    loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
 
        
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
@@ -3020,7 +3031,8 @@ if __name__ == '__main__':
     # parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
     # ''' loki REST API url : http://localhost:8010'''
     # parser.add_argument('--loki_api_url', dest='loki_api_url', default="", help='loki_url')
-    parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
+    # parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
+    parser.add_argument('--log_aggregation_agent_url', dest='log_aggregation_agent_url', default="", help='log_aggregation_agent_url')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
     parser.add_argument('--interface', dest='interface', default="db", help='db or http')
@@ -3071,7 +3083,7 @@ if __name__ == '__main__':
     if args.kibana_url:
         kibana_url = args.kibana_url
 
-    redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url = None, None, None, None, None, None, None, None
+    redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url = None, None, None, None, None, None, None, None, None
 
     ''' Redis port checking'''
     if args.redis_url:
@@ -3102,8 +3114,11 @@ if __name__ == '__main__':
     #     loki_api_url = args.loki_api_url
 
     # ''' loki_agent for text logs '''
-    if args.loki_custom_promtail_agent_url:
-        loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
+    # if args.loki_custom_promtail_agent_url:
+    #     loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
+
+    if args.log_aggregation_agent_url:
+        log_aggregation_agent_url = args.log_aggregation_agent_url
 
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
@@ -3181,9 +3196,12 @@ if __name__ == '__main__':
         monitoring_metrics.update({"loki_api_url" : loki_api_url})
 
     ''' loki_custom_promtail_agent_url checking '''
-    if loki_custom_promtail_agent_url:
-        monitoring_metrics.update({"loki_custom_promtail_agent_url" : loki_custom_promtail_agent_url})
+    # if loki_custom_promtail_agent_url:
+    #     monitoring_metrics.update({"loki_custom_promtail_agent_url" : loki_custom_promtail_agent_url})
 
+    ''' log_aggregation_agent_url checking '''
+    if log_aggregation_agent_url:
+        monitoring_metrics.update({"log_aggregation_agent_url" : log_aggregation_agent_url})
         
     logging.info(json.dumps(monitoring_metrics, indent=2))
     logging.info(interval)

@@ -8,13 +8,12 @@ import requests
 import logging
 import socket
 from json import dumps
-# import logging
 import sys
 import logstash
 import warnings
 warnings.filterwarnings("ignore")
 
-# logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
 
@@ -79,7 +78,7 @@ def follow(thefile, logs, is_end_seek=True):
                 buffer.append(line)
             else:
                 # if 'ERROR' in line:
-                if 'INFO' not in line or 'WARN' in line:
+                if 'INFO' not in line and 'WARN' not in line:
                     buffer.append(line)
         else:
             ''' return all wrap log'''
@@ -107,7 +106,7 @@ def push_to_logstash(log_status, hostname, filename, message):
         # "host": socket.gethostname().split(".")[0],
         # "host_name": hostname,
         # "log_filename": filename,
-        "message": "[{}] [{}] {}".format(log_filename, "Dev", message)
+        "message": "[{}] [{}] {}".format(filename, "Dev", message)
     }
     
     """:
@@ -149,8 +148,8 @@ def work(path, log_filename, hostname, logs):
     ''' Readline with INFO/ERROR with Seek Offset'''
     try:
         logfile = open("{}/{}".format(path, log_filename),"r")
-        # loglines = follow(logfile, logs)
-        loglines = follow(logfile, logs, is_end_seek=False)
+        loglines = follow(logfile, logs)
+        # loglines = follow(logfile, logs, is_end_seek=False)
         # iterate over the generator
         for line in loglines:
             # line = str(line).replace("\n", "")
@@ -173,7 +172,7 @@ def server_listen():
     serversocket.bind(("0.0.0.0", 2000))
     serversocket.listen(5) # become a server socket, maximum 5 connections
 
-    print("Wating a session..via PORT {}".format(str(port)))
+    logging.info("Wating a session..via PORT {}".format(str(port)))
 
 
     while True:
@@ -194,7 +193,7 @@ def server_listen():
                     break
 
         except Exception as e:
-            print("# Interrupted..")
+            logging.error("# Interrupted..{}".format(e))
 
         finally:
             connection.close()
@@ -202,6 +201,7 @@ def server_listen():
 
 if __name__ == '__main__':
     '''
+    [install pip for python2.7] python ./get-pip.py ➜ [install the library] pip install python-logstash
     (.venv) ➜  python ./Grafana-log/push_to_logstash_script.py --path ./Grafana-log --filename test.log --hostname Data_Transfer_Node_#1
     '''
     parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
@@ -223,7 +223,7 @@ if __name__ == '__main__':
 
     if args.logs:
         logs = args.logs
-
+   
     # print(socket.gethostname())
     
     T = []
@@ -251,8 +251,11 @@ if __name__ == '__main__':
                 t.join(0.5)
 
     except (KeyboardInterrupt, SystemExit):
-        print("# Interrupted..")
+        logging.error("# Interrupted..")
+    
+    except Exception as e:
+        logging.error(e)
         
     except Exception as e:
-        print(e)
+        logging.error(e)
     

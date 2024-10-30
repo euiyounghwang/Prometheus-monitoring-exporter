@@ -1,6 +1,6 @@
 #!/bin/sh
 LOGGING_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/log_to_logstash
-PATH=$PATH:$LOGGING_SERVICE_ALL_EXPORT_PATH/bin
+#PATH=$PATH:$LOGGING_SERVICE_ALL_EXPORT_PATH
 SERVICE_NAME=python-logging-to-logstash-sparklogs
 
 export LOGSTASH_HOST="localhost"
@@ -28,7 +28,7 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        #nohup python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_loki_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR &> /dev/null &
+        #nohup python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_logstash_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR &> /dev/null &
         python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_logstash_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR
         ;;
   stop)
