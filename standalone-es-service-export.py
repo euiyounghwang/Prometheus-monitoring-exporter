@@ -366,7 +366,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
                     response_sub_dict.update({"GREEN_CNT" : totalcount})
                     ''' save failure node with a reason into saved_failure_dict'''
-                    if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k):
+                    if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
                         saved_failure_dict.update({each_urls[0] : "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                 sock.close()
             response_dict.update({k : response_sub_dict})

@@ -106,7 +106,7 @@ def push_to_logstash(log_status, hostname, filename, message):
         # "host": socket.gethostname().split(".")[0],
         # "host_name": hostname,
         # "log_filename": filename,
-        "message": "[{}] [{}] {}".format(filename, "Dev", message)
+        "message": "[{}] [{}] {}".format(filename, os.environ["ENV"], message)
     }
     
     """:
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     [install pip for python2.7] python ./get-pip.py ➜ [install the library] pip install python-logstash
     (.venv) ➜  python ./Grafana-log/push_to_logstash_script.py --path ./Grafana-log --filename test.log --hostname Data_Transfer_Node_#1
     '''
-    parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
+    parser = argparse.ArgumentParser(description="Sending error logs through this script")
     parser.add_argument('-p', '--path', dest='path', default="/home/devuser", help='path for log')
     parser.add_argument('-f', '--filename', dest='filename', default="test1.log,test2.log", help='filename for log')
     parser.add_argument('-t', '--hostname', dest='hostname', default="hostname", help='hostname')
