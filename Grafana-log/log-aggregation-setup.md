@@ -7,6 +7,7 @@ So, I am proceeding with the following steps:
 
 - Filebeat to read the logs
     - Rather than sending all lines to logstash using Filebeat, I thought it would be better to send only ERROR log lines regarding to "Spark apps". So I am implementing python-based agent to send only ERROR logs) instead of Filebeat    <Doing>
+    - The Python script continuously reads the last line of the log file in real time. It also takes multiple log file names as parameters and reads error log lines from multiple log files. And then It passes them to logstash.
 - Ship to logstash ("Python-based agent" transmit only 'ERROR' logs to logstash)
     - Use grok filter from the ERROR line to create json format  <Doing>
 - Ingest "Error logs" into Elasticsearch (Dev) and create indices ("logstash-logger-yyyy-mm-dd"). 
