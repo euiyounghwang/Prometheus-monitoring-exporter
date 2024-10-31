@@ -1,6 +1,18 @@
 # Log Aggregaation
 <i>Log Aggregaation
 
+Currently, Grafana (v.10.x) that we are using does not support ES v.5, so I found a possible Grafana version that can connect with ES v.5 and additionally set up a lower version (v.8.0.0) of Grafana for text logs. This version of Grafana provide users to add ES v.5 as a data source to get data from the index.
+
+So, I am proceeding with the following steps:
+
+- Filebeat to read the logs
+    - Rather than sending all lines to logstash using Filebeat, I thought it would be better to send only ERROR log lines regarding to "Spark apps". So I am implementing python-based agent to send only ERROR logs) instead of Filebeat    <Doing>
+- Ship to logstash ("Python-based agent" transmit only 'ERROR' logs to logstash)
+    - Use grok filter from the ERROR line to create json format  <Doing>
+- Ingest "Error logs" into Elasticsearch (Dev) and create indices ("logstash-logger-yyyy-mm-dd"). 
+- In Grafana, Create a dashboard that displays text logs. <Will>
+
+
 To save spark text log, we need to pass it to filebeat-logstash-es cluster. However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.
 So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.
 - ./push_to_logstash.sh start (This script will be run as agent to send text logs to logstash using TCP socket)
@@ -10,8 +22,8 @@ So, instead of filebeat, I implemented a python script as agent to read only err
 #### Setup/Run Logstash-Agent
 - Run the script : `./Grafana-log/push_to_logstash.sh start` or `python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_logstash_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR`
 ```bash
-python ./get-pip.py
-pip install python-logstash
+python ./get-pip.py --proxy http://localhost:8080
+pip install python-logstash --proxy http://localhost:8080
 
 cd /lib/python2.7/site-packages
 cp -r /home/devuser/.local/lib/python2.7/site-packages/python_logstash-0.4.8.dist-info .
@@ -26,8 +38,12 @@ sudo cp -r home/devuser/.local/lib/python2.7/site-packages/python_logstash-0.4.8
 (.venv) ➜  python ./Grafana-log/push_to_logstash_script.py --path ./Grafana-log --filename test.log --hostname Data_Transfer_Node_#1
 
 #-- 
+# Check whether pip tool was installed on the particular instance
+pip list
+python ./get-pip.py --proxy http://localhost:8080
+
 # Copy libraries from dt to new dts
-sudo scp -r devuser@kibana:/home/devuser/monitoring/python_lib/python2.7/* .
+sudo scp -r devuser@kibana:/home/devuser/monitoring/python_lib/python2.7/* /lib/python2.7/site-packages/
 scp -r devuser@data_transfer_node_#3:/home/devuser/monitoring/log_to_logstash/* .
 #-- 
 
