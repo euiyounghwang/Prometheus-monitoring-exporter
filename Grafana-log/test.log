@@ -33,3 +33,4 @@ java.lang.OutOfMemoryError: Java heap space
         24/10/11 12:35:38 INFO DiskBlockManager: Shutdown hook called
 24/10/11 12:35:38 INFO ShutdownHookManager: Shutdown hook called
 24/10/11 12:35:40 INFO SecurityManager: Changing modify a
+org.apache.kafka.common.errors.DisconnectException: null

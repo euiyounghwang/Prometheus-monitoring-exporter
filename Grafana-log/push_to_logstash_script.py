@@ -98,6 +98,8 @@ def push_to_logstash(log_status, hostname, filename, message):
     host = os.environ["LOGSTASH_HOST"]
     SOCEKT_PORT = 5950
 
+    logging.info("hostname : {},  log_status : {}".format(hostname, log_status))
+
     # Monitoring
     ''' "message" => "{'message': '[test.log] [Dev] 24/10/29 00:00:01 INFO myLogger: 2024-10-29 00:00:01.803 Elastic INSERT START for queueid: 123456\\n'}", '''
     extra = {
@@ -106,6 +108,7 @@ def push_to_logstash(log_status, hostname, filename, message):
         # "host": socket.gethostname().split(".")[0],
         # "host_name": hostname,
         # "log_filename": filename,
+        # "message": "[{}] [{}] {}".format(filename, "Dev", message)
         "message": "[{}] [{}] {}".format(filename, os.environ["ENV"], message)
     }
     
@@ -158,7 +161,8 @@ def work(path, log_filename, hostname, logs):
             log_status = "INFO"
             if 'ERROR' in line:
                 log_status = "ERROR"
-            push_to_logstash(log_status, hostname, log_filename, line)
+            if ' ERROR ' in line or ' INFO ' in line or ' WARN ' in line:
+                push_to_logstash(log_status, hostname, log_filename, line)
     
     except Exception as e:
         logging.error(e)
