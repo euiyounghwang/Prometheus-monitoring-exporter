@@ -1,7 +1,7 @@
 # Log Aggregaation
 <i>Log Aggregaation
 
-Currently, Grafana (v.10.x) that we are using does not support ES v.5, so I found a possible Grafana version that can connect with ES v.5 and additionally set up a lower version (v.8.0.0) of Grafana for text logs. This version of Grafana provide users to add ES v.5 as a data source to get data from the index.
+Currently, Grafana (v.10.x) that we are using does not support ES v.5 to access and add a new data source, so I found a possible Grafana version that can connect with ES v.5 and additionally set up a lower version (v.8.0.0) of Grafana for text logs. This version of Grafana provide users to add ES v.5 as a data source to get data from the index.
 
 So, I am proceeding with the following steps:
 
@@ -87,4 +87,71 @@ sudo service rc-local status
 
 sudo systemctl start rc-local.service
 sudo service rc-local start
+```
+
+
+#### Alert
+```bash
+
+# --
+# Log Search
+GET logstash-logger-*/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "Dev or TEST* or Service*",
+            "fields": ["env"],
+            "lenient": true
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+# --
+
+# --
+# Log Aggregation
+GET logstash-logger-*/_search
+{
+  "size": 0, 
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "range": {
+            "@timestamp": {
+              "gte": "2024-10-30T18:00:00"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "@timestamp": {
+        "order": "desc"
+      }
+    }
+  ],
+  "aggs": {
+    "spark_log": {
+      "terms": {
+        "field": "env.keyword",
+        "size": 100
+      }
+    }
+  }
+}
 ```
