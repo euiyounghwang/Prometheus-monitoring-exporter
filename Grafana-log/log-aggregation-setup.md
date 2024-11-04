@@ -92,6 +92,8 @@ sudo service rc-local start
 
 
 #### Alert
+- Run the script : `./Grafana-log/log-aggregation-alert.sh start/stop/status` (In Dev Losgstash, run `/home/biadmin/monitoring/custom_export/log-aggregation-alert.sh start/stop/status`)
+- Get the results from Dev ES cluster which has text error logs from the spark custom apps
 ```bash
 
 # --
