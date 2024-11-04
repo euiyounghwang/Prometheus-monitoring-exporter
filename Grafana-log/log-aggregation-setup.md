@@ -20,7 +20,7 @@ So, instead of filebeat, I implemented a python script as agent to read only err
 - Then, The Grafana dashboard(Variable with "All" Options: https://stackoverflow.com/questions/72316944/grafana-variable-return-all-elastic-documents-when-selecting-all-and-the-attr, sample : * OR (NOT _exists_:provision_org.keyword)) will read the ES log index in ES cluster and show ERROR logs in near real time.
 
 
-#### Setup/Run Logstash-Agent
+#### Setup/Run Logstash-Agent/Filebeat
 - Run the script : `./Grafana-log/push_to_logstash.sh start` or `python $LOGGING_SERVICE_ALL_EXPORT_PATH/push_to_logstash_script.py --path $path --filename $logging_file_list --hostname $hostname --logs ERROR`
 ```bash
 python ./get-pip.py --proxy http://localhost:8080
@@ -89,6 +89,8 @@ sudo service rc-local status
 sudo systemctl start rc-local.service
 sudo service rc-local start
 ```
+- Run Filebeat : /home/biadmin/monitoring/filebeat-5.6.16-linux-x86_64/ home/biadmin/monitoring/filebeat-5.6.16-linux-x86_64
+
 
 
 #### Alert
