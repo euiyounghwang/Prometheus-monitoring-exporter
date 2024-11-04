@@ -16,8 +16,8 @@ So, I am proceeding with the following steps:
 
 To save spark text log, we need to pass it to filebeat-logstash-es cluster. However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.
 So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.
-- ./push_to_logstash.sh start (This script will be run as agent to send text logs to logstash using TCP socket)
-- Then, The Grafana dashboard will read the ES log index in ES cluster and show ERROR logs in near real time.
+- `./Grafana-log/push_to_logstash.sh start` (This script will be run as agent to send text logs to logstash using TCP socket)
+- Then, The Grafana dashboard(Variable with "All" Options: https://stackoverflow.com/questions/72316944/grafana-variable-return-all-elastic-documents-when-selecting-all-and-the-attr, sample : * OR (NOT _exists_:provision_org.keyword)) will read the ES log index in ES cluster and show ERROR logs in near real time.
 
 
 #### Setup/Run Logstash-Agent
