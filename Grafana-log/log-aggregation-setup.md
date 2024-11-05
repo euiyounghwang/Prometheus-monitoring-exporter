@@ -5,13 +5,14 @@ Currently, Grafana (v.10.x) that we are using does not support ES v.5 to access 
 
 So, I am proceeding with the following steps:
 
-- Filebeat to read the logs
-    - Rather than sending all lines to logstash using Filebeat, I thought it would be better to send only ERROR log lines regarding to "Spark apps". So I am implementing python-based agent to send only ERROR logs) instead of Filebeat    <Doing>
+- Sendding the logs with two ways
+    - Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds.
+    - Rather than sending all lines to logstash using Filebeat, I thought it would be better to send only ERROR log lines regarding to "Spark apps". So I am implementing python-based agent to send only ERROR logs) instead of Filebeat
     - The Python script continuously reads the last line of the log file in real time. It also takes multiple log file names as parameters and reads error log lines from multiple log files. And then It passes them to logstash.
-- Ship to logstash ("Python-based agent" transmit only 'ERROR' logs to logstash)
-    - Use grok filter from the ERROR line to create json format  <Doing>
+- Ship to logstash ("Python-based agent" transmit only 'ERROR' logs or Filebeat to logstash)
+    - Use grok filter from the ERROR line to create json format
 - Ingest "Error logs" into Elasticsearch (Dev) and create indices ("logstash-logger-yyyy-mm-dd"). 
-- In Grafana, Create a dashboard that displays text logs. <Will>
+- In Grafana, Create a dashboard that displays text logs.
 
 
 To save spark text log, we need to pass it to filebeat-logstash-es cluster. However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.

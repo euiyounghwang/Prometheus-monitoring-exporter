@@ -354,24 +354,34 @@ def get_metrics_all_envs(monitoring_metrics):
             for idx, each_host in enumerate(url_lists):
                 each_urls = each_host.split(":")
                 # logging.info("urls with port : {}".format(each_urls))
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                result = sock.connect_ex((each_urls[0],int(each_urls[1])))
-                if result == 0:
-                    # print("Port is open")
-                    totalcount +=1
-                    response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "OK"})
-                    response_sub_dict.update({"GREEN_CNT" : totalcount})
-                else:
-                    # print("Port is not open")
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    result = sock.connect_ex((each_urls[0],int(each_urls[1])))
+                    if result == 0:
+                        # print("Port is open")
+                        totalcount +=1
+                        response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "OK"})
+                        response_sub_dict.update({"GREEN_CNT" : totalcount})
+                    else:
+                        # print("Port is not open")
+                        response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
+                        response_sub_dict.update({"GREEN_CNT" : totalcount})
+                        ''' save failure node with a reason into saved_failure_dict'''
+                        if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                            saved_failure_dict.update({each_urls[0] + "_" + str(idx+1+10): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                    sock.close()
+                except Exception as e:
+                    print("Port is not open")
                     response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
                     response_sub_dict.update({"GREEN_CNT" : totalcount})
                     ''' save failure node with a reason into saved_failure_dict'''
                     if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
-                        saved_failure_dict.update({each_urls[0] : "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
-                sock.close()
+                        saved_failure_dict.update({each_urls[0] + "_" + str(idx+1+10): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                    pass
+                 
             response_dict.update({k : response_sub_dict})
             
-        # logging.info(json.dumps(response_dict, indent=2))
+        logging.info(json.dumps(response_dict, indent=2))
         logging.info(response_dict)
         return response_dict
 
@@ -1509,10 +1519,9 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' socket.connect_ex( <address> ) similar to the connect() method but returns an error indicator of raising an exception for errors '''
         ''' The error indicator is 0 if the operation succeeded, otherwise the value of the errno variable. '''
         ''' Kafka/Kafka connect/Spark/Kibana'''
+        
         response_dict = get_service_port_alive(monitoring_metrics_cp)
-        # print('\n\n\n\n\n')
-        # print(response_dict)
-        # print('\n\n\n\n\n')
+        logging.info(f"response_dict - {response_dict}")
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
@@ -1646,6 +1655,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 try:
                     logging.info(f"log_aggregation_agent_url socket client : {each_dt}")
                     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    client_socket.settimeout(1)
                     client_socket.connect((socket_dt, 2000))
 
                     ''' Gather the status of filebeat on each data transfer node'''
@@ -2051,6 +2061,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
     except Exception as e:
         logging.error(f"main get all env : {e}")
+        pass
         
 
 ''' global mememoy'''
