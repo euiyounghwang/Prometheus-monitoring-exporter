@@ -9,9 +9,9 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        nohup $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml &> /dev/null &
-        # $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -e -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml -d "publish" &
-        #$LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml
+        #nohup $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml &> /dev/null &
+        $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -e -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml -strict.perms=false -d "publish" &
+        #$LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -e -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml -strict.perms=false
         ;;
   stop)
         # Stop daemons.

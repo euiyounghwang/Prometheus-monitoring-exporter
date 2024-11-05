@@ -89,7 +89,18 @@ sudo service rc-local status
 sudo systemctl start rc-local.service
 sudo service rc-local start
 ```
-- Run Filebeat : /home/biadmin/monitoring/filebeat-5.6.16-linux-x86_64/ home/biadmin/monitoring/filebeat-5.6.16-linux-x86_64
+- Shell Script for Filebeat Service : `./Grafana-log/push_to_filebeat.sh`
+- Run Filebeat : `$LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -e -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml -strict.perms=false -d "publish" &` (Background) or `$LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat -e -c $LOGGING_SERVICE_ALL_EXPORT_PATH/filebeat.yml -strict.perms=false`
+```bash
+sudo vi /etc/rc.d/rc.local
+/home/devuser/monitoring/metrics_socket/prometheus-gather-server.sh start
+#/home/devuser/monitoring/log_to_logstash/push_to_logstash.sh start
+/home/devuser/monitoring/filebeat-5.6.16-linux-x86_64/push_to_filebeat.sh start
+```
+
+sudo service rc-local stop
+sudo service rc-local restart
+sudo service rc-local status
 
 
 
