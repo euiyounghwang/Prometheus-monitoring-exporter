@@ -9,6 +9,7 @@ import logging
 import socket
 from json import dumps
 import sys
+import subprocess
 import logstash
 import warnings
 warnings.filterwarnings("ignore")
@@ -170,7 +171,21 @@ def work(path, log_filename, hostname, logs):
 
 
 
+
+''' get ProcessID'''
+def get_command_output(cmd):
+    ''' Get PID with process name'''
+    try:
+        call = subprocess.check_output("{}".format(cmd), shell=True)
+        response = call.decode("utf-8")
+        # logging.info(response)
+        return response
+    except subprocess.CalledProcessError:
+        pass
+
+
 def server_listen():
+    ''' Return Pid whether filebeat is running via socket library to ES Monitoring Application (Used filebeat for error log, not this script)'''
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     port = 2000
     serversocket.bind(("0.0.0.0", 2000))
@@ -191,7 +206,8 @@ def server_listen():
                 data = connection.recv(1024)
                 # print("Received data: {}".format(data))
 
-                ''' get df -h /apps/ '''
+                """ reqeust this cmd (ps ax | grep -i '/filebeat.yml' | grep -v grep | awk '{print $1}') from ES Monitoring Application using socket library """
+                # get_command_output(data)
             
                 if not data:
                     break
@@ -243,11 +259,14 @@ if __name__ == '__main__':
         socket_th.start()
         T.append(socket_th)
 
+        '''
+        sending error logs to logstash via this script
         for collect_log in log_filename.split(","):
             th1 = Thread(target=work, args=(path, collect_log, hostname, logs, ))
             th1.daemon = True
             th1.start()
             T.append(th1)
+        '''
 
         # wait for all threads to terminate
         for t in T:

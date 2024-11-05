@@ -1633,10 +1633,40 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' 'log_aggregation_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
             ''' log_agent_instance_gauge_g = Gauge("log_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"]) '''
             log_agent_instance_gauge_g.clear()
+            """
             for k, v in response_dict["log_aggregation_agent_url"].items():
                 if k != 'GREEN_CNT':
                     log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+            """
 
+            list_of_data_transfer_nodes = monitoring_metrics.get("log_aggregation_agent_url").split(",")
+            for each_dt in list_of_data_transfer_nodes:
+                socket_dt = str(each_dt).split(":")[0]
+
+                try:
+                    logging.info(f"log_aggregation_agent_url socket client : {each_dt}")
+                    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    client_socket.connect((socket_dt, 2000))
+
+                    ''' Gather the status of filebeat on each data transfer node'''
+                    data = str.encode("ps ax | grep -i '/filebeat.yml' | grep -v grep | awk '{print $1}'")
+                    # data = str.encode("test")
+                    client_socket.sendall(data)
+
+                    received = client_socket.recv(1024)
+                    received = str(received.decode('utf-8'))
+                    print(f"# socket client received.. {received}")
+                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(each_dt)).set(1 if received else 2)
+                            
+                except Exception as e:
+                    logging.error(f"log_aggregation_agent_url error : {e}")
+                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(each_dt)).set(2)
+                    pass
+                        
+                finally:
+                    print("Closing socket")
+                    client_socket.close()
+                 
        
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         ''' To receive spark job lists, JSON results are returned from master node 8080 port. ''' 
@@ -2020,8 +2050,8 @@ def get_metrics_all_envs(monitoring_metrics):
       
 
     except Exception as e:
-        logging.error(e)
-
+        logging.error(f"main get all env : {e}")
+        
 
 ''' global mememoy'''
 global_es_shards_tasks_end_occurs_unassgined = False
