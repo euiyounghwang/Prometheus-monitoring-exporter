@@ -3313,10 +3313,14 @@ if __name__ == '__main__':
             # db_http_thread.start()
             # T.append(db_http_thread)
 
+            # -- Interval for checking the data pipelines
+            # db_jobs_interval=30
+            db_jobs_interval=300
+
             db_wmx_omx_list = str(db_url).split(",")
 
             ''' last argument is for multiple db connection'''
-            db_http_thread_Wmx = Thread(target=db_jobs_work, args=(300, None, sql, db_http_host, db_wmx_omx_list[0], 'WMx', multiple_db))
+            db_http_thread_Wmx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_http_host, db_wmx_omx_list[0], 'WMx', multiple_db))
             db_http_thread_Wmx.daemon = True
             db_http_thread_Wmx.start()
             T.append(db_http_thread_Wmx)
@@ -3330,7 +3334,7 @@ if __name__ == '__main__':
             """
 
             if multiple_db:
-                db_http_thread_Omx = Thread(target=db_jobs_work, args=(300, None, sql, db_http_host, db_wmx_omx_list[1], 'OMx', multiple_db))
+                db_http_thread_Omx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_http_host, db_wmx_omx_list[1], 'OMx', multiple_db))
                 db_http_thread_Omx.daemon = True
                 db_http_thread_Omx.start()
                 T.append(db_http_thread_Omx)
