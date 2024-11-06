@@ -6,7 +6,7 @@ Currently, Grafana (v.10.x) that we are using does not support ES v.5 to access 
 So, I am proceeding with the following steps:
 
 - Sendding the logs with two ways
-    - Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds.
+    - Send only error logs to logstash via Filebeat(https://coding-start.tistory.com/187). Check if Filebeat is running from the ES Monitoring Application every 30 seconds.
     - Rather than sending all lines to logstash using Filebeat, I thought it would be better to send only ERROR log lines regarding to "Spark apps". So I am implementing python-based agent to send only ERROR logs) instead of Filebeat
     - The Python script continuously reads the last line of the log file in real time. It also takes multiple log file names as parameters and reads error log lines from multiple log files. And then It passes them to logstash.
 - Ship to logstash ("Python-based agent" transmit only 'ERROR' logs or Filebeat to logstash)
