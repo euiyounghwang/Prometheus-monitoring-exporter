@@ -1,777 +1,1028 @@
 {
-    "annotations": {
-      "list": [
-        {
-          "builtIn": 1,
-          "datasource": {
-            "type": "grafana",
-            "uid": "-- Grafana --"
-          },
-          "enable": true,
-          "hide": true,
-          "iconColor": "rgba(0, 211, 255, 1)",
-          "name": "Annotations & Alerts",
-          "target": {
-            "limit": 100,
-            "matchAny": false,
-            "tags": [],
-            "type": "dashboard"
-          },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
           "type": "dashboard"
-        }
-      ]
-    },
-    "description": "Simple Elasticsearch logging interface, only need to bind an instance of Elasticsearch and start enjoying your logs :)",
-    "editable": true,
-    "gnetId": 17361,
-    "graphTooltip": 0,
-    "id": 1,
-    "iteration": 1730394013107,
-    "links": [],
-    "panels": [
-      {
-        "collapsed": false,
-        "datasource": null,
-        "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
-          "y": 0
         },
-        "id": 8,
-        "panels": [],
-        "title": "[Dev] ES_Team_Data_Pipelines_Agent_Monitoring",
-        "type": "row"
-      },
-      {
-        "datasource": "Prometheus",
-        "description": "To save spark text log, we need to pass it to filebeat-logstash-es cluster.\n    However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.\n    So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.",
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "mappings": [
-              {
-                "options": {
-                  "1": {
-                    "index": 0,
-                    "text": "Green"
-                  },
-                  "2": {
-                    "index": 1,
-                    "text": "Red"
-                  }
-                },
-                "type": "value"
-              }
-            ],
-            "max": 2,
-            "min": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "dark-red",
-                  "value": 1.01
-                }
-              ]
-            }
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 5,
-          "w": 3,
-          "x": 0,
-          "y": 1
-        },
-        "id": 10,
-        "options": {
-          "reduceOptions": {
-            "calcs": [
-              "lastNotNull"
-            ],
-            "fields": "",
-            "values": false
-          },
-          "showThresholdLabels": false,
-          "showThresholdMarkers": true,
-          "text": {}
-        },
-        "pluginVersion": "8.0.0",
-        "targets": [
-          {
-            "alias": "",
-            "bucketAggs": [
-              {
-                "field": "@timestamp",
-                "id": "2",
-                "settings": {
-                  "interval": "auto"
-                },
-                "type": "date_histogram"
-              }
-            ],
-            "exemplar": true,
-            "expr": "log_agent_health_metric{server_job=\"dev.test.com\"}",
-            "interval": "",
-            "legendFormat": "",
-            "metrics": [
-              {
-                "id": "1",
-                "type": "count"
-              }
-            ],
-            "query": "",
-            "refId": "A",
-            "timeField": "@timestamp"
-          }
-        ],
-        "title": "[Dev] Spark Log Agent",
-        "type": "gauge"
-      },
-      {
-        "collapsed": true,
-        "datasource": null,
-        "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
-          "y": 6
-        },
-        "id": 12,
-        "panels": [],
-        "title": "[Smoke] ES_Team_Data_Pipelines_Agent_Monitoring",
-        "type": "row"
-      },
-      {
-        "datasource": "Prometheus",
-        "description": "To save spark text log, we need to pass it to filebeat-logstash-es cluster.\n    However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.\n    So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.",
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "mappings": [
-              {
-                "options": {
-                  "1": {
-                    "index": 0,
-                    "text": "Green"
-                  },
-                  "2": {
-                    "index": 1,
-                    "text": "Red"
-                  }
-                },
-                "type": "value"
-              }
-            ],
-            "max": 2,
-            "min": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "dark-red",
-                  "value": 1.01
-                }
-              ]
-            }
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 5,
-          "w": 3,
-          "x": 0,
-          "y": 7
-        },
-        "id": 17,
-        "options": {
-          "reduceOptions": {
-            "calcs": [
-              "lastNotNull"
-            ],
-            "fields": "",
-            "values": false
-          },
-          "showThresholdLabels": false,
-          "showThresholdMarkers": true,
-          "text": {}
-        },
-        "pluginVersion": "8.0.0",
-        "targets": [
-          {
-            "alias": "",
-            "bucketAggs": [
-              {
-                "field": "@timestamp",
-                "id": "2",
-                "settings": {
-                  "interval": "auto"
-                },
-                "type": "date_histogram"
-              }
-            ],
-            "exemplar": true,
-            "expr": "log_agent_health_metric{server_job=\"smoke.test.com\"}",
-            "interval": "",
-            "legendFormat": "",
-            "metrics": [
-              {
-                "id": "1",
-                "type": "count"
-              }
-            ],
-            "query": "",
-            "refId": "A",
-            "timeField": "@timestamp"
-          }
-        ],
-        "title": "[Smoke] Spark Log Agent",
-        "type": "gauge"
-      },
-      {
-        "collapsed": true,
-        "datasource": null,
-        "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
-          "y": 12
-        },
-        "id": 14,
-        "panels": [],
-        "title": "[QA] ES_Team_Data_Pipelines_Agent_Monitoring",
-        "type": "row"
-      },
-      {
-        "collapsed": true,
-        "datasource": null,
-        "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
-          "y": 13
-        },
-        "id": 16,
-        "panels": [],
-        "title": "[Prod] ES_Team_Data_Pipelines_Agent_Monitoring",
-        "type": "row"
-      },
-      {
-        "datasource": "Prometheus",
-        "description": "To save spark text log, we need to pass it to filebeat-logstash-es cluster.\n    However, if we pass all lines in the spark log or archive log files to logstash using filebeat, a lot of traffic will be generated.\n    So, instead of filebeat, I implemented a python script as agent to read only error logs and pass them to logstash.",
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "mappings": [
-              {
-                "options": {
-                  "1": {
-                    "index": 0,
-                    "text": "Green"
-                  },
-                  "2": {
-                    "index": 1,
-                    "text": "Red"
-                  }
-                },
-                "type": "value"
-              }
-            ],
-            "max": 2,
-            "min": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "dark-red",
-                  "value": 1.01
-                }
-              ]
-            }
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 5,
-          "w": 3,
-          "x": 0,
-          "y": 14
-        },
-        "id": 18,
-        "options": {
-          "reduceOptions": {
-            "calcs": [
-              "lastNotNull"
-            ],
-            "fields": "",
-            "values": false
-          },
-          "showThresholdLabels": false,
-          "showThresholdMarkers": true,
-          "text": {}
-        },
-        "pluginVersion": "8.0.0",
-        "targets": [
-          {
-            "alias": "",
-            "bucketAggs": [
-              {
-                "field": "@timestamp",
-                "id": "2",
-                "settings": {
-                  "interval": "auto"
-                },
-                "type": "date_histogram"
-              }
-            ],
-            "exemplar": true,
-            "expr": "log_agent_health_metric{server_job=\"prod.test.com\"}",
-            "interval": "",
-            "legendFormat": "",
-            "metrics": [
-              {
-                "id": "1",
-                "type": "count"
-              }
-            ],
-            "query": "",
-            "refId": "A",
-            "timeField": "@timestamp"
-          }
-        ],
-        "title": "[Prod1] Spark Log Agent",
-        "type": "gauge"
-      },
-      {
-        "collapsed": false,
-        "datasource": null,
-        "gridPos": {
-          "h": 1,
-          "w": 24,
-          "x": 0,
-          "y": 19
-        },
-        "id": 6,
-        "panels": [],
-        "title": "ES_Team_Data_Pipelines_Logs",
-        "type": "row"
-      },
-      {
-        "datasource": null,
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "palette-classic"
-            },
-            "custom": {
-              "axisLabel": "",
-              "axisPlacement": "auto",
-              "barAlignment": 0,
-              "drawStyle": "line",
-              "fillOpacity": 100,
-              "gradientMode": "none",
-              "hideFrom": {
-                "legend": false,
-                "tooltip": false,
-                "viz": false
-              },
-              "lineInterpolation": "linear",
-              "lineStyle": {
-                "fill": "solid"
-              },
-              "lineWidth": 1,
-              "pointSize": 4,
-              "scaleDistribution": {
-                "type": "linear"
-              },
-              "showPoints": "never",
-              "spanNulls": false,
-              "stacking": {
-                "group": "A",
-                "mode": "none"
-              },
-              "thresholdsStyle": {
-                "mode": "off"
-              }
-            },
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                }
-              ]
-            }
-          },
-          "overrides": []
-        },
-        "gridPos": {
-          "h": 7,
-          "w": 24,
-          "x": 0,
-          "y": 20
-        },
-        "id": 4,
-        "options": {
-          "legend": {
-            "calcs": [],
-            "displayMode": "list",
-            "placement": "bottom",
-            "showLegend": true
-          },
-          "tooltip": {
-            "mode": "multi",
-            "sort": "none"
-          }
-        },
-        "targets": [
-          {
-            "alias": "",
-            "bucketAggs": [
-              {
-                "field": "@timestamp",
-                "id": "2",
-                "settings": {
-                  "interval": "auto",
-                  "min_doc_count": "0"
-                },
-                "type": "date_histogram"
-              }
-            ],
-            "datasource": {
-              "type": "elasticsearch",
-              "uid": "Elasticsearch"
-            },
-            "metrics": [
-              {
-                "id": "1",
-                "type": "count"
-              }
-            ],
-            "query": "env:$Smart_Suite_Environment",
-            "refId": "A",
-            "timeField": "@timestamp"
-          }
-        ],
-        "title": "Data Pipeline (Spark App) Error Logs Count",
-        "type": "timeseries"
-      },
-      {
-        "datasource": null,
-        "description": "",
-        "fieldConfig": {
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "custom": {
-              "align": "auto",
-              "displayMode": "auto",
-              "filterable": true
-            },
-            "mappings": [],
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "red",
-                  "value": 80
-                }
-              ]
-            }
-          },
-          "overrides": [
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "message"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 340
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "log_level"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 60
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "env"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 65
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "path"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 248
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "log_message"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 639
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "_type"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 72
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "highlight"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": null
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "log_filename"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 211
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "log_name"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 99
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "tags"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 98
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "@version"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 60
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "host"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 119
-                }
-              ]
-            },
-            {
-              "matcher": {
-                "id": "byName",
-                "options": "_source"
-              },
-              "properties": [
-                {
-                  "id": "custom.width",
-                  "value": 82
-                }
-              ]
-            }
-          ]
-        },
-        "gridPos": {
-          "h": 14,
-          "w": 24,
-          "x": 0,
-          "y": 27
-        },
-        "id": 2,
-        "options": {
-          "footer": {
-            "fields": "",
-            "reducer": [
-              "sum"
-            ],
-            "show": false
-          },
-          "frameIndex": 0,
-          "showHeader": true,
-          "sortBy": [
-            {
-              "desc": true,
-              "displayName": "@timestamp"
-            }
-          ]
-        },
-        "pluginVersion": "8.0.0",
-        "repeat": null,
-        "targets": [
-          {
-            "alias": "",
-            "bucketAggs": [],
-            "datasource": {
-              "type": "elasticsearch",
-              "uid": "Elasticsearch"
-            },
-            "metrics": [
-              {
-                "id": "1",
-                "settings": {
-                  "limit": "500"
-                },
-                "type": "logs"
-              }
-            ],
-            "query": "env:$Smart_Suite_Environment",
-            "refId": "A",
-            "timeField": "@timestamp"
-          }
-        ],
-        "title": "Data Pipeline (Spark App) Error Logs",
-        "type": "table"
+        "type": "dashboard"
       }
-    ],
-    "refresh": "5s",
-    "schemaVersion": 30,
-    "style": "dark",
-    "tags": [],
-    "templating": {
-      "list": [
-        {
-          "allValue": null,
-          "current": {
-            "selected": false,
-            "text": "All",
-            "value": "Dev or QA* or Prod*"
+    ]
+  },
+  "description": "Simple Elasticsearch logging interface, only need to bind an instance of Elasticsearch and start enjoying your logs :)",
+  "editable": true,
+  "gnetId": 17361,
+  "graphTooltip": 0,
+  "id": 1,
+  "iteration": 1731031835729,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 8,
+      "panels": [],
+      "title": "[Dev/Smoke] ES_Team_Data_Pipelines_Log_Agent_Monitoring",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
           },
-          "description": null,
-          "error": null,
-          "hide": 0,
-          "includeAll": false,
-          "label": null,
-          "multi": false,
-          "name": "Smart_Suite_Environment",
-          "options": [
+          "mappings": [
             {
-              "selected": true,
-              "text": "All",
-              "value": "Dev or QA* or Prod*"
-            },
-            {
-              "selected": false,
-              "text": "Dev",
-              "value": "Dev"
-            },
-            {
-              "selected": false,
-              "text": "Smoke",
-              "value": "Smoke"
-            },
-            {
-              "selected": false,
-              "text": "Prod1",
-              "value": "Prod1"
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "Green"
+                },
+                "2": {
+                  "index": 1,
+                  "text": "Red"
+                }
+              },
+              "type": "value"
             }
           ],
-          "query": "All : Dev or QA* or Prod*, Dev,Smoke,Prod1",
-          "queryValue": "",
-          "skipUrlSync": false,
-          "type": "custom"
+          "max": 2,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 10,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "exemplar": true,
+          "expr": "log_agent_health_metric{server_job=\"dev.test.com\"}",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "",
+          "refId": "A",
+          "timeField": "@timestamp"
         }
-      ]
+      ],
+      "title": "[Dev] Spark Log Agent",
+      "type": "gauge"
     },
-    "time": {
-      "from": "now-3h",
-      "to": "now"
+    {
+      "datasource": "Prometheus",
+      "description": "Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "Green"
+                },
+                "2": {
+                  "index": 1,
+                  "text": "Red"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 2,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 3,
+        "y": 1
+      },
+      "id": 17,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "exemplar": true,
+          "expr": "log_agent_health_metric{server_job=\"dev.test.com\"}",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "title": "[Smoke] Spark Log Agent",
+      "type": "gauge"
     },
-    "timepicker": {},
-    "timezone": "",
-    "title": "ES_Team_Data_Pipeline_Logs",
-    "uid": "0bq6ATWNz",
-    "version": 58
-  }
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 14,
+      "panels": [],
+      "title": "[QA] ES_Team_Data_Pipelines_Log_Agent_Monitoring",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "Green"
+                },
+                "2": {
+                  "index": 1,
+                  "text": "Red"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 2,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 6
+      },
+      "id": 19,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "exemplar": true,
+          "expr": "log_agent_health_metric{server_job=\"dev.test.com\"}",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "title": "[QA1] Spark Log Agent",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "id": 16,
+      "panels": [],
+      "title": "[Prod] ES_Team_Data_Pipelines_Log_Agent_Monitoring",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Send only error logs to logstash via Filebeat. Check if Filebeat is running from the ES Monitoring Application every 30 seconds",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "index": 0,
+                  "text": "Green"
+                },
+                "2": {
+                  "index": 1,
+                  "text": "Red"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "max": 2,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "dark-red",
+                "value": 1.01
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 0,
+        "y": 11
+      },
+      "id": 18,
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "exemplar": true,
+          "expr": "log_agent_health_metric{server_job=\"dev.test.com\"}",
+          "interval": "",
+          "legendFormat": "",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "title": "[Prod1] Spark Log Agent",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 6,
+      "panels": [],
+      "title": "ES_Team_Data_Pipelines_Logs",
+      "type": "row"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "dark-red",
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "points",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 10,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "dark-red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "pluginVersion": "8.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "fields.env.keyword",
+              "id": "3",
+              "settings": {
+                "min_doc_count": "0",
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "field": "@timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto",
+                "min_doc_count": "1",
+                "trimEdges": "0"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "Elasticsearch"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "fields.env: $Smart_Suite_Environment OR env: $Smart_Suite_Environment",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Data Pipeline (Spark App) Error Logs Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "filterable": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "message"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 606
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "log_level"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "path"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 132
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "log_message"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 985
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 66
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "highlight"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 108
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "log_filename"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 211
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "log_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 99
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "tags"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "@version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 60
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "host"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 112
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_source"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 178
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "@timestamp"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fields.env"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 104
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "beat.version"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 65
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "input_type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 110
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "offset"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 98
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "beat.name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 113
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "beat.hostname"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": null
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "_index"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 190
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "raw_data"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 335
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "sort"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 130
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "source"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 2,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "frameIndex": 0,
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "@timestamp"
+          }
+        ]
+      },
+      "pluginVersion": "8.0.0",
+      "repeat": null,
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "Elasticsearch"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "settings": {
+                "limit": "500"
+              },
+              "type": "logs"
+            }
+          ],
+          "query": "fields.env: $Smart_Suite_Environment OR env: $Smart_Suite_Environment",
+          "refId": "A",
+          "timeField": "@timestamp"
+        }
+      ],
+      "title": "Data Pipeline (Spark App) Error Logs",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 30,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "allValue": "*",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "description": null,
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": false,
+        "name": "Smart_Suite_Environment",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "Dev",
+            "value": "Dev"
+          },
+          {
+            "selected": false,
+            "text": "Smoke",
+            "value": "Smoke"
+          },
+          {
+            "selected": false,
+            "text": "QA1",
+            "value": "QA1"
+          },
+          {
+            "selected": false,
+            "text": "Prod1",
+            "value": "Prod1"
+          }
+        ],
+        "query": "Dev,Smoke,QA1,Prod1",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ]
+  },
+  "timezone": "",
+  "title": "ES_Team_Data_Pipeline_Logs",
+  "uid": "0bq6ATWNz",
+  "version": 143
+}
