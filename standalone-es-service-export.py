@@ -1914,19 +1914,23 @@ def get_metrics_all_envs(monitoring_metrics):
         if list(set(all_env_status_memory_list)) == [1]:
             ''' green '''
             all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(1)
+            saved_status_dict.update({'server_active' : 'Green'})
             global_service_active = True
+            logging.info(f"SERVER ACTIVE : Green")
         
         elif list(set(all_env_status_memory_list)) == [-1]:
             ''' red '''
             all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(3)
             ''' update gloabl variable for alert email'''
             saved_status_dict.update({'server_active' : 'Red'})
+            logging.info(f"SERVER ACTIVE : Red")
 
         else:
             ''' yellow '''
             all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(2)
             ''' update gloabl variable for alert email'''
             saved_status_dict.update({'server_active' : 'Yellow'})
+            logging.info(f"SERVER ACTIVE : Yellow")
             
         ''' all envs update for current data pipeline active --> process in db_jobs_work function'''
         ''' ----------------------------------------------------- '''
@@ -2018,7 +2022,7 @@ def get_metrics_all_envs(monitoring_metrics):
       
         # logging.info(f"saved_thread_alert - {saved_thread_alert}, saved_critcal_sms_alert - {saved_critcal_sms_alert}")
         logging.info(f"save_thread_alert_history - {save_thread_alert_history}")
-        logging.info(f"saved_status_dict - {saved_status_dict}")
+        logging.info(f"saved_status_dict - {json.dumps(saved_status_dict, indent=2)}")
         logging.info(f"service_status_dict - {json.dumps(service_status_dict, indent=2)}")
         logging.info(f"WMx_threads_db_active - {WMx_threads_db_active}, OMx_threads_db_active : {OMx_threads_db_active}")
         logging.info(f"Mail Alert mail Configuration - {global_mail_configuration.get(hostname).get('is_mailing','')}, Mail Alert SMS Configuration : {global_mail_configuration.get(hostname).get('is_sms','')}")
@@ -2302,7 +2306,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                 logging.info("db_http_host : {}, db_info : {}, db_url : {}, sql : {}".format(db_http_host, db_info, db_url, sql))
                 http_urls = "http://{}/db/get_db_query".format(db_http_host)
                 resp = requests.post(url=http_urls, json=request_body, timeout=600)
-                
+
                 if not (resp.status_code == 200):
                     ''' clear table for db records if host not reachable'''
                     
@@ -2473,6 +2477,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
         except Exception as e:
             logging.error(e)
             # saved_failure_db_dict.update({"http-db-interface_jobs-{}".format(db_info) : "{} [{} DB]-> {}".format(http_urls, db_info, str(e))})
+            # saved_failure_db_dict.update({"http-db-interface_jobs-{}".format(db_info) : "{} DB -> {}".format(db_info, str(e))})
+            # all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+            # saved_status_dict.update({'es_pipeline' : 'Red'})
             ''' Disable to WMx_threads_db_active or OMx_threads_db_active '''
             Initialize_db_status_red(db_info)
             pass
@@ -2572,8 +2579,13 @@ def get_mail_configuration(db_http_host):
 
     global global_mail_configuration, saved_failure_dict
     try:
-        es_config_host = str(db_http_host).split(":")[0]
-        logging.info(f"es_config_host : {es_config_host}")
+        # if ':' in str(db_http_host):
+        #     es_config_host = str(db_http_host).split(":")[0]
+        # else:
+        #     es_config_host = str(db_http_host)
+        logging.info(f"get_mail_configuration_db_http_host : {db_http_host}")
+        es_config_host = os.environ["ES_CONFIGURATION_HOST"]
+        logging.info(f"get_mail_configuration_es_config_host : {es_config_host}")
         resp = requests.get(url="http://{}:8004/config/get_mail_config".format(es_config_host), timeout=5)
                 
         if not (resp.status_code == 200):
@@ -2615,6 +2627,8 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
     try:
         start_http_server(int(port))
         logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
+        logging.info(f"es_http_host : {es_http_host}")
+        logging.info(f"db_http_host : {db_http_host}")
 
         StartedTime = datetime.datetime.now()
         while True:
@@ -2624,7 +2638,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             get_global_configuration(es_http_host)
 
             ''' get db configuration'''
-            get_mail_configuration(db_http_host)
+            get_mail_configuration(es_http_host)
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
             get_metrics_all_envs(monitoring_metrics)
@@ -3188,10 +3202,12 @@ if __name__ == '__main__':
     ''' ----------------------------------------------------------------------------------------------------------------'''
 
     ''' point out to same host'''
-    es_http_host = db_http_host
+    # es_http_host = db_http_host
+    es_http_host = os.environ["ES_CONFIGURATION_HOST"]
 
     ''' update host for ES Configuration API'''
-    global_es_configuration_host = str(es_http_host).split(":")[0]
+    # global_es_configuration_host = str(es_http_host).split(":")[0]
+    global_es_configuration_host = str(es_http_host)
 
     if args.interval:
         interval = args.interval
@@ -3314,8 +3330,14 @@ if __name__ == '__main__':
             # T.append(db_http_thread)
 
             # -- Interval for checking the data pipelines
-            # db_jobs_interval=30
-            db_jobs_interval=300
+            if global_env_name == 'DEV':
+                # print('\n\n\n\n\n\n')
+                # print(global_env_name)
+                # print('\n\n\n\n\n\n')
+                db_jobs_interval=30
+                # db_jobs_interval=300
+            else:
+                db_jobs_interval=300
 
             db_wmx_omx_list = str(db_url).split(",")
 
