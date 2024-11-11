@@ -26,6 +26,8 @@ export SMTP_HOST="localhost"
 export SMTP_PORT=212
 export MAIL_SENDER="mymail"
 export ES_CONFIGURATION_URL="http://localhost:8004/docs"
+export ES_CONFIGURATION_HOST="localhost"
+
 export ZOOKEEPER_URLS="localhost:2181,localhost:2181,localhost:2181"
 export BROKER_LIST="localhost:9092,localhost:9092,localhost:9092"
 export GET_KAFKA_ISR_LIST="$SCRIPTDIR/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe --zookeeper $ZOOKEEPER_URLS --topic ELASTIC_PIPELINE_QUEUE"
