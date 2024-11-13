@@ -14,6 +14,8 @@ else
     source $SCRIPTDIR/$VENV/Scripts/activate
 fi
 
+ES_HOST="http://localhost:9200"
+
 #--
 # Alert for text error logs from Dev ES Cluster with logstash-logger-*
 #--
@@ -23,8 +25,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        #nohup python $LOG_AGG_SERVICE_PATH/logstash-agent-alert.py &> /dev/null &
-        python $LOG_AGG_SERVICE_PATH/logstash-agent-alert.py --ts http://localhost:9200
+        #nohup python $LOG_AGG_SERVICE_PATH/logstash-agent-alert.py --ts $ES_HOST &> /dev/null &
+        python $LOG_AGG_SERVICE_PATH/logstash-agent-alert.py --ts $ES_HOST
         ;;
   stop)
         # Stop daemons.
