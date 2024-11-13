@@ -3,3 +3,4 @@
 scripts/output/
 Grafana-log/logstash-output
 Grafana-log/.venv/
+Playbook/*.docx
