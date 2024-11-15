@@ -1,5 +1,6 @@
 #!/bin/sh
-LOG_AGG_SERVICE_PATH=/home/devuser/monitoring/custom_export
+#LOG_AGG_SERVICE_PATH=/home/devuser/monitoring/custom_export
+LOG_AGG_SERVICE_PATH="C:/Users/euiyoung.hwang/Git_Workspace/Prometheus-monitoring-exporter/Grafana-log/"
 #PATH=$PATH:$LOG_AGG_SERVICE_PATH
 SERVICE_NAME=log-aggregatopm-alert-service
 
@@ -14,7 +15,7 @@ else
     source $SCRIPTDIR/$VENV/Scripts/activate
 fi
 
-ES_HOST="http://localhost:9200"
+ES_HOST="http://localhost:9201"
 
 #--
 # Alert for text error logs from Dev ES Cluster with logstash-logger-*

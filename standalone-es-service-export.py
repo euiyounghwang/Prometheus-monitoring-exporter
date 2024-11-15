@@ -1525,6 +1525,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
+
         '''
         # printout Kafka_Connect
         response_dict["kafka_connect_url"]  {'localhost1:8083': 'OK', 'GREEN_CNT': 3, 'localhost2:8083': 'OK', 'localhost3:8083': 'OK'}
@@ -1544,7 +1545,7 @@ def get_metrics_all_envs(monitoring_metrics):
         # print('response_dict["kafka_connect_url"] ', response_dict["kafka_connect_url"])
         # print('Master of Kafka connect : {}'.format(master_kafka_active))
         # print('\n\n\n\n')
-
+        
         ''' Kafka connect node update'''
         ''' As long as Kafka Connect is running on the primary node, this is fine since it’s not mandatory for Connect to be running on nodes 2,3.'''
         kafka_connect_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
@@ -1635,7 +1636,7 @@ def get_metrics_all_envs(monitoring_metrics):
         #     for k, v in response_dict["loki_custom_promtail_agent_url"].items():
         #         if k != 'GREEN_CNT':
         #             loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
-
+        
         ''' Update the status of log_aggregation_agent_url agent by using socket.connect_ex only Dev'''
         if 'log_aggregation_agent_url' in monitoring_metrics:
             active_cnt = int(response_dict["log_aggregation_agent_url"]["GREEN_CNT"])
@@ -1677,7 +1678,6 @@ def get_metrics_all_envs(monitoring_metrics):
                     print("Closing socket")
                     client_socket.close()
                  
-       
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         ''' To receive spark job lists, JSON results are returned from master node 8080 port. ''' 
         ''' From the results, we get the list of spark jobs in activeapps key and transform them to metrics for exposure. '''

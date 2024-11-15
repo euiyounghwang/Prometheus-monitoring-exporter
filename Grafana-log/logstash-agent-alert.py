@@ -28,13 +28,11 @@ def get_search(source_host):
         logging.info(obj.isoformat())
         """
         # logging.info(datetime.now().isoformat())
-        timestamp_now = datetime.now() + timedelta(hours=3)
+        ''' "@timestamp": "2024-11-13T17:46:17.368Z" --> "timestamp": "2024-11-13 12:46:16" '''
+        timestamp_now = datetime.now() + timedelta(hours=2)
+        logging.info(datetime.now())
         logging.info(timestamp_now.isoformat())
-        es_client = Elasticsearch(hosts=source_host,
-                                headers=get_headers(),
-                                verify_certs=False,
-                                                max_retries=0,
-                                                timeout=5)
+        es_client = Elasticsearch(hosts=source_host, headers=get_headers(), verify_certs=False, max_retries=0, timeout=5)
         
         es_query = {
             "size": 0, 
@@ -61,7 +59,7 @@ def get_search(source_host):
             "aggs": {
                 "spark_log": {
                 "terms": {
-                    "field": "env.keyword",
+                    "field": "fields.env.keyword",
                     "size": 100
                 }
                 }
@@ -77,6 +75,10 @@ def get_search(source_host):
         
     
 
+def alert(env):
+    '''' send alert '''
+    logging.info(f"alert started : {env}")
+
     
 def work(es_host):
     ''' Alert job for error logs'''
@@ -85,7 +87,17 @@ def work(es_host):
         logging.info(f"es_host : {es_host}")
         ''' get resutls with aggs'''
         results = get_search(es_host)
-        logging.info(json.dumps(results, indent=2))
+        # logging.info(json.dumps(results, indent=2))
+        # aggs_buckets = results["aggregations"]["spark_log"]["buckets"]
+        aggs_buckets = [ {"key" : "Dev", "doc_count": 10}]
+        ''' if buckets are in the aggs result'''
+        if aggs_buckets:
+            logging.info(f"aggs_buckets : {json.dumps(aggs_buckets, indent=2)}")
+            ''' send an alert'''
+            for env in aggs_buckets:
+                alert(env.get("key"))
+        else:
+            logging.info(f"aggs_buckets : {json.dumps([], indent=2)}")
     except Exception as e:
         logging.error(e)
         pass
