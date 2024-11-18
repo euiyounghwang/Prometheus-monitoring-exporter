@@ -1958,6 +1958,7 @@ def get_metrics_all_envs(monitoring_metrics):
         """ create alert audit message & Update log metrics"""
         ''' merge'''
         saved_failure_dict.update(saved_failure_tasks_dict)
+        # saved_failure_dict = {k: v for k, v in sorted(saved_failure_dict.items(), key=lambda item: item[0])}
         for k, v in saved_failure_dict.items():
             es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(str(global_env_name).lower(), remove_special_char(k)), reason=v).set(0)
             ''' remove waring logs for the alert if our service is online'''
