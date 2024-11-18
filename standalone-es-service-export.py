@@ -1000,7 +1000,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 client_socket.sendall(data)
 
                 received = client_socket.recv(1024)
-                print(f"# socket client received.. {received}")
+                print(f"# socket client received.. {received.decode('utf-8')}")
                 
                 disk_space_list = [element for element in str(received.decode('utf-8').split('\n')[1]).split(' ') if len(element) > 0]
                 # print('split#2 ', disk_space_list)
