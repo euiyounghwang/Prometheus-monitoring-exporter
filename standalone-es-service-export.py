@@ -614,6 +614,7 @@ def get_metrics_all_envs(monitoring_metrics):
         except Exception as e:
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
             saved_failure_dict.update({node : "Spark cluster - http://{}:8080/json API do not reachable".format(master_node)})
+            spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(0)
             logging.error(e)
             return []
             
