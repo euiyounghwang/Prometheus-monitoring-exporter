@@ -368,7 +368,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         response_sub_dict.update({"GREEN_CNT" : totalcount})
                         ''' save failure node with a reason into saved_failure_dict'''
                         if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
-                            saved_failure_dict.update({each_urls[0] + "_" + str(idx+1+10): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                            saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                     sock.close()
                 except Exception as e:
                     print("Port is not open")
@@ -376,7 +376,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     response_sub_dict.update({"GREEN_CNT" : totalcount})
                     ''' save failure node with a reason into saved_failure_dict'''
                     if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
-                        saved_failure_dict.update({each_urls[0] + "_" + str(idx+1+10): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                        saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                     pass
                  
             response_dict.update({k : response_sub_dict})
@@ -1806,7 +1806,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' all envs update for current server active'''
             ''' all_env_status_memory_list -1? 0? 1? at least one?'''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='kafka_listner')
-            saved_failure_dict.update({",".join(kafka_nodes_list) : "All Kafka listeners are not running.."})
+            saved_failure_dict.update({",".join(kafka_nodes_list) : "[KAFKA CONNECT] All Kafka Listeners are not running.."})
 
         ''' add tracking'''
         ''' if one of listener is not running with running status'''
