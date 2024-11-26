@@ -22,4 +22,5 @@ export PROMETHEUS_HOST
 export API_HOST
 
 # streamlit run [streamlit-filenam.py] [--server.port 30001]
-streamlit run $SCRIPTDIR/main.py
+streamlit run $SCRIPTDIR/main.py --server.port 7001
+#streamlit run $SCRIPTDIR/main.py
