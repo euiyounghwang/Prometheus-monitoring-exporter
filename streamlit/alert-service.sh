@@ -31,7 +31,6 @@ case "$1" in
          else
           echo "$SERVICE_SUB_NAME was not Running"
         fi
-
         ;;
   restart)
         $0 stop
