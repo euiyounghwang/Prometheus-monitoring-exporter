@@ -344,6 +344,7 @@ def get_metrics_all_envs(monitoring_metrics):
         socket.connect_ex( <address> ) similar to the connect() method but returns an error indicator of raising an exception for errors returned by C-level connect() call.
         Other errors like host not found can still raise exception though
         '''
+        exclude_port_detect = ['redis', 'configuration', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
         response_dict = {}
         for k, v in monitoring_metrics.items():
             response_dict.update({k : ""})
@@ -367,7 +368,8 @@ def get_metrics_all_envs(monitoring_metrics):
                         response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
                         response_sub_dict.update({"GREEN_CNT" : totalcount})
                         ''' save failure node with a reason into saved_failure_dict'''
-                        if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                        # if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                        if str(k) not in exclude_port_detect:
                             saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                     sock.close()
                 except Exception as e:
@@ -375,7 +377,8 @@ def get_metrics_all_envs(monitoring_metrics):
                     response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
                     response_sub_dict.update({"GREEN_CNT" : totalcount})
                     ''' save failure node with a reason into saved_failure_dict'''
-                    if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                    # if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                    if str(k) not in exclude_port_detect:
                         saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
                     pass
                  
@@ -3083,7 +3086,7 @@ if __name__ == '__main__':
     parser.add_argument('--configuration_job_url', dest='configuration_job_url', default="", help='configuration_job hosts')
     parser.add_argument('--es_configuration_api_url', dest='es_configuration_api_url', default="", help='es_configuration_api_url hosts')
     parser.add_argument('--log_db_url', dest='log_db_url', default="", help='log_db_url')
-    parser.add_argument('--alert_monitoring_url', dest='alert_monitoring_url', default="", help='alert_monitoring_url')
+    parser.add_argument('--alert_monitoring_url', dest='alert_monitoring_url', default="", help='alert_monitoring_ui_url')
     # ''' loki url : http://localhost:3100'''
     # parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
     # ''' loki REST API url : http://localhost:8010'''
