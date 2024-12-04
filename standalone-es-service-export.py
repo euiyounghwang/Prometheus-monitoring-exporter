@@ -1427,6 +1427,7 @@ def get_metrics_all_envs(monitoring_metrics):
         global saved_status_dict, saved_failure_db_dict, saved_failure_db_kafka_dict
         global ALERT_RESENT
         global global_env_name
+        global WMx_backlog, OMx_backlog
 
         ES_CLUSTER_RED = False
 
@@ -2040,6 +2041,8 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
+        logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}")
+        
         
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
@@ -2112,6 +2115,9 @@ WMx_threads_db_Kafka_offset_active = True
 ''' Threshold'''
 DATA_PIPELINE_THRESHOLD = 0.505
 KAFKA_OFFSET_EDITTS_UPDATED_THRESHOLD = 0.1
+
+''' Backlog '''
+WMx_backlog, OMx_backlog = 0, 0
 
 
 ''' Team does not wont to monitor this metrics for DB performace'''
@@ -2500,6 +2506,8 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
 def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, db_info):
     ''' Get backlogs for both DB's'''
+    global WMx_backlog, OMx_backlog
+    
     while True:
         try:
 
@@ -2543,6 +2551,8 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             ''' DB processing time '''
             EndTime = datetime.datetime.now()
 
+            logging.info(f"# db_transactin_time_WMx_backlog : {db_transactin_time_WMx}, db_transactin_time_OMx_backlog : {db_transactin_time_OMx}")
+
             Delay_Time_WMx, Delay_Time_OMx = 0.0, 0.0
             if db_info == "WMx":
                 Delay_Time_WMx = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
@@ -2554,9 +2564,11 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             ''' response same format with list included dicts'''   
             logging.info(f"db-job: result_json_value : {result_json_value}")
             if db_info == "WMx":
-                db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(result_json_value[0].get("TOTAL_UNPROCESSED_RECS"))
+                WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
+                db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(WMx_backlog))
             elif db_info == "OMx":
-                db_jobs_backlogs_OMx_gauge_g.labels(server_job=socket.gethostname()).set(result_json_value[0].get("TOTAL_UNPROCESSED_RECS"))
+                OMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
+                db_jobs_backlogs_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(OMx_backlog))
                    
             
         except Exception as e:
@@ -3451,17 +3463,19 @@ if __name__ == '__main__':
                 T.append(db_http_thread_Omx)
 
             
-            ''' Get backlogs'''
+            ''' Get backlogs.. only for checking WMx backlog'''
             if backlog:
                 db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[0], 'WMx'))
                 db_http_thread_Wmx_Backlog.daemon = True
                 db_http_thread_Wmx_Backlog.start()
                 T.append(db_http_thread_Wmx_Backlog)
 
+                """
                 db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
                 db_http_thread_Omx_Backlog.daemon = True
                 db_http_thread_Omx_Backlog.start()
                 T.append(db_http_thread_Omx_Backlog)
+                """
 
         # wait for all threads to terminate
         for t in T:
