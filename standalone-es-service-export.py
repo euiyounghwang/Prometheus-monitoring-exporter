@@ -106,6 +106,8 @@ db_jobs_gauge_kafka_offset_wmx_g = Gauge("db_jobs_wmx_kafka_offset_running_metri
 db_jobs_gauge_omx_g = Gauge("db_jobs_omx_running_metrics", 'Metrics scraped from localhost', ["server_job", "processname", "cnt", "status", "addts", "dbid", "db_info"])
 db_jobs_performance_WMx_gauge_g = Gauge("db_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_performance_OMx_gauge_g = Gauge("db_jobs_performance2_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_backlogs_WMx_gauge_g = Gauge("db_jobs_backlog_wmx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
@@ -2495,6 +2497,79 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             time.sleep(interval)
 
 
+
+def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, db_info):
+    ''' Get backlogs for both DB's'''
+    while True:
+        try:
+
+            StartTime = datetime.datetime.now()
+            db_transactin_time_WMx, db_transactin_time_OMx = 0.0, 0.0
+
+            if db_http_host:
+                '''  retrieve records from DB interface REST API URL using requests library'''
+                logging.info("# HTTP Interface for db_jobs_backlogs_work")
+
+                ''' call to DB interface RestAPI'''
+                request_body = {
+                        "db_url" : db_url,
+                        "sql" : sql
+                }
+
+                logging.info("db_http_host : {}, db_info : {}, db_url : {}, sql : {}".format(db_http_host, db_info, db_url, sql))
+                http_urls = "http://{}/db/get_db_query".format(db_http_host)
+                resp = requests.post(url=http_urls, json=request_body, timeout=600)
+
+                if not (resp.status_code == 200):
+                    ''' clear table for db records if host not reachable'''
+                    logging.info(f"db_jobs_backlogs_work in 404 response - {saved_failure_db_dict}, saved_status_dict - {saved_status_dict}")
+                    continue
+                
+                logging.info(f"db/process_table - {resp}")
+                ''' db job performance through db interface restapi'''
+                # db_jobs_performance_gauge_g.labels(server_job=socket.gethostname()).set(int(resp.json["running_time"]))
+                result_json_value = resp.json()["results"]
+
+                if db_info == "WMx":
+                    db_transactin_time_WMx = resp.json()["running_time"]
+                elif db_info == "OMx":
+                    db_transactin_time_OMx = resp.json()["running_time"]
+         
+            else:
+                ''' This logic perform to connect to DB directly and retrieve records from processd table '''
+                logging.info("# DB Interface Directly")
+                result_json_value = database_object.excute_oracle_query(sql)
+
+            ''' DB processing time '''
+            EndTime = datetime.datetime.now()
+
+            Delay_Time_WMx, Delay_Time_OMx = 0.0, 0.0
+            if db_info == "WMx":
+                Delay_Time_WMx = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
+                logging.info("# [{}] HTTP db_jobs_backlogs_work DB Query Running Time - {}".format(db_info, str(Delay_Time_WMx)))
+            elif db_info == "OMx":
+                Delay_Time_OMx = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
+                logging.info("# [{}] HTTP db_jobs_backlogs_work DB Query Running Time - {}".format(db_info, str(Delay_Time_OMx)))
+
+            ''' response same format with list included dicts'''   
+            logging.info(f"db-job: result_json_value : {result_json_value}")
+            if db_info == "WMx":
+                db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(result_json_value[0].get("TOTAL_UNPROCESSED_RECS"))
+            elif db_info == "OMx":
+                db_jobs_backlogs_OMx_gauge_g.labels(server_job=socket.gethostname()).set(result_json_value[0].get("TOTAL_UNPROCESSED_RECS"))
+                   
+            
+        except Exception as e:
+            logging.error(e)
+            pass
+        
+        finally:
+            # time.sleep(interval)
+            ''' update after five minutes'''
+            time.sleep(interval)
+
+
+
 def alert_to_text(data, hostname, sms_list, saved_status_dict, immediately=False):
     ''' Send sms alerts to our team when the usage of CPU/JVM is over 85% for 5 minutes or (ES Service/Data pipeline has at least Yellow)'''
     if saved_thread_alert or saved_critcal_sms_alert or immediately:
@@ -3101,6 +3176,8 @@ if __name__ == '__main__':
     parser.add_argument('--db_run', dest="db_run", default="False", help='If true, executable will run after compilation.')
     parser.add_argument('--omx_db_con', dest="omx_db_con", default="True", help='If true, it will connect to db.')
     parser.add_argument('--sql', dest='sql', default="select * from test", help='sql')
+    parser.add_argument('--sql_backlog', dest='sql_backlog', default="select * from test", help='sql_backlog')
+    parser.add_argument('--backlog', dest="backlog", default="False", help='If true, it will get backlog from DB\'s.')
     # parser.add_argument('--kafka_sql', dest='kafka_sql', default="select * from test", help='kafka_sql')
     ''' request DB interface restpi insteady of connecting db dircectly'''
     parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
@@ -3198,6 +3275,12 @@ if __name__ == '__main__':
     if args.sql:
         sql = args.sql
 
+    if args.sql_backlog:
+        sql_backlog = args.sql_backlog
+
+    if args.backlog:
+        backlog = args.backlog
+        
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
 
@@ -3270,7 +3353,8 @@ if __name__ == '__main__':
 
     db_run = True if str(db_run).upper() == "TRUE" else False
     multiple_db = True if str(omx_db_con).upper() == "TRUE" else False
-    print(interface, db_run, multiple_db, type(db_run), sql)
+    backlog = True if str(backlog).upper() == "TRUE" else False
+    print(interface, db_run, multiple_db, type(db_run), sql, backlog)
 
     if interface == 'db' and db_run:
         database_object_WMx = oracle_database(db_url)
@@ -3365,6 +3449,19 @@ if __name__ == '__main__':
                 db_http_thread_Omx.daemon = True
                 db_http_thread_Omx.start()
                 T.append(db_http_thread_Omx)
+
+            
+            ''' Get backlogs'''
+            if backlog:
+                db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[0], 'WMx'))
+                db_http_thread_Wmx_Backlog.daemon = True
+                db_http_thread_Wmx_Backlog.start()
+                T.append(db_http_thread_Wmx_Backlog)
+
+                db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
+                db_http_thread_Omx_Backlog.daemon = True
+                db_http_thread_Omx_Backlog.start()
+                T.append(db_http_thread_Omx_Backlog)
 
         # wait for all threads to terminate
         for t in T:
