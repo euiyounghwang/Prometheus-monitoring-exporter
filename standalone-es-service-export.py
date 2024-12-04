@@ -2510,6 +2510,9 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
     
     # Max_History_For_Hour (5 minute * 12)
     WMx_backlog_list = [] 
+
+    ''' calculate the lengh of list for the alert can be sent per 1 hour'''
+    # Max_History_For_Hour = int(6000/interval)
     Max_History_For_Hour = 12
 
     # Max_Backlog_CNT = 0
