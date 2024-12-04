@@ -2508,6 +2508,13 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
     ''' Get backlogs for both DB's'''
     global WMx_backlog, OMx_backlog
     
+    # Max_History_For_Hour (5 minute * 12)
+    WMx_backlog_list = [] 
+    Max_History_For_Hour = 12
+
+    # Max_Backlog_CNT = 0
+    Max_Backlog_CNT = 10000
+    
     while True:
         try:
 
@@ -2563,14 +2570,39 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
 
             ''' response same format with list included dicts'''   
             logging.info(f"db-job: result_json_value : {result_json_value}")
+
+            ''' get db configuration'''
+            if not global_mail_configuration:
+                get_mail_configuration(db_http_host)
+            data = global_mail_configuration
+
+            host_name = socket.gethostname().split(".")[0]
+            dev_email_list = data[host_name].get("dev_mail_list", "")
+
             if db_info == "WMx":
                 WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(WMx_backlog))
+                
+                ''' send mail'''
+                is_alert_option = data[host_name].get("is_mailing")
+                if len(WMx_backlog_list) < 1 and float(WMx_backlog) > Max_Backlog_CNT and is_alert_option:
+                    logging.info(f"db_jobs_backlogs_work alert : {WMx_backlog}, WMx_backlog_list : {WMx_backlog_list}")
+                    send_mail(body="Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}".format(WMx_backlog), 
+                            host= socket.gethostname().split(".")[0], 
+                            env=data[host_name].get("env"), 
+                            status_dict=saved_status_dict, 
+                            to=dev_email_list, cc="", _type='mail')
+                    
+                WMx_backlog_list.append(WMx_backlog)
+
+                ''' alert almost every 1 hour for backlog for unprocessed data '''
+                if len(WMx_backlog_list) >= Max_History_For_Hour:
+                    WMx_backlog_list.clear()
+
             elif db_info == "OMx":
                 OMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(OMx_backlog))
-                   
-            
+       
         except Exception as e:
             logging.error(e)
             pass
@@ -3465,13 +3497,13 @@ if __name__ == '__main__':
             
             ''' Get backlogs.. only for checking WMx backlog'''
             if backlog:
-                db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[0], 'WMx'))
+                db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[0], 'WMx'))
                 db_http_thread_Wmx_Backlog.daemon = True
                 db_http_thread_Wmx_Backlog.start()
                 T.append(db_http_thread_Wmx_Backlog)
 
                 """
-                db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(db_jobs_interval, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
+                db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
                 db_http_thread_Omx_Backlog.daemon = True
                 db_http_thread_Omx_Backlog.start()
                 T.append(db_http_thread_Omx_Backlog)
