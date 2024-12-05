@@ -12,6 +12,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
 
+- Grafana : Add CSV plugin (unzip `/home/devuser/monitoring/grafana-8.0.0/data/plugins/marcusolsson-csv-datasource-0.6.21.linux_amd64.zip`) and then restart Grafana
 
 #### Python V3.9 Install
 ```bash
