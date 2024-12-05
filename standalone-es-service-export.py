@@ -2581,20 +2581,26 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
 
             host_name = socket.gethostname().split(".")[0]
             dev_email_list = data[host_name].get("dev_mail_list", "")
+            dev_sms_list = data[host_name].get("dev_sms_list", "")
 
             if db_info == "WMx":
                 WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(WMx_backlog))
                 
-                ''' send mail'''
+                ''' send alert for backlog'''
                 is_alert_option = data[host_name].get("is_mailing")
+                # if len(WMx_backlog_list) < 1 and float(WMx_backlog) > Max_Backlog_CNT:
                 if len(WMx_backlog_list) < 1 and float(WMx_backlog) > Max_Backlog_CNT and is_alert_option:
                     logging.info(f"db_jobs_backlogs_work alert : {WMx_backlog}, WMx_backlog_list : {WMx_backlog_list}")
-                    send_mail(body="Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}".format(WMx_backlog), 
+                    alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}".format(WMx_backlog)
+                    ''' send mail'''
+                    send_mail(body=alert_msg, 
                             host= socket.gethostname().split(".")[0], 
                             env=data[host_name].get("env"), 
                             status_dict=saved_status_dict, 
                             to=dev_email_list, cc="", _type='mail')
+                    ''' send sms'''
+                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
                     
                 WMx_backlog_list.append(WMx_backlog)
 
