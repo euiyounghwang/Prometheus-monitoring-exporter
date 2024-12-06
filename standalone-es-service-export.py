@@ -106,6 +106,8 @@ db_jobs_gauge_kafka_offset_wmx_g = Gauge("db_jobs_wmx_kafka_offset_running_metri
 db_jobs_gauge_omx_g = Gauge("db_jobs_omx_running_metrics", 'Metrics scraped from localhost', ["server_job", "processname", "cnt", "status", "addts", "dbid", "db_info"])
 db_jobs_performance_WMx_gauge_g = Gauge("db_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_performance_OMx_gauge_g = Gauge("db_jobs_performance2_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_wmx_sql_data_pipeline_gauge_g = Gauge("wmx_data_pipeline_sql_running_time_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_omx_sql_data_pipeline_gauge_g = Gauge("omx_data_pipeline_sql_running_time_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_WMx_gauge_g = Gauge("db_jobs_backlog_wmx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 
