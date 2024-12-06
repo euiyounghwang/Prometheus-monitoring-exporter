@@ -2043,7 +2043,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
-        logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}")
+        logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
         
         
         ''' Service are back online and push them into Grafana-Loki '''
@@ -2288,6 +2288,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
   
     ''' db main process with sleep five mintues'''
     global saved_status_dict, saved_failure_db_dict, WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active
+    global db_transactin_time_WMx, db_transactin_time_OMx
     global global_env_name
     time_difference_to_hours = 0.0
 
@@ -2386,8 +2387,10 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             # db_transactin_perfomrance = db_transactin_time if db_http_host else Delay_Time
             if db_info == "WMx":
                 db_jobs_performance_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                # db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
             elif db_info == "OMx":
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
+                # db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
 
             
             ''' response same format with list included dicts'''   
