@@ -1546,6 +1546,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Get the status of primary node from the Kafka connect such as OK or FAIL'''
         if "{}:8083".format(master_kafka) in response_dict["kafka_connect_url"]:
             master_kafka_active = response_dict["kafka_connect_url"]["{}:8083".format(master_kafka)]
+
         else:
             master_kafka_active = "FAIL"
             is_flag_active_primary_node_for_kafka_connect = False
@@ -1562,9 +1563,13 @@ def get_metrics_all_envs(monitoring_metrics):
         if master_kafka_active == "OK":
             ''' If Kafka Connect is not running on node #2 or node #3 or a combination of both nodes #2 and #3, then the color code check should show as yellow if Kafka Connect is running on the primary node (node 1).'''
             kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+            ''' Update the status of Kafka connect to Server active for alert'''
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_url").split(",")), types='kafka')
         else:
             ''' If Kafka Connect is not running on the primary node, then the color code check should show as “red” since this means data is not being processed for our ES pipeline queue for WMx and OMx. '''
             kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
+            ''' Update the status of Kafka connect to Server active for alert'''
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
 
         ''' zookeeper node update'''
         zookeeper_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["zookeeper_url"]["GREEN_CNT"]))
@@ -1870,7 +1875,8 @@ def get_metrics_all_envs(monitoring_metrics):
         
         MAX_NUMBERS = len(monitoring_metrics.get("kafka_connect_url").split(","))
         ''' update server active status for Kafka Connect'''
-        all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+        ''' *** if this line is disabled, the status of Kafak connector is active'''
+        # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
         ''' save service_status_dict for alerting on all serivces'''
         if int(response_dict["kafka_connect_url"]["GREEN_CNT"]) == MAX_NUMBERS:
             kafka_connect_status = 'Green' 
@@ -2044,7 +2050,6 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
-        
         
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
