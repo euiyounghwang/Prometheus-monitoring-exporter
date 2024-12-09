@@ -1563,14 +1563,10 @@ def get_metrics_all_envs(monitoring_metrics):
         if master_kafka_active == "OK":
             ''' If Kafka Connect is not running on node #2 or node #3 or a combination of both nodes #2 and #3, then the color code check should show as yellow if Kafka Connect is running on the primary node (node 1).'''
             kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
-            ''' Update the status of Kafka connect to Server active for alert'''
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_url").split(",")), types='kafka')
         else:
             ''' If Kafka Connect is not running on the primary node, then the color code check should show as “red” since this means data is not being processed for our ES pipeline queue for WMx and OMx. '''
             kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
-            ''' Update the status of Kafka connect to Server active for alert'''
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
-
+            
         ''' zookeeper node update'''
         zookeeper_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["zookeeper_url"]["GREEN_CNT"]))
         
@@ -1692,6 +1688,9 @@ def get_metrics_all_envs(monitoring_metrics):
                     print("Closing socket")
                     client_socket.close()
                  
+
+        ''' ********* Server Active Graph ******************** '''
+
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         ''' To receive spark job lists, JSON results are returned from master node 8080 port. ''' 
         ''' From the results, we get the list of spark jobs in activeapps key and transform them to metrics for exposure. '''
@@ -1873,10 +1872,24 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' update kafka_nodes'''
         service_status_dict.update({"kafka_nodes" : int(response_dict["kafka_url"]["GREEN_CNT"])})
         
+        '''  ******  Kafka Connect Health ****************'''
         MAX_NUMBERS = len(monitoring_metrics.get("kafka_connect_url").split(","))
-        ''' update server active status for Kafka Connect'''
-        ''' *** if this line is disabled, the status of Kafak connector is active'''
+
+        ''' Update Server Active status for Kafka Connect'''
+        ''' *** if this line is enabled, it will be checked the status if all Kafak nodes are active based on the number of active nodes'''
         # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+        
+        ''' Update Server Active status for Kafka Connect'''
+        kafka_connect_status_primary_node = 'Green'
+        if is_flag_active_primary_node_for_kafka_connect:
+            ''' Update the status of Kafka connect to Server active for alert -> set the value as three nodes if master node is active'''
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_url").split(",")), types='kafka')
+        else:
+            kafka_connect_status_primary_node = 'Red'
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+        
+        service_status_dict.update({"kafka_connect_primary_node" : kafka_connect_status_primary_node})
+
         ''' save service_status_dict for alerting on all serivces'''
         if int(response_dict["kafka_connect_url"]["GREEN_CNT"]) == MAX_NUMBERS:
             kafka_connect_status = 'Green' 
@@ -1889,6 +1902,7 @@ def get_metrics_all_envs(monitoring_metrics):
         service_status_dict.update({"kafka_connect" : kafka_connect_status})
         ''' update kafka_connect_nodes'''
         service_status_dict.update({"kafka_connect_nodes" : int(response_dict["kafka_connect_url"]["GREEN_CNT"])})
+        '''  ******  Kafka Connect Health ****************'''
 
         ''' update server active status for Zookeeper'''
         MAX_NUMBERS = len(monitoring_metrics.get("zookeeper_url").split(","))
@@ -3128,7 +3142,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                     Spark Health : <b>%s</b>, Spark Custom Apps : <b>%s</b> <BR/>\
                     - Active Spark Custom Apps : <b>%s</b> <BR/>\
                     Kafka Health : <b>%s</b>, Kafka Nodes : <b>%s</b> <BR/>\
-                    Kafka_connect Health : <b>%s</b>, Kafka Connect Nodes : <b>%s</b> <BR/>\
+                    Kafka_connect Health : <b>%s</b>, Kafka_connect_primary_node Health : <b>%s</b>, Kafka Connect Nodes : <b>%s</b> <BR/>\
                     Zookeeper Health : <b>%s</b>, Zookeeper Nodes : <b>%s</b> <BR/>\
                     Kibana Health : <b>%s</b> <BR/>\
                     Logstash Health : <b>%s</b> <BR/>\
@@ -3140,7 +3154,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                        service_status_dict.get("spark",""), service_status_dict.get("spark_custom_apps",""),
                        str(service_status_dict.get("spark_custom_apps_list","")).replace(" ", ""),
                        service_status_dict.get("kafka",""), service_status_dict.get("kafka_nodes",""),
-                       service_status_dict.get("kafka_connect",""), service_status_dict.get("kafka_connect_nodes",""),
+                       service_status_dict.get("kafka_connect",""), service_status_dict.get("kafka_connect_primary_node",""), service_status_dict.get("kafka_connect_nodes",""),
                        service_status_dict.get("zookeeper",""), service_status_dict.get("zookeeper_nodes",""),
                        service_status_dict.get("kibana",""),
                        service_status_dict.get("logstash",""),
