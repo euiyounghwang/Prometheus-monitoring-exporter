@@ -2064,6 +2064,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
+        logging.info(f"recheck_WMx : {recheck_WMx}, WMx_backlog_list : {WMx_backlog_list}")
         
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
@@ -2530,23 +2531,24 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
 def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, db_info):
     ''' Get backlogs for both DB's'''
-    global WMx_backlog, OMx_backlog
+    global WMx_backlog, OMx_backlog, WMx_backlog_list, recheck_WMx
     
     # Max_History_For_Hour (5 minute * 12)
     WMx_backlog_list = [] 
+    recheck_WMx = True
 
     ''' calculate the lengh of list for the alert can be sent per 1 hour'''
     # Max_History_For_Hour = int(6000/interval)
-    Max_History_For_Hour = 12
+    Max_History_For_Hour = 2
 
-    # Max_Backlog_CNT = 0
-    Max_Backlog_CNT = 10000
+    Max_Backlog_CNT = 0
+    # Max_Backlog_CNT = 10000
     
     while True:
         try:
 
             StartTime = datetime.datetime.now()
-            db_transactin_time_WMx, db_transactin_time_OMx = 0.0, 0.0
+            db_transactin_time_Backlog_WMx, db_transactin_time_Backlog_OMx = 0.0, 0.0
 
             if db_http_host:
                 '''  retrieve records from DB interface REST API URL using requests library'''
@@ -2573,9 +2575,9 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                 result_json_value = resp.json()["results"]
 
                 if db_info == "WMx":
-                    db_transactin_time_WMx = resp.json()["running_time"]
+                    db_transactin_time_Backlog_WMx = resp.json()["running_time"]
                 elif db_info == "OMx":
-                    db_transactin_time_OMx = resp.json()["running_time"]
+                    db_transactin_time_Backlog_OMx = resp.json()["running_time"]
          
             else:
                 ''' This logic perform to connect to DB directly and retrieve records from processd table '''
@@ -2585,7 +2587,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             ''' DB processing time '''
             EndTime = datetime.datetime.now()
 
-            logging.info(f"# db_transactin_time_WMx_backlog : {db_transactin_time_WMx}, db_transactin_time_OMx_backlog : {db_transactin_time_OMx}")
+            logging.info(f"# db_transactin_time_WMx_backlog : {db_transactin_time_Backlog_WMx}, db_transactin_time_OMx_backlog : {db_transactin_time_Backlog_OMx}")
 
             Delay_Time_WMx, Delay_Time_OMx = 0.0, 0.0
             if db_info == "WMx":
@@ -2610,13 +2612,17 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             if db_info == "WMx":
                 WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(WMx_backlog))
+
+                WMx_backlog_list.append(WMx_backlog)
                 
+                ''' check if one of WMx_backlog_list list is bigger than 10000 as Max_Backlog_CNT'''
+                is_bigger_than_condition = [k for k in WMx_backlog_list if float(k) > Max_Backlog_CNT]
+
                 ''' send alert for backlog'''
                 is_alert_option = data[host_name].get("is_mailing")
-                # if len(WMx_backlog_list) < 1 and float(WMx_backlog) > Max_Backlog_CNT:
-                if len(WMx_backlog_list) < 1 and float(WMx_backlog) > Max_Backlog_CNT and is_alert_option:
+                if len(is_bigger_than_condition) > 0 and recheck_WMx and is_alert_option:
                     logging.info(f"db_jobs_backlogs_work alert : {WMx_backlog}, WMx_backlog_list : {WMx_backlog_list}")
-                    alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}".format(WMx_backlog)
+                    alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}, db_transactin_time_WMx : {}/sec, db_transactin_time_OMx : {}/sec".format(WMx_backlog, db_transactin_time_WMx, db_transactin_time_OMx)
                     ''' send mail'''
                     send_mail(body=alert_msg, 
                             host= socket.gethostname().split(".")[0], 
@@ -2624,12 +2630,14 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                             status_dict=saved_status_dict, 
                             to=dev_email_list, cc="", _type='mail')
                     ''' send sms'''
-                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
-                    
-                WMx_backlog_list.append(WMx_backlog)
+                    # send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
 
+                    ''' disbaled this variable for sending every 1 hour'''
+                    recheck_WMx = False
+                
                 ''' alert almost every 1 hour for backlog for unprocessed data '''
                 if len(WMx_backlog_list) >= Max_History_For_Hour:
+                    recheck_WMx = True
                     WMx_backlog_list.clear()
 
             elif db_info == "OMx":
