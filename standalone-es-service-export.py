@@ -1182,7 +1182,8 @@ def get_metrics_all_envs(monitoring_metrics):
         try:
             logging.info(f"is_dev_mode - {is_dev_mode}")
             # es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
-            es_exporter_host = str(os.environ["ES_EXPORTER_HOST"])
+            ''' If kibana url is different with argument, you may need to add this environment variable to ./standalone-export-run.sh '''
+            es_exporter_host = str(os.environ["ES_EXPORTER_HOST"]) if os.environ.get("ES_EXPORTER_HOST") is not None else monitoring_metrics.get("kibana_url", "").split(":")[0]
             resp = requests.get(url="http://{}:9114/metrics".format(es_exporter_host), timeout=5)
                     
             if not (resp.status_code == 200):
@@ -2539,8 +2540,8 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
     recheck_WMx = True
 
     ''' calculate the lengh of list for the alert can be sent per 1 hour'''
-    # Max_History_For_Hour = int(3600/interval)
-    Max_History_For_Hour = 12
+    Max_History_For_Hour = int(3600/interval)
+    # Max_History_For_Hour = 12
 
     # Max_Backlog_CNT = 0
     Max_Backlog_CNT = 10000
@@ -2631,7 +2632,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                             status_dict=saved_status_dict, 
                             to=dev_email_list, cc="", _type='mail')
                     ''' send sms'''
-                    # send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
+                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
 
                     ''' disbaled this variable for sending every 1 hour'''
                     recheck_WMx = False
