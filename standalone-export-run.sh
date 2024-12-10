@@ -27,6 +27,8 @@ export SMTP_PORT=212
 export MAIL_SENDER="mymail"
 export ES_CONFIGURATION_URL="http://localhost:8004/docs"
 export ES_CONFIGURATION_HOST="localhost"
+export ES_EXPORTER_HOST="localhost"
+
 
 export ZOOKEEPER_URLS="localhost:2181,localhost:2181,localhost:2181"
 export BROKER_LIST="localhost:9092,localhost:9092,localhost:9092"

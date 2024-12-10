@@ -1181,7 +1181,8 @@ def get_metrics_all_envs(monitoring_metrics):
 
         try:
             logging.info(f"is_dev_mode - {is_dev_mode}")
-            es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
+            # es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
+            es_exporter_host = str(os.environ["ES_EXPORTER_HOST"])
             resp = requests.get(url="http://{}:9114/metrics".format(es_exporter_host), timeout=5)
                     
             if not (resp.status_code == 200):
