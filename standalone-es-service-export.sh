@@ -3,6 +3,7 @@ ES_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/custom_export
 PATH=$PATH:$ES_SERVICE_ALL_EXPORT_PATH/bin
 SERVICE_NAME=es-service-all-service
 
+: <<'END'
 cat << "EOF"
        _,.
      ,` -.)
@@ -25,7 +26,7 @@ cat << "EOF"
      |     {__)
            ()`
 EOF
-
+END
 
 # See how we were called.
 case "$1" in
