@@ -2314,6 +2314,8 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
     global global_env_name
     time_difference_to_hours = 0.0
 
+    db_transactin_time_WMx, db_transactin_time_OMx = 0.0, 0.0
+
     while True:
         try:
             # - main sql
@@ -2326,8 +2328,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             # lock.acquire()
 
             StartTime = datetime.datetime.now()
-            db_transactin_time_WMx, db_transactin_time_OMx = 0.0, 0.0
-
+            
             ''' clear saved_failure_db_dict '''
             Initialize_active_multiple_db_clear(multipe_db)
 
