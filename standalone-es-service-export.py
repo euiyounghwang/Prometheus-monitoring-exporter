@@ -18,8 +18,8 @@ from config.log_config import create_log
 import subprocess
 import json
 import copy
-import jaydebeapi
-import jpype
+import jaydebeapi # type: ignore
+import jpype # type: ignore
 import re
 from collections import defaultdict
 # import paramiko
@@ -38,7 +38,7 @@ load_dotenv() # will search for .env file in local folder and load variables
 """ ---------------- """
 """ Grafana Loki """
 import logging
-import logging_loki
+import logging_loki # type: ignore
 logging_loki.emitter.LokiEmitter.level_tag = "level"
 # assign to a variable named handler 
 handler = logging_loki.LokiHandler(
@@ -62,7 +62,10 @@ hitl_server_health_request_time = Histogram('hitl_server_health_request_time', '
 kafka_brokers_gauge = Gauge("kafka_brokers", "the number of kafka brokers")
 
 ''' export application performance metric'''
-es_service_jobs_performance_gauge_g = Gauge("es_service_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+# es_global_api_jobs_performance_gauge_g = Gauge("es_global_api_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+# es_get_mail_configuration_jobs_performance_gauge_g = Gauge("es_get_mail_configuration_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+# es_get_metrics_all_envs_jobs_performance_gauge_g = Gauge("es_get_metrics_all_envs_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+es_service_jobs_performance_gauge_g = Gauge("es_service_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
 
 ''' gauge with dict type'''
 
@@ -1542,11 +1545,11 @@ def get_metrics_all_envs(monitoring_metrics):
         response_dict["kafka_connect_url"]  {'localhost1:8083': 'OK', 'GREEN_CNT': 3, 'localhost2:8083': 'OK', 'localhost3:8083': 'OK'}
         '''
         ''' extract master node from kafka hosts'''
-        master_kafka = monitoring_metrics.get("kafka_url").split(",")[0]
+        master_kafka = monitoring_metrics.get("kafka_connect_url").split(",")[0]
         master_kafka = master_kafka.split(':')[0]
         is_flag_active_primary_node_for_kafka_connect = True
         ''' Get the status of primary node from the Kafka connect such as OK or FAIL'''
-        if "{}:8083".format(master_kafka) in response_dict["kafka_connect_url"]:
+        if "{}:8083".format(master_kafka) in response_dict["kafka_connect_url"] and response_dict["kafka_connect_url"]["{}:8083".format(master_kafka)] == 'OK':
             master_kafka_active = response_dict["kafka_connect_url"]["{}:8083".format(master_kafka)]
 
         else:
@@ -1801,6 +1804,8 @@ def get_metrics_all_envs(monitoring_metrics):
 
         if failure_check:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='kafka_listner')
+            ''' update the status Kafka connect is not running correctly on the primary node'''
+            is_flag_active_primary_node_for_kafka_connect = False
 
 
         logging.info(f"is_running_one_of_kafka_listner - {is_running_one_of_kafka_listner}, host_list : {host_list}")
@@ -1821,11 +1826,15 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' all_env_status_memory_list -1? 0? 1? at least one?'''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='kafka_listner')
             saved_failure_dict.update({",".join(kafka_nodes_list) : "[KAFKA CONNECT] All Kafka Listeners are not running.."})
+            ''' update the status Kafka connect is not running correctly on the primary node'''
+            is_flag_active_primary_node_for_kafka_connect = False
 
         ''' add tracking'''
         ''' if one of listener is not running with running status'''
         if not any_failure_listener:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='kafka_listner')
+            ''' update the status Kafka connect is not running correctly on the primary node'''
+            is_flag_active_primary_node_for_kafka_connect = False
 
 
         '''  kafka Connect health Set if listeners are working on all nodes with state of RUNNING'''
@@ -2530,7 +2539,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             ''' update after five minutes'''
             time.sleep(interval)
 
-
+''' defined if backlog thread is not running for any env'''
+recheck_WMx = False
+WMx_backlog_list = []
 
 def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, db_info):
     ''' Get backlogs for both DB's'''
@@ -2772,6 +2783,13 @@ def get_mail_configuration(db_http_host):
         pass
 
 
+
+def running_time(end_time, start_time):
+    ''' Calculate running time'''
+    Delay_Time = str((end_time - start_time).seconds) + '.' + str((end_time - start_time).microseconds).zfill(6)[:2]
+    return Delay_Time
+
+
 def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
     ''' Threading work'''
     '''
@@ -2792,6 +2810,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
         echo "logstash is not Running"
     fi
     '''
+
     try:
         start_http_server(int(port))
         logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
@@ -2802,21 +2821,48 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
         while True:
             StartTime = datetime.datetime.now()
 
+            ''' **** Validate the time it take to run each function'''
+
             ''' get global configuration'''
+            start_time_fun = datetime.datetime.now()
+            
+            ''' call fun'''
             get_global_configuration(es_http_host)
+            
+            end_time_func = datetime.datetime.now()
+            ''' export the time for this get_global_configuration'''
+            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' get db configuration'''
+            start_time_fun = datetime.datetime.now()
+            
+            ''' call fun'''
             get_mail_configuration(es_http_host)
+            
+            end_time_func = datetime.datetime.now()
+            ''' export the time for this get_global_configuration'''
+            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
+            start_time_fun = datetime.datetime.now()
+
+            ''' call fun'''
             get_metrics_all_envs(monitoring_metrics)
+
+            end_time_func = datetime.datetime.now()
+            ''' export the time for this get_global_configuration'''
+            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
+            ''' **** '''
             
             ''' export application processing time '''
             EndTime = datetime.datetime.now()
             Delay_Time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
+
             logging.info("# StartedTime Application - {}".format(str(StartedTime)))
             logging.info("# Export Application Running Time - {}\n\n".format(str(Delay_Time)))
-            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname()).set(float(Delay_Time))
+
+            ''' ES Monitoring Running Time'''
+            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_service_all").set(float(Delay_Time))
             
             time.sleep(interval)
         
