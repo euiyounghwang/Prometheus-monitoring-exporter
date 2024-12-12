@@ -67,6 +67,9 @@ kafka_brokers_gauge = Gauge("kafka_brokers", "the number of kafka brokers")
 # es_get_metrics_all_envs_jobs_performance_gauge_g = Gauge("es_get_metrics_all_envs_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 es_service_jobs_performance_gauge_g = Gauge("es_service_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
 
+''' es cluster search time using _cat api'''
+es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
+
 ''' gauge with dict type'''
 
 ''' es_exporter_plugin'''
@@ -594,7 +597,7 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"get_spark_jobs #1- {master_node}")
 
             # -- make a call to master node to get the information of activeapps
-            resp = requests.get(url="http://{}:8080/json".format(master_node), timeout=60, verify=False)
+            resp = requests.get(url="http://{}:8080/json".format(master_node), timeout=5, verify=False)
             logging.info(f"get_spark_jobs - response {resp.status_code}")
             
             if not (resp.status_code == 200):
@@ -759,14 +762,19 @@ def get_metrics_all_envs(monitoring_metrics):
                 es_basic_info = {}
                 try:
                     # -- make a call to node
+                    
                     ''' export es metrics from ES cluster with Search Guard'''
                     resp = requests.get(url="{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=5, verify=False)
-                    
+
                     if not (resp.status_code == 200):
                         ''' save failure node with a reason into saved_failure_dict'''
                         # saved_failure_dict.update({each_es_host.split(":")[0] : each_es_host + " Port closed"})
                         continue
                     
+                    ''' export the time for this get_global_configuration'''
+                    ''' The Response object returned by requests.post() (and requests.get() etc.) has a property called elapsed '''
+                    es_cluster_search_time_gauge_g.labels(server_job=socket.gethostname(), category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
+
                     logging.info(f"activeES - {resp}, {resp.json()}")
                     ''' log if one of ES nodes goes down'''
                     if int(resp.json().get("relocating_shards")) > 0 or int(resp.json().get("initializing_shards")) > 0 or int(resp.json().get("unassigned_shards")) > 0:
