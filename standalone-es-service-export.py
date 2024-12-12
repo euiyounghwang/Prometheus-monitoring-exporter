@@ -68,7 +68,7 @@ kafka_brokers_gauge = Gauge("kafka_brokers", "the number of kafka brokers")
 es_service_jobs_performance_gauge_g = Gauge("es_service_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
 
 ''' es cluster search time using _cat api'''
-es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
+es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metrics scraped from localhost', ["server_job", "env", "category"])
 
 ''' gauge with dict type'''
 
@@ -773,7 +773,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     
                     ''' export the time for this get_global_configuration'''
                     ''' The Response object returned by requests.post() (and requests.get() etc.) has a property called elapsed '''
-                    es_cluster_search_time_gauge_g.labels(server_job=socket.gethostname(), category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
+                    es_cluster_search_time_gauge_g.labels(server_job=socket.gethostname(), env=global_env_name, category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
 
                     logging.info(f"activeES - {resp}, {resp.json()}")
                     ''' log if one of ES nodes goes down'''
