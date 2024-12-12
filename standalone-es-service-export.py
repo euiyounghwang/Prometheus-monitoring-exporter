@@ -764,7 +764,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     # -- make a call to node
                     
                     ''' export es metrics from ES cluster with Search Guard'''
-                    resp = requests.get(url="{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=5, verify=False)
+                    resp = requests.get(url="{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=30, verify=False)
 
                     if not (resp.status_code == 200):
                         ''' save failure node with a reason into saved_failure_dict'''
