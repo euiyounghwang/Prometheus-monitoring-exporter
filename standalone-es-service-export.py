@@ -789,7 +789,8 @@ def get_metrics_all_envs(monitoring_metrics):
                     if int(resp.json().get("relocating_shards")) == 0 and int(resp.json().get("initializing_shards")) == 0:
                         ''' still ES cluster has unassgned shards'''
                         if int(resp.json().get("unassigned_shards")) > 0:
-                            if int(resp.json().get("number_of_nodes")) == len(es_url_hosts_list):
+                            '''' if nodes is the same and the status of ES cluster is yellow (it should not work if the status is red or green)'''
+                            if int(resp.json().get("number_of_nodes")) == len(es_url_hosts_list) and resp.json().get("status") == 'yellow':
                                 global_es_shards_tasks_end_occurs_unassgined = True
                                 ''' nedd to update '''
                                 """
