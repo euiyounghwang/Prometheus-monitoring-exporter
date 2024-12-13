@@ -1,0 +1,357 @@
+
+#
+# The following yaml cannot be copy-pasted to Prometheus configuration.
+#     Please navigate to https://samber.github.io/awesome-prometheus-alerts/rules instead.
+#
+# Contributing guidelines:
+#      https://github.com/samber/awesome-prometheus-alerts/blob/master/CONTRIBUTING.md
+#
+
+# https://blog.omoknooni.me/115
+
+groups:
+  - name: example
+    rules:
+    # Alert for any instance that is unreachable for >5 minutes.
+    - alert: InstanceDown
+      expr: up == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: Host High Usage of CPU (instance {{ $labels.node }})
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: "{{ $labels.instance }}) of job {{ $labels.job }} has been down for more than 5 minutes"
+    - alert: Host_High_Usage_CPU_Cluster
+      #expr: system.memory.actual.used.pct * 100 > 1
+      expr: es_os_cpu_percent{cluster="es-docker-cluster",node="es02",nodeid="OTrBiPjAS1aZRRstCc0_sg",} > 80
+      for: 2m
+      labels:
+        tenant: test
+        severity: warning
+      annotations:
+        summary: Host High Usage of CPU (instance {{ $labels.node }})
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: "Host High Usage of CPU (> 50%)"
+        query: '`es_os_cpu_percent{cluster="es-docker-cluster",node="es02",nodeid="OTrBiPjAS1aZRRstCc0_sg",} > 60`'
+        
+    - alert: HostOutOfMemory
+      #expr: system.memory.actual.used.pct * 100 > 1
+      expr: es_jvm_mem_heap_used_percent{cluster="es-docker-cluster",node="es01",nodeid="ENbXGy5ASPevQ3A5MPnZJg",} > 60
+      for: 2m
+      labels:
+        tenant: test
+        severity: warning
+      annotations:
+        summary: Host out of memory (instance {{ $labels.node }})
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: "Node memory is filling up (< 10% left)"
+        query: '`es_jvm_mem_heap_used_percent{cluster="es-docker-cluster",node="es01",nodeid="ENbXGy5ASPevQ3A5MPnZJg",} > 10`'
+       
+  - name: RabbitMQ 
+    rules:
+    - alert: RabbitmqDown
+      # expr: 'rabbitmq_up{service="{{ template "rabbitmq.fullname" . }}"} == 0'
+      expr: 'sum(rabbitmq_build_info) < 1'
+      for: 5m
+      labels:
+        severity: error
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        summary: Rabbitmq down (instance {{ "{{ $labels.instance }}" }})
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: RabbitMQ node down 
+    # - alert: ClusterDown
+    #   expr: 'sum(rabbitmq_running{service="{{ template "rabbitmq.fullname" . }}"}) < {{ .Values.replicaCount }}'
+    #   for: 5m
+    #   labels:
+    #     severity: error
+    #   annotations:
+    #     triggered: "{{ $labels.destination_workload }}"
+    #     resolved: "{{ $labels.destination_workload }}"
+    #     value: "{{ printf \"%.5fs\" $value }}" 
+    #     summary: Cluster down (instance {{ "{{ $labels.instance }}" }})
+    #     description: |
+    #         Less than {{ .Values.replicaCount }} nodes running in RabbitMQ cluster
+    #         VALUE = {{ "{{ $value }}" }}
+    # - alert: ClusterPartition
+    #   expr: 'rabbitmq_partitions{service="{{ template "rabbitmq.fullname" . }}"} > 0'
+    #   for: 5m
+    #   labels:
+    #     severity: error
+    #   annotations:
+    #     triggered: "{{ $labels.destination_workload }}"
+    #     resolved: "{{ $labels.destination_workload }}"
+    #     value: "{{ printf \"%.5fs\" $value }}" 
+    #     summary: Cluster partition (instance {{ "{{ $labels.instance }}" }})
+    #     description: |
+    #         Cluster partition
+    #         VALUE = {{ "{{ $value }}" }}
+    - alert: OutOfMemory
+      expr: 'rabbitmq_process_resident_memory_bytes / rabbitmq_resident_memory_limit_bytes * 100 > 90'
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Out of memory (instance {{ "{{ $labels.instance }}" }})
+        description: A node use more than 90% of allocated RAM
+        # description: |
+        #     Memory available for RabbmitMQ is low (< 10%)\n  VALUE = {{ "{{ $value }}" }}
+        #     LABELS: {{ "{{ $labels }}" }}
+    - alert: TooManyConnections
+      # expr: 'rabbitmq_connectionsTotal{service="{{ template "rabbitmq.fullname" . }}"} > 1000'
+      expr: 'rabbitmq_connections > 1000'
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Too many connections (instance {{ "{{ $labels.instance }}" }})
+        description: The total connections of a node is too high
+        # description: |
+        #     RabbitMQ instance has too many connections (> 1000)
+        #     VALUE = {{ "{{ $value }}" }}\n  LABELS: {{ "{{ $labels }}" }}
+  
+  
+  - name: Elasticsearch
+    rules:
+    - alert: Elastic_UP_V8
+      expr: up{instance="host.docker.internal:9209",job="ES7_BASIC_AUTH_INSTALL_BIN"} != 1
+      for: 120s
+      labels:
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        summary: "Instance - {{ $labels.instance }}"
+        description: "Alarm - `Velocity ES cluster is down`"
+    - alert: Elastic_UP
+      expr: up{job="ES7_BASIC_AUTH_Elastic_Exporter"} != 1
+      for: 120s
+      labels:
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        summary: "Instance - {{ $labels.instance }}"
+        description: "Alarm - `Velocity ES cluster is down`"
+    - alert: Elasticsearch Heap Usage Too High
+      expr: '(elasticsearch_jvm_memory_used_bytes{area="heap"} / elasticsearch_jvm_memory_max_bytes{area="heap"}) * 100 > 90'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        summary: Heap Usage Too High (instance {{ $labels.node }})
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: "The heap usage is over 90%"
+        query: '`(elasticsearch_jvm_memory_used_bytes{area="heap"} / elasticsearch_jvm_memory_max_bytes{area="heap"}) * 100 > 90`'
+    - alert: Elasticsearch Heap Usage warning
+      expr: '(elasticsearch_jvm_memory_used_bytes{area="heap"} / elasticsearch_jvm_memory_max_bytes{area="heap"}) * 100 > 80'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        summary: Heap Usage Too High (instance {{ $labels.node }})
+        value: "{{ printf \"%.5fs\" $value }}" 
+        description: "The heap usage is over 80%"
+        query: '`(elasticsearch_jvm_memory_used_bytes{area="heap"} / elasticsearch_jvm_memory_max_bytes{area="heap"}) * 100 > 80`'
+    - alert: ElasticSearchJvmMemoryPercent
+      expr: es_jvm_mem_heap_used_percent > 95
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: "Instance - {{$labels.instance}}"
+        description: "Alarm - `High JVM memory consumption for: more than 1 minute. Please check logs for: more details`"
+        query: '`es_jvm_mem_heap_used_percent > 95`'
+    - alert: Elasticsearch disk out of space
+      expr: 'elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes * 100 < 10'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Instance - {{$labels.instance}}, Elasticsearch disk out of space (instance {{ $labels.node }})
+        description: "Alarm - `Elasticsearch reports that there  are only {{ $value }}% left on {{ $labels.path }} at {{$labels.instance}}. Please check it`"
+        query: '`elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes * 100 < 10`'
+    - alert: Elasticsearch disk space low
+      expr: 'elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes * 100 < 20'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch disk out of space (instance {{ $labels.node }})
+        description: "The disk usage is over 80%"
+        query: '`elasticsearch_filesystem_data_available_bytes / elasticsearch_filesystem_data_size_bytes * 100 < 20`'
+    - alert: Elasticsearch Cluster Red
+      expr: 'elasticsearch_cluster_health_status{color="red"} == 1'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elastic Cluster Red status (instance {{ $labels.node }})
+        description: "Elastic Cluster Red status"
+        query: '`elasticsearch_cluster_health_status{color="red"} == 1`'
+    - alert: Elasticsearch Cluster Yellow
+      expr: 'elasticsearch_cluster_health_status{color="yellow"} == 1'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elastic Cluster Yellow status (instance {{ $labels.node }})
+        description: "Elastic Cluster Yello status"
+        query: '`elasticsearch_cluster_health_status{color="yellow"} == 1`'
+    - alert: Elasticsearch Healthy Nodes
+      expr: 'elasticsearch_cluster_health_number_of_nodes < 2'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Missing node in Elasticsearch cluster (instance {{ $labels.node }})
+        description: "Missing node in Elasticsearch cluster"
+        query: '`elasticsearch_cluster_health_number_of_nodes < 2`'
+    - alert: Elasticsearch Healthy Data Nodes ( < 2)
+      expr: 'elasticsearch_cluster_health_number_of_data_nodes < 2'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Missing data node in Elasticsearch cluster (instance {{ $labels.node }})
+        description: "Missing data node in Elasticsearch cluster"
+        query: '`elasticsearch_cluster_health_number_of_data_nodes < 2`'
+    - alert: Elasticsearch relocating shards
+      expr: 'elasticsearch_cluster_health_relocating_shards > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: info
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch is relocating shards (instance {{ $labels.node }})
+        description: "Elasticsearch is relocating shards"
+        query: '`elasticsearch_cluster_health_relocating_shards > 0`'
+    - alert: Elasticsearch relocating shards too long
+      expr: 'elasticsearch_cluster_health_relocating_shards > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: info
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch is relocating shards (instance {{ $labels.node }})
+        description: "Elasticsearch has been relocating shards for 15min"
+        query: '`elasticsearch_cluster_health_relocating_shards > 0`'
+    - alert: Elasticsearch initializing shards
+      expr: 'elasticsearch_cluster_health_initializing_shards > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: info
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch is initializing shards (instance {{ $labels.node }})
+        description: "Elasticsearch is initializing shards"
+        query: '`elasticsearch_cluster_health_relocating_shards > 0`'
+    - alert: Elasticsearch initializing shards too long
+      expr: 'elasticsearch_cluster_health_initializing_shards > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch is initializing shards too long (instance {{ $labels.node }})
+        description: "Elasticsearch has been initializing shards for 15 min"
+        query: '`elasticsearch_cluster_health_initializing_shards > 0`'
+    - alert: Elasticsearch unassigned shards
+      expr: 'elasticsearch_cluster_health_unassigned_shards > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch has unassigned shards (instance {{ $labels.node }})
+        description: "Elasticsearch has unassigned shards"
+        query: '`elasticsearch_cluster_health_unassigned_shards > 0`'
+    - alert: Elasticsearch pending tasks
+      expr: 'elasticsearch_cluster_health_number_of_pending_tasks > 0'
+      for: 15m
+      labels:
+        tenant: prod
+        severity: critical
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: Elasticsearch has pending tasks. Cluster works slowly. (instance {{ $labels.node }})
+        description: "Elasticsearch has pending tasks. Cluster works slowly."
+        query: '`elasticsearch_cluster_health_number_of_pending_tasks > 0`'
+    - alert: Elasticsearch no new documents
+      expr: 'increase(elasticsearch_indices_indexing_index_total{es_data_node="true"}[10m]) < 1'
+      labels:
+        tenant: prod
+        severity: warning
+      annotations:
+        triggered: "{{ $labels.destination_workload }}"
+        resolved: "{{ $labels.destination_workload }}"
+        value: "{{ printf \"%.5fs\" $value }}" 
+        summary: No new documents for 10 min! (instance {{ $labels.node }})
+        description: "No new documents for 10 min!"
+        query: '`increase(elasticsearch_indices_indexing_index_total{es_data_node="true"}[10m]) < 1`'
+              
+             

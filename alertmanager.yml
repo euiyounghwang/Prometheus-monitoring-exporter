@@ -1,0 +1,47 @@
+
+# https://hippogrammer.tistory.com/260
+
+global:
+  resolve_timeout: 5m
+  # slack_api_url: 'https://hooks.slack.com/services/..'
+route:
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'slack'
+  # match_re:
+  #   alertname: Elastic_UP|Elasticsearch_Too_Few_Nodes_Running|Elasticsearch_JVM_Heap_Too_High|ElasticSearchJvmMemoryPercent|ElasticNoAvailableSpace|NumberOfPendingTasks
+  #   continue: true
+receivers:
+  - name: 'slack'
+    slack_configs:
+      - send_resolved: true
+        # username: 'prometheus-alert'
+        channel: '#alert'
+        api_url: 'https://hooks.slack.com/services/XXXX'
+        # title: |-
+        #   # [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+        #   {{ template "custom_title" . }}{{- "\n" -}}{{ template "custom_slack_message" . }}
+        username: '{{ template "slack.default.username" . }}'
+        color: '{{ if eq .Status "firing" }}danger{{ else if eq .Status "pending" }}warning{{ else }}good{{ end }}'
+        title: '{{ template "slack.default.title" . }}'
+        # title_link: '{{ template "slack.default.titlelink" . }}'
+        pretext: '{{ .CommonAnnotations.summary }}'
+        text: |-
+          {{ range .Alerts }}
+          *Alert : * {{ .Annotations.title }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`
+          *summary : * {{ .Annotations.summary }}
+          *Description : * {{ .Annotations.description }}
+          *Details : *
+            {{ range .Labels.SortedPairs }} • *{{ .Name }} : * `{{ .Value }}`
+            {{ end }}
+
+          *Grafana URL : * http://localhost:3001/{{ end }}
+          {{ end }}
+        fallback: '{{ template "slack.default.fallback" . }}'
+        # icon_emoji: '{{ template "slack.default.iconemoji" . }}'
+        # icon_url: '{{ template "slack.default.iconurl" . }}'
+        icon_url: http://avatars3.githubusercontent.com/u/3380462
+templates:
+  # - '/etc/alertmanager/config/*.tmpl'
+  - '/slack.tmpl'
