@@ -2433,7 +2433,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             elif db_info == "OMx":
                 ''' update the time it take to establish the db connection and excute the basic query for OMx'''
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
-                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
 
             
             ''' response same format with list included dicts'''   
