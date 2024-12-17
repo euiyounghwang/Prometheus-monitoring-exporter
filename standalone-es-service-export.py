@@ -2427,11 +2427,13 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             ''' if db_http_post set db_transactin_time from HTTP interface API otherwise set Delay time'''
             # db_transactin_perfomrance = db_transactin_time if db_http_host else Delay_Time
             if db_info == "WMx":
+                ''' update the time it take to establish the db connection and excute the basic query for WMx'''
                 db_jobs_performance_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
-                # db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
             elif db_info == "OMx":
+                ''' update the time it take to establish the db connection and excute the basic query for OMx'''
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
-                # db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
 
             
             ''' response same format with list included dicts'''   
