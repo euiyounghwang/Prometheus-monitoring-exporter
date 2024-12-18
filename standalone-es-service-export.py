@@ -116,6 +116,8 @@ db_jobs_wmx_sql_data_pipeline_gauge_g = Gauge("wmx_data_pipeline_sql_running_tim
 db_jobs_omx_sql_data_pipeline_gauge_g = Gauge("omx_data_pipeline_sql_running_time_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_WMx_gauge_g = Gauge("db_jobs_backlog_wmx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_wmx_db_active_gauge_g = Gauge("db_wmx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
+db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
 
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
@@ -2429,10 +2431,14 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             if db_info == "WMx":
                 ''' update the time it take to establish the db connection and excute the basic query for WMx'''
                 db_jobs_performance_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                ''' check if wmx db is active'''
+                db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
                 db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
             elif db_info == "OMx":
                 ''' update the time it take to establish the db connection and excute the basic query for OMx'''
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
+                ''' check if omx db is active'''
+                db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
                 db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
 
             
@@ -2543,6 +2549,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             # saved_status_dict.update({'es_pipeline' : 'Red'})
             ''' Disable to WMx_threads_db_active or OMx_threads_db_active '''
             Initialize_db_status_red(db_info)
+            ''' check if wmx/omx db is inactive'''
+            db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
+            db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
             pass
         
         finally:
