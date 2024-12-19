@@ -2508,7 +2508,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                                 Initialize_active_multiple_db_clear(multipe_db)
 
                                 # if all([WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active]):
-                                if len(saved_failure_db_dict) < 1:
+                                if len(saved_failure_db_dict) < 1 and WMx_threads_db_active and OMx_threads_db_active:
                                     all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(1)
 
                         ''' else '''
@@ -2544,9 +2544,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
         except Exception as e:
             logging.error(e)
             # saved_failure_db_dict.update({"http-db-interface_jobs-{}".format(db_info) : "{} [{} DB]-> {}".format(http_urls, db_info, str(e))})
-            # saved_failure_db_dict.update({"http-db-interface_jobs-{}".format(db_info) : "{} DB -> {}".format(db_info, str(e))})
-            # all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
-            # saved_status_dict.update({'es_pipeline' : 'Red'})
+            # saved_failure_db_dict.update({"db_jobs-{}".format(db_info) : "{} DB -> {}".format(db_info, str(e))})
+            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+            saved_status_dict.update({'es_pipeline' : 'Red'})
             ''' Disable to WMx_threads_db_active or OMx_threads_db_active '''
             Initialize_db_status_red(db_info)
             ''' check if wmx/omx db is inactive'''
