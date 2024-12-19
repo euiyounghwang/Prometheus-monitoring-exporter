@@ -2550,8 +2550,10 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             ''' Disable to WMx_threads_db_active or OMx_threads_db_active '''
             Initialize_db_status_red(db_info)
             ''' check if wmx/omx db is inactive'''
-            db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
-            db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
+            if db_info == "WMx":
+                db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
+            elif db_info == "OMx":
+                db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
             pass
         
         finally:
