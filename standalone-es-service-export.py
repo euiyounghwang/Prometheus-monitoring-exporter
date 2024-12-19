@@ -36,6 +36,8 @@ load_dotenv() # will search for .env file in local folder and load variables
 # logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 """ ---------------- """
+''' Datasource : {service=~"prometheus-monitoring-service|prometheus-monitoring-service1", env=~"$Kafka_Data_Source_Env"} '''
+''' Grafana Dashboard -> Settings -> Variable -> Kafka_Data_Source -> grafana-loki, query type: Label values, Label : env'''
 """ Grafana Loki """
 import logging
 import logging_loki # type: ignore
