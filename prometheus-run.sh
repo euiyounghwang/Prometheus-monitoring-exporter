@@ -1,5 +1,5 @@
 #!/bin/sh
-PROMETHEUS_EXPORT_PATH=/home/devuser/monitoring/prometheus-2.37.0.linux-amd64/
+PROMETHEUS_EXPORT_PATH=/home/devuser/monitoring/prometheus-3.0.1.linux-amd64/
 PATH=$PATH:$PROMETHEUS_EXPORT_PATH/bin
 SERVICE_NAME=prometheus-service
 
@@ -8,6 +8,7 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
+        #$PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=15d --storage.tsdb.retention.size=30GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_DATA_PATH --web.listen-address=:9099
         nohup $PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=14d --storage.tsdb.retention.size=2GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_EXPORT_PATH &> /dev/null &
         ;;
   stop)
