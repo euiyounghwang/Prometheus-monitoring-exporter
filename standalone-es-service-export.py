@@ -613,20 +613,21 @@ def get_metrics_all_envs(monitoring_metrics):
             spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(1)
 
             # logging.info(f"activeapps - {resp}, {resp.json()}")
-            resp_working_job = resp.json().get("activeapps", "")
+            resp_working_job = resp.json().get("activeapps", [])
             # response_activeapps = []
             if resp_working_job:
                 logging.info(f"activeapps - {resp_working_job}")
-                if len(resp_working_job)  < 1:
-                    saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - No Spark Custom Apps".format(master_node)})   
-                logging.info(f"get_active_jobs [Yes] {resp_working_job}") 
+                '''
+                # if len(resp_working_job)  < 1:
+                #     saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - No Spark Custom Apps".format(master_node)})   
                 return resp_working_job
+                '''
             else:
                 logging.info(f"get_active_jobs [No] {resp_working_job}") 
-                saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - http://{}:8080/json, no active jobs. Please run 'Spark Custom Apps'".format(master_node)})
+                saved_failure_dict.update({"{}:8080_#1".format(master_node) : "Spark cluster - http://{}:8080/json, no active jobs. Please run 'Spark Custom Apps'".format(master_node)})
 
-            # return resp.json().get("completedapps", "")
-            return []
+            return resp_working_job
+            # return []
 
         except Exception as e:
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
@@ -1717,6 +1718,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' save service_status_dict for alerting on all serivces'''
         spark_status = 'Green' if response_spark_jobs else 'Red'
+
         service_status_dict.update({"spark" : spark_status})
         service_status_dict.update({"spark_custom_apps" : len(response_spark_jobs) if response_spark_jobs else 0})
 
@@ -1748,6 +1750,35 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' all_env_status_memory_list -1? 0? 1? at least one?'''
             ''' master node spark job is not running'''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='spark')
+
+        ''' Check spark custom app if this is running on spark cluster'''
+        '''
+              "activeapps" : [ {
+                "id" : "app-20241223103909-0000",
+                "starttime" : 1734968349533,
+                "name" : "StreamProcessEXP",
+                "cores" : 10,
+                "user" : "spark",
+                "memoryperexecutor" : 1024,
+                "memoryperslave" : 1024,
+                "resourcesperexecutor" : [ ],
+                "resourcesperslave" : [ ],
+                "submitdate" : "Mon Dec 23 10:39:09 EST 2024",
+                "state" : "RUNNING",
+                "duration" : 349703907
+            } ],
+        '''
+        ''' Check spark custom app if this is running on spark cluster'''
+        spark_app_check_list = str(os.environ['SPARK_APP_CEHCK']).split(",")
+        is_runnng_spark = True
+        for running_spark in spark_app_check_list:
+            if running_spark not in custom_apps:
+                is_runnng_spark = False
+        ''' Check spark custom app if this is running on spark cluster'''
+        if not is_runnng_spark:
+            saved_failure_dict.update({"{}:8080_#2".format(master_spark) : "Spark cluster - http://{}:8080/json, no spark custom job (sparkSubmit.sh). Please confirm/run this.".format(master_spark)})
+            service_status_dict.update({"spark" : 'Red'})
+            get_all_envs_status(all_env_status_memory_list, -1, types='spark')
 
         # -- Get connect listeners
         '''
@@ -2435,13 +2466,13 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                 db_jobs_performance_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
                 ''' check if wmx db is active'''
                 db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
-                db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                # db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
             elif db_info == "OMx":
                 ''' update the time it take to establish the db connection and excute the basic query for OMx'''
                 db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
                 ''' check if omx db is active'''
                 db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
-                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
+                # db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
 
             
             ''' response same format with list included dicts'''   

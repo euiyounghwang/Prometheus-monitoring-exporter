@@ -28,6 +28,7 @@ export MAIL_SENDER="mymail"
 export ES_CONFIGURATION_URL="http://localhost:8004/docs"
 export ES_CONFIGURATION_HOST="localhost"
 export ES_EXPORTER_HOST="localhost"
+export SPARK_APP_CEHCK="StreamProcessEXP"
 
 
 export ZOOKEEPER_URLS="localhost:2181,localhost:2181,localhost:2181"
