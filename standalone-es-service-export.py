@@ -1067,6 +1067,15 @@ def get_metrics_all_envs(monitoring_metrics):
             kafka_url_hosts_list = kafka_url_hosts.split(",")
             logging.info(f"kafka_url_hosts_list - {kafka_url_hosts_list}")
 
+            ''' Gather too many open files from Primary Master Data Node via socket'''
+            ''' The open files limit is a setting in Linux that limits the number of open file descriptors that a process can have.'''
+            ''' you'll see how many regular files are open. This number is definitely more than the 4096 you have in your limits.'''
+            ''' In Linux, you can change the maximum amount of open files. You may modify this number by using the ulimit command. It grants you the ability to control the resources available for the shell or process started by it.'''
+            ''' If you want to see the hard and soft limits, you can use the following commands -> ulimit -Hn, ulimit -Sn'''
+            ''' lsof -Pn -u spark | wc -l or lsof -Pn -u biadmin | wc -l '''
+            ''' increase max file via /etc/security/limits.conf'''
+
+            ''' Gather disk usage from Data Transfer Node via socket'''
             loop = 1
             for idx, each_server in enumerate(kafka_url_hosts_list):
                 logging.info(f"{idx+1} : {each_server}")
