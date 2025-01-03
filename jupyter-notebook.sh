@@ -14,5 +14,5 @@ else
     source $SCRIPTDIR/$VENV/Scripts/activate
 fi
 
-# jupyter notebook
-jupyter lab
+jupyter notebook
+#jupyter lab

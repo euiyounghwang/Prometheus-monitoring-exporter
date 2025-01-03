@@ -5,3 +5,4 @@ Grafana-log/logstash-output
 Grafana-log/.venv/
 Playbook/*.docx
 fab/
+.virtual_documents/
