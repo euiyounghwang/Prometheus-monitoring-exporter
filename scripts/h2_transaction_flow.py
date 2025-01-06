@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 from airflow.models import Variable
 import logging
-from db import oracle_database
+from workflow.jupyter_workflow.db import oracle_database
 
 logger = logging.getLogger("airflow.task")
 
