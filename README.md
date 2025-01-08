@@ -9,10 +9,21 @@ When Prometheus scrapes your instance's HTTP endpoint, the client library sends 
 
 The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service.
 Metrics can be exposed through a standalone web server, or through Twisted, WSGI and the node exporter textfile collector.
+- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security)
+  - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
+  - cat web.yml
+    tls_server_config:
+            cert_file: /certs/certificate.crt
+            key_file: /certs/private.key
+  - Run : /home/prometheus/prometheus-2.35.0.linux-amd64/prometheus --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 --web.enable-lifecycle --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
+
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
 
+
 - Grafana : Add CSV plugin (unzip `/home/devuser/monitoring/grafana-8.0.0/data/plugins/marcusolsson-csv-datasource-0.6.21.linux_amd64.zip`) and then restart Grafana, Documentation(https://grafana.com/docs/grafana/latest/administration/plugin-management/, https://grafana.github.io/grafana-csv-datasource/installation/, https://deyoun.tistory.com/80)
+
+
 
 #### Python V3.9 Install
 ```bash
