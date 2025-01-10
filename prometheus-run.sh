@@ -9,7 +9,8 @@ case "$1" in
         # Start daemon.
         echo "Starting $SERVICE_NAME";
         #$PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=15d --storage.tsdb.retention.size=30GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_DATA_PATH --web.listen-address=:9099
-        nohup $PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=14d --storage.tsdb.retention.size=2GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_EXPORT_PATH &> /dev/null &
+        #$PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=14d --storage.tsdb.retention.size=2GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_EXPORT_PATH --web.config.file=$PROMETHEUS_EXPORT_PATH/web.yml
+        nohup $PROMETHEUS_EXPORT_PATH/prometheus --config.file=$PROMETHEUS_EXPORT_PATH/prometheus.yml --storage.tsdb.retention.time=14d --storage.tsdb.retention.size=2GB --web.enable-admin-api --storage.tsdb.path=$PROMETHEUS_EXPORT_PATH --web.config.file=$PROMETHEUS_EXPORT_PATH/web.yml &> /dev/null &
         ;;
   stop)
         # Stop daemons.

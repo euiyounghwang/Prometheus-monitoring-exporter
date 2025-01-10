@@ -105,6 +105,27 @@ or you can run this shell script `./create_virtual_env.sh` to make an environmen
 
 ### Architecture
 - Prometheus, Loki(https://github.com/grafana/loki, API : https://grafana.com/docs/loki/latest/reference/loki-http-api/), Promtail, Grafana, Collector as export app (Exports data in the Prometheus format, which allows it to be scraped by a Prometheus server.)
+
+- Prometheus login credentials
+```bash
+''' https://velog.io/@zihs0822/Prometheus-Security '''
+openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
+cat web.yml
+tls_server_config:
+        cert_file: /certs/certificate.crt
+        key_file: /certs/private.key
+
+ExecStart=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus \
+  --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml \
+  --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 \
+  --web.enable-lifecycle \
+  --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
+# -----------------------------
+cat web.yml
+basic_auth_users:
+        dbaas: test_with_bcrypted
+```
+
 - Promtail(https://github.com/grafana/loki/releases/) is an agent which ships the contents of local logs to a private Grafana Loki. Loki is a horizontally scalable, highly available, multi-tenant log aggregation system inspired by Prometheus and developed by Grafana Labs. Loki(https://github.com/grafana/loki/releases/) aims to simplify effective and user-friendly collection and storage of logs.
 - A Loki-based logging stack consists of 3 components:
   - promtail is the agent, responsible for gathering logs and sending them to Loki.
