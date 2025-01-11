@@ -3124,7 +3124,7 @@ def alert_work(db_http_host):
                 if is_sent_alert and is_resent_if_alert_need_to:
                     message = ", ".join(saved_thread_alert_message)
                     message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
-                    logger.error("Prometheus-Monitoring-Service - {}".format(message),
+                    logger.error("Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message),
                                     extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
                                         global_env_name,
                                         saved_thread_alert,
