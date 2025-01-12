@@ -3120,7 +3120,7 @@ def alert_work(db_http_host):
             """ Grafana-Loki Log """
             if saved_thread_alert:
                 ''' out of 00:00 time range for some issue from the db and sent alert again after 1 hour'''
-                ''' it will be sent alert log regardless of alert option'''
+                ''' it will be sent alert log if alert is enabled'''
                 if is_sent_alert and is_resent_if_alert_need_to:
                     message = ", ".join(saved_thread_alert_message)
                     message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
