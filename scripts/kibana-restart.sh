@@ -15,7 +15,6 @@ else
     sudo $KIBANA_PATH &
 fi
 
-#--
-#** Script for ES restart **
-#*/10 * * * * /home/devuser/UtilityScripts/es-restart.sh localhost dev
-#** ---------------------- **
+#** Kibana
+#*/10 * * * * /home/devuser/UtilityScripts/kibana-restart.sh
+
