@@ -124,7 +124,7 @@ fi
 # ---
 
 #--
-#** Script for ES restart **
+#** Script for Kibana restart **
 */10 * * * * /home/devuser/UtilityScripts/es-restart.sh localhost dev
 #** ---------------------- **
 
