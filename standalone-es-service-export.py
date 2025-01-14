@@ -95,6 +95,7 @@ kafka_connect_health_gauge_g = Gauge("kafka_connect_health_metric", 'Metrics scr
 kafka_isr_list_gauge_g = Gauge("kafka_isr_list_metric", 'Metrics scraped from localhost', ["server_job", "topic", "partition", "leader", "replicas", "isr"])
 zookeeper_nodes_gauge_g = Gauge("zookeeper_health_metric", 'Metrics scraped from localhost', ["server_job"])
 spark_nodes_gauge_g = Gauge("spark_health_metric", 'Metrics scraped from localhost', ["server_job"])
+spark_custom_apps_gauge_g = Gauge("spark_custom_apps_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kibana_instance_gauge_g = Gauge("kibana_health_metric", 'Metrics scraped from localhost', ["server_job"])
 redis_instance_gauge_g = Gauge("redis_health_metric", 'Metrics scraped from localhost', ["server_job"])
 es_configuration_instance_gauge_g = Gauge("es_configuration_writing_job_health_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -1788,6 +1789,9 @@ def get_metrics_all_envs(monitoring_metrics):
             saved_failure_dict.update({"{}:8080_#2".format(master_spark) : "Spark cluster - http://{}:8080/json, no spark custom job (sparkSubmit.sh). Please confirm/run this.".format(master_spark)})
             service_status_dict.update({"spark" : 'Red'})
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
+            spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(0)
+        else:
+            spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(1)
 
         # -- Get connect listeners
         '''
