@@ -1781,14 +1781,17 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Check spark custom app if this is running on spark cluster'''
         spark_app_check_list = str(os.environ['SPARK_APP_CEHCK']).split(",")
         is_runnng_spark = True
+        _not_running_app_name = []
         for running_spark in spark_app_check_list:
             if running_spark not in custom_apps:
                 is_runnng_spark = False
+                _not_running_app_name.append(running_spark)
         
         ''' Check spark custom app if this is running on spark cluster'''
         ''' Get a list of spark custom app from environment in shell script'''
         if not is_runnng_spark:
-            saved_failure_dict.update({"{}:8080_#2".format(master_spark) : "Spark cluster - http://{}:8080/json, no spark custom job (sparkSubmit.sh). Please confirm/run this.".format(master_spark)})
+            for idx, _each_not_running_spark_app in enumerate(_not_running_app_name):
+                saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "Spark cluster - http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
             service_status_dict.update({"spark" : 'Red'})
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
             spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(0)
