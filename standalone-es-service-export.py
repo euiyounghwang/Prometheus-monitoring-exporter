@@ -2516,6 +2516,11 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                         ''' top record for validating if data pipeline is being processed within 30 minutes'''
                         if each_row == 0:
 
+                            ''' Delete db_jobs exception if key does exist in saved_failure_db_dict''' 
+                            exception_key = 'db-jobs-{}_{}'.format(db_info,db_info)
+                            if exception_key in saved_failure_db_dict.keys():
+                                del saved_failure_db_dict[exception_key]
+
                             ''' --------------'''
                             ''' update process name with time difference'''
                             # Calculate the time gap
