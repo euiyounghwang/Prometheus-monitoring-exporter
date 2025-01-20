@@ -149,6 +149,9 @@ qa25 = st.empty()
 qa25.subheader('Qa25')  
 qa25 = st.empty()
 
+qa26 = st.empty()
+qa26.subheader('Qa26')  
+qa26 = st.empty()
 
 def get_mail_configuration(db_http_host):
     ''' interface es_config_api http://localhost:8004/config/get_mail_config '''
@@ -382,6 +385,12 @@ def Display(resp, all_env_dicts):
         qa25.success(f'Alert {resp[all_env_dicts.get("qa25")]["is_mailing"]}')
     else:
         qa25.error(f'Alert {resp[all_env_dicts.get("qa25")]["is_mailing"]}')
+
+      # ''' qa25 '''
+    if resp[all_env_dicts.get("qa26")]["is_mailing"]:
+        qa26.success(f'Alert {resp[all_env_dicts.get("qa26")]["is_mailing"]}')
+    else:
+        qa26.error(f'Alert {resp[all_env_dicts.get("qa26")]["is_mailing"]}')
 
     # input_user_name = st.text_input(label="User Name", value=f'Alert {resp[all_env_dicts.get("prod3")]["is_mailing"]}')
 
