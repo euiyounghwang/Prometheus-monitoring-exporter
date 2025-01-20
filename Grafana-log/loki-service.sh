@@ -3,6 +3,13 @@
 LOKI_PATH=/home/devuser/monitoring/grafana-loki
 SERVICE_NAME=grafana-loki-service
 
+# ''' https://community.grafana.com/t/how-to-set-up-loki-and-promtail-to-communicate-over-tls/107867 '''
+# - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
+# - openssl x509 -in ./certificate.crt -subject -noout
+# tls_server_config:
+#    cert_file: /certs/certificate.crt
+#    key_file: /certs/private.key
+
 # See how we were called.
 case "$1" in
   start)

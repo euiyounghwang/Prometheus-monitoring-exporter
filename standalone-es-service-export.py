@@ -39,12 +39,17 @@ load_dotenv() # will search for .env file in local folder and load variables
 ''' Datasource : {service=~"prometheus-monitoring-service|prometheus-monitoring-service1", env=~"$Kafka_Data_Source_Env"} '''
 ''' Grafana Dashboard -> Settings -> Variable -> Kafka_Data_Source -> grafana-loki, query type: Label values, Label : env'''
 """ Grafana Loki """
+''' https://pypi.org/project/python-logging-loki/ '''
+''' https://community.grafana.com/t/adding-basic-auth-to-loki-using-nginx/111549/4 '''
 import logging
 import logging_loki # type: ignore
 logging_loki.emitter.LokiEmitter.level_tag = "level"
 # assign to a variable named handler 
+
+''' loki tls : https://community.grafana.com/t/how-to-set-up-loki-and-promtail-to-communicate-over-tls/107867'''
+LOKI_ENDPOINT="http://{}:3100/loki/api/v1/push".format(os.getenv("LOKI_HOST"))
 handler = logging_loki.LokiHandler(
-   url="http://{}:3100/loki/api/v1/push".format(os.getenv("LOKI_HOST")),
+   url=LOKI_ENDPOINT,
    version="1",
 )
 # create a new logger instance, name it whatever you want
@@ -2174,6 +2179,42 @@ def get_metrics_all_envs(monitoring_metrics):
         pass
         
 
+
+def generate_log_message(message):
+    ''' 
+    push logs to Grafana-loki via HTTP Post method
+    # logger.error("Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message),
+                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
+                                        global_env_name,
+                                        saved_thread_alert,
+                                        message_status
+                                        ),
+                                        "env" : "{}".format(global_env_name), 
+                                        }},
+                    # )
+    '''
+    headers = {"content-type":"application/json"}
+    data = {
+        "streams": [{
+            "stream": { "job": "python-requests", "env": "test", "level": "info", "tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
+                                        global_env_name,
+                                        saved_thread_alert,
+                                        message
+                                        ),
+                                        "env" : "{}".format(global_env_name), 
+                                        }},
+            "values": [ time.time_ns(), message ]  
+        }]
+    }
+    print('\n\n')
+    print(json.dumps(data, indent=2))
+    print('\n\n')
+    response = requests.post(LOKI_ENDPOINT, headers=headers, json=data, verify=False)
+    print(response)
+    return response.status_code
+
+
+
 ''' global mememoy'''
 global_es_shards_tasks_end_occurs_unassgined = False
 global_out_of_alert_time_range = False
@@ -3136,9 +3177,10 @@ def alert_work(db_http_host):
             if saved_thread_alert:
                 ''' out of 00:00 time range for some issue from the db and sent alert again after 1 hour'''
                 ''' it will be sent alert log if alert is enabled'''
+                message = ", ".join(saved_thread_alert_message)
+                message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
+                
                 if is_sent_alert and is_resent_if_alert_need_to:
-                    message = ", ".join(saved_thread_alert_message)
-                    message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
                     logger.error("Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message),
                                     extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
                                         global_env_name,
@@ -3148,6 +3190,8 @@ def alert_work(db_http_host):
                                         "env" : "{}".format(global_env_name), 
                                         }},
                     )
+                
+                # generate_log_message(message_status)
 
             logging.info(f"saved_thread_alert - {saved_thread_alert}")
             # logging.info(f"saved_thread_alert_message - {saved_thread_alert_message}")
@@ -3159,7 +3203,8 @@ def alert_work(db_http_host):
             if is_dev_mode:
                 time.sleep(60)
             else:
-                time.sleep(60*thread_interval)
+                # time.sleep(60*thread_interval)
+                time.sleep(10)
 
     except (KeyboardInterrupt, SystemExit):
         logging.info("#Interrupted..")

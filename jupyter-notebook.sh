@@ -30,6 +30,12 @@ export MAIL_USERLIST="test@test.com"
 export MAIL_CC="testg@test.com"
 
 
+# --
+# https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
+# You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate, i.e. mycert.pem, with the command:
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem
+# --
+
 #jupyter notebook
 #jupyter lab
 
@@ -40,6 +46,7 @@ case "$1" in
         # Start daemon.
         echo "Starting $SERVICE_NAME";
         # nohup jupyter notebook --ip 0.0.0.0 &> /dev/null &
+        # jupyter notebook --ip 0.0.0.0 --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key
         jupyter notebook --ip 0.0.0.0
         ;;
   stop)

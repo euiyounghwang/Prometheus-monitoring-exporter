@@ -3,6 +3,9 @@ auth_enabled: false
 server:
   http_listen_port: 3100
   grpc_listen_port: 9096
+  tls_server_config:
+    cert_file: /certs/certificate.crt
+    key_file: /certs/private.key
 
 common:
   instance_addr: 0.0.0.0
