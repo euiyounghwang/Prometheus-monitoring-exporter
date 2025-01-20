@@ -21,6 +21,12 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 
   - Run : /home/prometheus/prometheus-2.35.0.linux-amd64/prometheus --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 --web.enable-lifecycle --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
 
+- Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
+  - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
+  - You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate, i.e. mycert.pem, with the command:
+  - A self-signed certificate can be generated with openssl. For example, the following command will create a certificate valid for 365 days with both the key and certificate data written to the same file:
+  - openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem
+  - jupyter notebook --ip 0.0.0.0 --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
 
