@@ -648,7 +648,8 @@ def get_metrics_all_envs(monitoring_metrics):
             return 1
         
         ''' save failure node with a reason into saved_failure_dict'''
-        saved_failure_dict.update({socket.gethostname() : "Logstash is not running.."})
+        # saved_failure_dict.update({socket.gethostname() : "Logstash is not running.."})
+        saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
         return 0
     
 
@@ -2131,7 +2132,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"Mail Alert mail Configuration - {global_mail_configuration.get(hostname).get('is_mailing','')}, Mail Alert SMS Configuration : {global_mail_configuration.get(hostname).get('is_sms','')}")
         logging.info(f"global_es_shards_tasks_end_occurs_unassgined - {global_es_shards_tasks_end_occurs_unassgined}")
         logging.info(f"global_OUT_OF_ALERT_TIME : {global_OUT_OF_ALERT_TIME}, global_TIME_STAMP : {global_TIME_STAMP}, global_out_of_alert_time_range - {global_out_of_alert_time_range}")
-        logging.info(f"global_es_configuration_host : {global_es_configuration_host}, global_env_name - {global_env_name}")
+        logging.info(f"global_es_configuration_host : {global_es_configuration_host}, global_loki_host : {os.getenv('LOKI_HOST')}, global_env_name - {global_env_name}")
         logging.info(f"current_alert_message : {saved_thread_alert_message}")
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
