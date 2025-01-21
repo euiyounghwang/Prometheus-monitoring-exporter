@@ -2160,7 +2160,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     )
             '''
             ''' Push log to Grafana-Loki'''
-            push_log_to_grafana_loki(env=global_env_name, title_msg="Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name), body_msg="[{}] Services, Alert : {}".format(global_env_name,saved_thread_alert))
+            push_log_to_grafana_loki(env=global_env_name, title_msg="Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name), body_msg="[{}] Services, Alert : {}".format(global_env_name,saved_thread_alert), logger_level="info")
 
         ''' ----------------------'''
         ''' SMS alert imediately'''
@@ -2184,7 +2184,7 @@ def get_metrics_all_envs(monitoring_metrics):
         
 
 
-def push_log_to_grafana_loki(env, title_msg, body_msg):
+def push_log_to_grafana_loki(env, title_msg, body_msg, logger_level):
     ''' push msg log into grafana-loki '''
 
     def loki_timestamp():
@@ -2203,7 +2203,7 @@ def push_log_to_grafana_loki(env, title_msg, body_msg):
                     "message": body_msg,
                     "env": env,
                     "logger" : "prometheus-logger",
-                    "level" : "error"
+                    "level" : logger_level
                 },
                 'values': [
                     [
@@ -3200,7 +3200,8 @@ def alert_work(db_http_host):
                     ''' Push log to Grafana-Loki'''
                     push_log_to_grafana_loki(env=global_env_name, 
                                              title_msg= "Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message), 
-                                             body_msg="[{}] Services, Alert : {}, Issues : {}".format(global_env_name, saved_thread_alert, message_status)
+                                             body_msg="[{}] Services, Alert : {}, Issues : {}".format(global_env_name, saved_thread_alert, message_status),
+                                             logger_level="error"
                                              )
 
                 
