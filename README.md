@@ -27,6 +27,8 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - A self-signed certificate can be generated with openssl. For example, the following command will create a certificate valid for 365 days with both the key and certificate data written to the same file:
   - openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem
   - jupyter notebook --ip 0.0.0.0 --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key
+  - openssl x509 -enddate -noout -in ./mycert.pem 
+    notAfter=Jan 18 20:58:27 2035 GMT
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
 
