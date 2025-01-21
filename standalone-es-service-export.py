@@ -24,6 +24,7 @@ import re
 from collections import defaultdict
 # import paramiko
 import base64
+import pytz
 from dotenv import load_dotenv
 import warnings
 warnings.filterwarnings("ignore")
@@ -2148,6 +2149,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
             """ # Grafana-Loki Log """
+            '''
             logger.info("Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name),
                                     extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}".format(
                                         global_env_name,
@@ -2156,7 +2158,9 @@ def get_metrics_all_envs(monitoring_metrics):
                                         "env" : "{}".format(global_env_name), 
                                         }},
                     )
-           
+            '''
+            ''' Push log to Grafana-Loki'''
+            push_log_to_grafana_loki(env=global_env_name, title_msg="Prometheus-Monitoring-Service - [{}] Services are back online".format(global_env_name), body_msg="[{}] Services, Alert : {}".format(global_env_name,saved_thread_alert))
 
         ''' ----------------------'''
         ''' SMS alert imediately'''
@@ -2180,38 +2184,39 @@ def get_metrics_all_envs(monitoring_metrics):
         
 
 
-def generate_log_message(message):
-    ''' 
-    push logs to Grafana-loki via HTTP Post method
-    # logger.error("Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message),
-                                    extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
-                                        global_env_name,
-                                        saved_thread_alert,
-                                        message_status
-                                        ),
-                                        "env" : "{}".format(global_env_name), 
-                                        }},
-                    # )
-    '''
-    headers = {"content-type":"application/json"}
-    data = {
-        "streams": [{
-            "stream": { "job": "python-requests", "env": "test", "level": "info", "tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
-                                        global_env_name,
-                                        saved_thread_alert,
-                                        message
-                                        ),
-                                        "env" : "{}".format(global_env_name), 
-                                        }},
-            "values": [ time.time_ns(), message ]  
-        }]
+def push_log_to_grafana_loki(env, title_msg, body_msg):
+    ''' push msg log into grafana-loki '''
+
+    def loki_timestamp():
+      return f"{(int(time.time() * 1_000_000_000))}"
+
+    url = 'https://{}:3100/loki/api/v1/push'.format(os.getenv('LOKI_HOST'))
+    headers = {
+        'Content-type': 'application/json'
     }
-    print('\n\n')
-    print(json.dumps(data, indent=2))
-    print('\n\n')
-    response = requests.post(LOKI_ENDPOINT, headers=headers, json=data, verify=False)
-    print(response)
-    return response.status_code
+    ''' 'service': 'prometheus-monitoring-service','message': '[DEV] Services, Alert : True, Issues : Server Active : Green, ES Data Pipline : Red','env': 'PROD' '''
+    payload = {
+        'streams': [
+            {
+                'stream' : {
+                    'service': 'prometheus-monitoring-service',
+                    "message": body_msg,
+                    "env": env,
+                    "logger" : "prometheus-logger",
+                    "level" : "error"
+                },
+                'values': [
+                    [
+                        loki_timestamp(),
+                        title_msg
+                    ]
+                ]
+            }
+        ]
+    }
+    # payload = json.dumps(payload)
+    response = requests.post(url, json=payload, headers=headers, verify=False)
+    print(response.status_code)
 
 
 
@@ -3181,6 +3186,7 @@ def alert_work(db_http_host):
                 message_status = "Server Active : {}, ES Data Pipline : {}".format(saved_status_dict.get("server_active","Green"), saved_status_dict.get("es_pipeline","Green"))
                 
                 if is_sent_alert and is_resent_if_alert_need_to:
+                    '''
                     logger.error("Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message),
                                     extra={"tags": {"service": "prometheus-monitoring-service", "message" : "[{}] Services, Alert : {}, Issues : {}".format(
                                         global_env_name,
@@ -3190,9 +3196,14 @@ def alert_work(db_http_host):
                                         "env" : "{}".format(global_env_name), 
                                         }},
                     )
-                
-                # generate_log_message(message_status)
+                    '''
+                    ''' Push log to Grafana-Loki'''
+                    push_log_to_grafana_loki(env=global_env_name, 
+                                             title_msg= "Prometheus-Monitoring-Service - [{}] {}".format(global_env_name, message), 
+                                             body_msg="[{}] Services, Alert : {}, Issues : {}".format(global_env_name, saved_thread_alert, message_status)
+                                             )
 
+                
             logging.info(f"saved_thread_alert - {saved_thread_alert}")
             # logging.info(f"saved_thread_alert_message - {saved_thread_alert_message}")
 
@@ -3203,8 +3214,7 @@ def alert_work(db_http_host):
             if is_dev_mode:
                 time.sleep(60)
             else:
-                # time.sleep(60*thread_interval)
-                time.sleep(10)
+                time.sleep(60*thread_interval)
 
     except (KeyboardInterrupt, SystemExit):
         logging.info("#Interrupted..")
