@@ -86,9 +86,13 @@ def work():
         
         except Exception as e:
             logging.error(e)
+            '''
             logger.error("Prometheus-Alert-Service",
                 extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
             )
+            '''
+            ''' Push logs to Grafana-Loki'''
+            push_log_to_grafana_loki(title_msg=str(e), body_msg=str(e), logger_level="error")
 
 
 
@@ -105,9 +109,13 @@ def work():
         
         except Exception as e:
            logging.error(e)
+           '''
            logger.error("Prometheus-Alert-Service",
                 extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
            )
+           '''
+           ''' Push logs to Grafana-Loki'''
+           push_log_to_grafana_loki(title_msg=str(e), body_msg=str(e), logger_level="error")
 
 
     def transform_json(mapping_host_dict, configuration_data, key, alert_bool_option):
@@ -136,9 +144,13 @@ def work():
 
         except Exception as e:
             logging.error(e)
+            '''
             logger.error("Prometheus-Alert-Service",
                 extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
             )
+            '''
+            ''' Push logs to Grafana-Loki'''
+            push_log_to_grafana_loki(title_msg=str(e), body_msg=str(e), logger_level="error")
 
     
     def retry_connnection():
@@ -201,9 +213,14 @@ def work():
 
                 key = key.decode('utf-8')
                 message = "[{}] Alert : {}, {}".format(str(key).upper(), redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"]),
+                '''
                 logger.info("Prometheus-Alert-Service - {}".format(message),
                     extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
                 )
+                '''
+                msg = "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])
+                ''' Push logs to Grafana-Loki'''
+                push_log_to_grafana_loki(title_msg=msg, body_msg=msg, logger_level="info")
 
                 ''' delete key'''
                 # r.delete(key)
@@ -221,12 +238,50 @@ def work():
     except (KeyboardInterrupt, SystemExit) as e:
         logging.info("#Interrupted..")
         message = "[{}]".format(str(key).upper()),
+        '''
         logger.error("Prometheus-Alert-Service {}".format(message),
                     extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
                 )
+        '''
+        ''' Push logs to Grafana-Loki'''
+        push_log_to_grafana_loki(title_msg=str(e), body_msg=str(e), logger_level="error")
 
     finally:
         redis_client.Set_Close()
+
+
+def push_log_to_grafana_loki(title_msg, body_msg, logger_level):
+    ''' push msg log into grafana-loki '''
+
+    def loki_timestamp():
+      return f"{(int(time.time() * 1_000_000_000))}"
+
+    url = 'https://{}:3100/loki/api/v1/push'.format(os.getenv('LOKI_HOST'))
+    headers = {
+        'Content-type': 'application/json'
+    }
+    ''' 'service': 'prometheus-monitoring-service','message': '[DEV] Services, Alert : True, Issues : Server Active : Green, ES Data Pipline : Red','env': 'PROD' '''
+    payload = {
+        'streams': [
+            {
+                'stream' : {
+                    'service': 'prometheus-alert-service',
+                    "message": body_msg,
+                    "logger" : "prometheus-logger",
+                    "level" : logger_level
+                },
+                'values': [
+                    [
+                        loki_timestamp(),
+                        title_msg
+                    ]
+                ]
+            }
+        ]
+    }
+    # payload = json.dumps(payload)
+    response = requests.post(url, json=payload, headers=headers, verify=False)
+    print(response.status_code)
 
 
 def HTTP_Server():
