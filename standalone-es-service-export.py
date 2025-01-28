@@ -943,7 +943,7 @@ def get_metrics_all_envs(monitoring_metrics):
                                 get_host_name = None
                             else:
                                 get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
-
+                          
                             if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
                                 nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                             else:
