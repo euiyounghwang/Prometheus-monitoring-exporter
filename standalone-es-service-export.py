@@ -1799,11 +1799,14 @@ def get_metrics_all_envs(monitoring_metrics):
         if not is_runnng_spark:
             for idx, _each_not_running_spark_app in enumerate(_not_running_app_name):
                 saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "Spark cluster - http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
-            service_status_dict.update({"spark" : 'Red'})
+            is_status_spark_custom_app = 'Red'
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
             spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(0)
         else:
+            is_status_spark_custom_app = 'Green'
             spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(1)
+        ''' Update the status of spark custom app in service_status_dict for the alert'''
+        service_status_dict.update({"spark" : is_status_spark_custom_app})
 
         # -- Get connect listeners
         '''
