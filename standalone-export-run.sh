@@ -2,7 +2,8 @@
 set -e
 
 JAVA_HOME='/home/biadmin/jdk1.8.0_151'
-PATH=$PATH:$JAVA_HOME
+#PATH=$PATH:$JAVA_HOME
+export PATH=$JAVA_HOME/bin:$PATH
 export JAVA_HOME
 
 # Activate virtualenv && run serivce
