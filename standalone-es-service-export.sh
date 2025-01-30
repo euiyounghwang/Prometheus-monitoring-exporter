@@ -50,6 +50,7 @@ case "$1" in
         $0 stop
         sleep 2
         $0 start
+        sleep 2
         ;;
   status)
         pid=`ps ax | grep -i '/standalone-es-service-export.py' | grep -v grep | awk '{print $1}'`

@@ -92,6 +92,9 @@ nodes_max_disk_used_gauge_g = Gauge("node_disk_used_metric", 'Metrics scraped fr
 es_nodes_gauge_g = Gauge("es_node_metric", 'Metrics scraped from localhost', ["server_job"])
 es_nodes_basic_info_docs_gauge_g = Gauge("es_node_basic_docs_metric", 'Metrics scraped from localhost', ["server_job"])
 es_nodes_basic_info_indices_gauge_g = Gauge("es_node_basic_indices_metric", 'Metrics scraped from localhost', ["server_job"])
+es_nodes_total_info_docs_gauge_g = Gauge("es_node_total_docs_metric", 'Metrics scraped from localhost', ["server_job"])
+es_nodes_total_info_indices_gauge_g = Gauge("es_node_total_indices_metric", 'Metrics scraped from localhost', ["server_job"])
+es_nodes_group_info_docs_gauge_g = Gauge("es_node_group_docs_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 es_nodes_health_gauge_g = Gauge("es_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_nodes_gauge_g = Gauge("kafka_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_connect_nodes_gauge_g = Gauge("kafka_connect_nodes_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -851,14 +854,16 @@ def get_metrics_all_envs(monitoring_metrics):
                     ]
                     '''
                     # logging.info(f"resp_basic_info - {resp_info}, {resp_info.json()}")
-                    total_docs, total_indices = 0, 0
+                    total_docs, total_indices, not_system_docs, not_system_indices = 0, 0, 0, 0
                     for each_json_info in list(resp_info.json()):
                         ''' Exclude the list of indices if indices has '.' as prefix to be used system indices such as .monitoring* or .kibana*'''
                         if not each_json_info.get("index").startswith("."):
-                            total_docs += int(each_json_info.get("docs.count"))
-                            total_indices += 1
+                            not_system_docs += int(each_json_info.get("docs.count"))
+                            not_system_indices += 1
+                        total_docs += int(each_json_info.get("docs.count"))
+                        total_indices += 1
                             
-                    es_basic_info.update({"docs" : total_docs, "indices" : total_indices})
+                    es_basic_info.update({"total_docs" : total_docs, "total_indices" : total_indices, "docs" : not_system_docs, "indices" : not_system_indices})
 
                     return resp.json(), es_basic_info
                 
@@ -1488,8 +1493,15 @@ def get_metrics_all_envs(monitoring_metrics):
         if resp_es_health:
             ''' get es nodes from _cluster/health api'''
             es_nodes_gauge_g.labels(socket.gethostname()).set(int(resp_es_health['number_of_nodes']))
+            ''' --- '''
+            ''' get total docs, total indices, total docs excluded system indices, total indices excluded system indices'''
             es_nodes_basic_info_docs_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['docs']))
             es_nodes_basic_info_indices_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['indices']))
+            es_nodes_total_info_docs_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['total_docs']))
+            es_nodes_total_info_indices_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['total_indices']))
+            es_nodes_group_info_docs_gauge_g.labels(server_job=socket.gethostname(), category="wmx_omx_indices").set(int(resp_es_basic_info['indices']))
+            es_nodes_group_info_docs_gauge_g.labels(server_job=socket.gethostname(), category="total_indices").set(int(resp_es_basic_info['total_indices']))
+            ''' --- '''
             if resp_es_health['status'] == 'green':
                 ''' update cluster status if we have all nodes running'''
                 all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list,1)
