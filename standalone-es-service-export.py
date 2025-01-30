@@ -853,6 +853,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     # logging.info(f"resp_basic_info - {resp_info}, {resp_info.json()}")
                     total_docs, total_indices = 0, 0
                     for each_json_info in list(resp_info.json()):
+                        ''' Exclude the list of indices if indices has '.' as prefix to be used system indices such as .monitoring* or .kibana*'''
                         if not each_json_info.get("index").startswith("."):
                             total_docs += int(each_json_info.get("docs.count"))
                             total_indices += 1
