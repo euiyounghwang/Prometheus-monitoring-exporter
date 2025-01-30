@@ -970,7 +970,7 @@ def get_metrics_all_envs(monitoring_metrics):
                                 # if get_float_number(v) >= int(os.environ["NODES_DISK_AVAILABLE_THRESHOLD"]):
                                 if get_float_number(v) >= int(disk_usage_threshold_es_config_api):
                                     ''' save failure node with a reason into saved_failure_dict'''
-                                    saved_failure_dict.update({"{}_{}".format(each_es_host.split(":")[0], str(loop)) : "[host : {}, name : {}]".format(each_es_host.split(":")[0], element_dict.get("name","")) + " Disk Used : " + element_dict.get("diskUsedPercent","") + "%" + ", Disk Threshold : " + str(disk_usage_threshold_es_config_api) + "%" })
+                                    saved_failure_dict.update({"{}_{}".format(each_es_host.split(":")[0], str(loop)) : "[host : {}, name : {}]".format(get_host_name, element_dict.get("name","")) + " Disk Used : " + element_dict.get("diskUsedPercent","") + "%" + ", Disk Threshold : " + str(disk_usage_threshold_es_config_api) + "%" })
                                     is_over_free_Disk_space = True
                                 loop += 1
                             
