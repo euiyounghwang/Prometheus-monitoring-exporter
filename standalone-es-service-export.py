@@ -697,8 +697,9 @@ def get_metrics_all_envs(monitoring_metrics):
                 ]
             """
             try:
-                 # -- make a call to cluster for checking the disk space on all nodes in the cluster
-                resp = requests.get(url="{}://{}/_cat/shards?format=json&v=true&h=index,shard,prirep,state,node,unassigned.reason&s=state".format(es_cluster_call_protocal, each_es_host), headers=get_header(), verify=False, timeout=5)
+                # -- make a call to cluster for checking the disk space on all nodes in the cluster
+                es_urls = "{}://{}/_cat/shards?format=json&v=true&h=index,shard,prirep,state,node,unassigned.reason&s=state".format(es_cluster_call_protocal, each_es_host)
+                resp = requests.get(url=es_urls.format(es_cluster_call_protocal, each_es_host), headers=get_header(), verify=False, timeout=5)
                     
                 if not (resp.status_code == 200):
                     ''' save failure node with a reason into saved_failure_dict'''
@@ -777,7 +778,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     # -- make a call to node
                     
                     ''' export es metrics from ES cluster with Search Guard'''
-                    resp = requests.get(url="{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=30, verify=False)
+                    es_urls = "{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host)
+                    resp = requests.get(url=es_urls, headers=get_header(), timeout=30, verify=False)
+                    print('\n\n\n')
+                    print(f"es_urls : {es_urls}")
+                    print('\n\n\n')
 
                     if not (resp.status_code == 200):
                         ''' save failure node with a reason into saved_failure_dict'''
@@ -848,8 +853,9 @@ def get_metrics_all_envs(monitoring_metrics):
                     # logging.info(f"resp_basic_info - {resp_info}, {resp_info.json()}")
                     total_docs, total_indices = 0, 0
                     for each_json_info in list(resp_info.json()):
-                        total_docs += int(each_json_info.get("docs.count"))
-                        total_indices += 1
+                        if not each_json_info.get("index").startswith("."):
+                            total_docs += int(each_json_info.get("docs.count"))
+                            total_indices += 1
                             
                     es_basic_info.update({"docs" : total_docs, "indices" : total_indices})
 
