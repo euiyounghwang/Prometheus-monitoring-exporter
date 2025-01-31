@@ -50,6 +50,7 @@ case "$1" in
         $0 stop
         sleep 2
         $0 start
+        # Need to wait for two seconds to start python script via Fabric
         sleep 2
         ;;
   status)

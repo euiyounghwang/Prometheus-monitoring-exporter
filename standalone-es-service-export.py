@@ -857,7 +857,8 @@ def get_metrics_all_envs(monitoring_metrics):
                     total_docs, total_indices, not_system_docs, not_system_indices = 0, 0, 0, 0
                     for each_json_info in list(resp_info.json()):
                         ''' Exclude the list of indices if indices has '.' as prefix to be used system indices such as .monitoring* or .kibana*'''
-                        if not each_json_info.get("index").startswith("."):
+                        # if not each_json_info.get("index").startswith("."):
+                        if each_json_info.get("index").startswith("wx_") or each_json_info.get("index").startswith("om_") or each_json_info.get("index").startswith("es_") or each_json_info.get("index").startswith("archive_es_"):
                             not_system_docs += int(each_json_info.get("docs.count"))
                             not_system_indices += 1
                         total_docs += int(each_json_info.get("docs.count"))
