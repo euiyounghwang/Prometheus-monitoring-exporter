@@ -116,10 +116,13 @@ qa11 = st.empty()
 qa11.subheader('Qa11')  
 qa11 = st.empty()
 
-
 qa13 = st.empty()
 qa13.subheader('Qa13')  
 qa13 = st.empty()
+
+qa13_new = st.empty()
+qa13_new.subheader('Qa13_new')  
+qa13_new = st.empty()
 
 qa14 = st.empty()
 qa14.subheader('Qa14')  
@@ -144,6 +147,10 @@ qa18 = st.empty()
 qa20 = st.empty()
 qa20.subheader('Qa20')  
 qa20 = st.empty()
+
+qa22 = st.empty()
+qa22.subheader('Qa22')  
+qa22 = st.empty()
 
 qa25 = st.empty()
 qa25.subheader('Qa25')  
@@ -344,6 +351,12 @@ def Display(resp, all_env_dicts):
     else:
         qa13.error(f'Alert {resp[all_env_dicts.get("qa13")]["is_mailing"]}')
 
+    # ''' qa13_new '''
+    if resp[all_env_dicts.get("qa13_new")]["is_mailing"]:
+        qa13_new.success(f'Alert {resp[all_env_dicts.get("qa13_new")]["is_mailing"]}')
+    else:
+        qa13_new.error(f'Alert {resp[all_env_dicts.get("qa13_new")]["is_mailing"]}')
+
     # ''' qa14 '''
     if resp[all_env_dicts.get("qa14")]["is_mailing"]:
         qa14.success(f'Alert {resp[all_env_dicts.get("qa14")]["is_mailing"]}')
@@ -379,6 +392,12 @@ def Display(resp, all_env_dicts):
         qa20.success(f'Alert {resp[all_env_dicts.get("qa20")]["is_mailing"]}')
     else:
         qa20.error(f'Alert {resp[all_env_dicts.get("qa20")]["is_mailing"]}')
+
+    # ''' qa22 '''
+    if resp[all_env_dicts.get("qa22")]["is_mailing"]:
+        qa22.success(f'Alert {resp[all_env_dicts.get("qa22")]["is_mailing"]}')
+    else:
+        qa22.error(f'Alert {resp[all_env_dicts.get("qa22")]["is_mailing"]}')
 
     # ''' qa25 '''
     if resp[all_env_dicts.get("qa25")]["is_mailing"]:

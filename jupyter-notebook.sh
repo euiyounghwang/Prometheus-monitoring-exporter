@@ -29,6 +29,8 @@ export MAIL_SENDER="es-report@test.com"
 export MAIL_USERLIST="test@test.com"
 export MAIL_CC="testg@test.com"
 
+export DEV_ES_HOST="dev:9200"
+
 
 # --
 # https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
@@ -45,8 +47,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        # nohup jupyter notebook --ip 0.0.0.0 &> /dev/null &
-        # jupyter notebook --ip 0.0.0.0 --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key
+        # nohup jupyter notebook --ip 0.0.0.0 --allow-root --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key &> /dev/null &
+        # jupyter notebook --ip 0.0.0.0 --allow-root --certfile=./certs/mycert.pem --keyfile ./certs/mykey.key
         jupyter notebook --ip 0.0.0.0
         ;;
   stop)
