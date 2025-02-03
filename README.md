@@ -13,11 +13,13 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
   - openssl x509 -in ./certificate.crt -subject -noout
   - cat web.yml
+  ```bash
     tls_server_config:
-            cert_file: /certs/certificate.crt
-            key_file: /certs/private.key
+        cert_file: /certs/certificate.crt
+        key_file: /certs/private.key
     basic_auth_users:
         es_view: base64.encode(test)
+  ```
 
   - Run : /home/prometheus/prometheus-2.35.0.linux-amd64/prometheus --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 --web.enable-lifecycle --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
 
