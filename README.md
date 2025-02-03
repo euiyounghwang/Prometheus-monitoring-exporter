@@ -37,6 +37,16 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 
 - Grafana : Add CSV plugin (unzip `/home/devuser/monitoring/grafana-8.0.0/data/plugins/marcusolsson-csv-datasource-0.6.21.linux_amd64.zip`) and then restart Grafana, Documentation(https://grafana.com/docs/grafana/latest/administration/plugin-management/, https://grafana.github.io/grafana-csv-datasource/installation/, https://deyoun.tistory.com/80)
 
+- Gradio : Gradio is the fastest way to demo your machine learning model with a friendly web interface so that anyone can use it. Gradio is an open-source Python package that allows you to quickly build a demo or web application for your machine learning model, API, or any arbitrary Python function. You can then share a link to your demo or web application in just a few seconds using Gradio's built-in sharing features. No JavaScript, CSS, or web hosting experience needed!
+```bash
+import gradio as gr
+
+def greet(name):
+    return "Hello " + name + "!"
+
+demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+demo.launch()   
+```
 
 
 #### Python V3.9 Install
