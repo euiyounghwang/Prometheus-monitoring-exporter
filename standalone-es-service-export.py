@@ -616,7 +616,7 @@ def get_metrics_all_envs(monitoring_metrics):
             
             if not (resp.status_code == 200):
                 spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(0)
-                saved_failure_dict.update({node : "Spark cluster - http://{}:8080/json API do not reachable".format(master_node)})
+                saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
                 return None
             
             ''' expose metrics spark node health is active'''
@@ -641,7 +641,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
         except Exception as e:
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
-            saved_failure_dict.update({node : "Spark cluster - http://{}:8080/json API do not reachable".format(master_node)})
+            saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
             spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(0)
             logging.error(e)
             return []
@@ -1818,7 +1818,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Get a list of spark custom app from environment in shell script'''
         if not is_runnng_spark:
             for idx, _each_not_running_spark_app in enumerate(_not_running_app_name):
-                saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "Spark cluster - http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
+                saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "[SPARK CLUSTER APP] http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
             is_status_spark_custom_app = 'Red'
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
             spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(0)
