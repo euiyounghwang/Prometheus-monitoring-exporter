@@ -14,6 +14,15 @@ SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 ES_REDIS_CONFIGURATION_WRITE_PATH=/home/devuser/monitoring/custom_export
 SERVICE_NAME=es-configuration-service
 
+VENV=".venv"
+
+# Python 3.11.7 with Window
+if [ -d "$ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/bin" ]; then
+    source $ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/bin/activate
+else
+    source $ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/Scripts/activate
+fi
+
 # See how we were called.
 case "$1" in
   start)

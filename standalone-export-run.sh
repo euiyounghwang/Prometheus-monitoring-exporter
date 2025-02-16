@@ -20,6 +20,15 @@ else
     source $VENV/Scripts/activate
 fi
 
+VENV=".venv"
+
+# Python 3.11.7 with Window
+# if [ -d "$ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/bin" ]; then
+#     source $ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/bin/activate
+# else
+#     source $ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/Scripts/activate
+# fi
+
 
 # -- Export Variable
 export GRAFANA_DASHBOARD_URL="http://localhost:3000/d/adm08055cf3lsa/es-team-dashboard?orgId=1'&'from=now-5m'&'to=now'&'refresh=5s"
