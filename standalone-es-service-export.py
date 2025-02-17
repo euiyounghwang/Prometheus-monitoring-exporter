@@ -459,6 +459,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 try:
                     # -- make a call to master node to get the information of activeapps
                     logging.info(each_node)
+                    ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                     resp = requests.get(url="http://{}:8083/connectors".format(each_node), timeout=5, verify=False)
                         
                     # logging.info(f"activeapps - {resp}, {resp.status_code}, {resp.json()}")
@@ -516,6 +517,7 @@ def get_metrics_all_envs(monitoring_metrics):
                             ''' save failure node with a reason into saved_failure_dict'''
                             saved_failure_dict.update({"{}_{}".format(node, str(loop)) : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
                         """
+                        ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                         resp_tasks = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=5, verify=False)
                         
                         if not (resp_tasks.status_code == 200):
@@ -542,6 +544,7 @@ def get_metrics_all_envs(monitoring_metrics):
                             if node_lists_loop == 0:
                                 all_listeners_is_empty.append(False)
 
+                        ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                         resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=5, verify=False)
                         listeners_list.append(resp_listener.json())
                         
@@ -611,6 +614,7 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"get_spark_jobs #1- {master_node}")
 
             # -- make a call to master node to get the information of activeapps
+            ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
             resp = requests.get(url="http://{}:8080/json".format(master_node), timeout=5, verify=False)
             logging.info(f"get_spark_jobs - response {resp.status_code}")
             
@@ -702,6 +706,7 @@ def get_metrics_all_envs(monitoring_metrics):
             try:
                 # -- make a call to cluster for checking the disk space on all nodes in the cluster
                 es_urls = "{}://{}/_cat/shards?format=json&v=true&h=index,shard,prirep,state,node,unassigned.reason&s=state".format(es_cluster_call_protocal, each_es_host)
+                ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                 resp = requests.get(url=es_urls.format(es_cluster_call_protocal, each_es_host), headers=get_header(), verify=False, timeout=5)
                     
                 if not (resp.status_code == 200):
@@ -747,6 +752,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         payload = {
                             "number_of_replicas": int(number_of_replicas)
                         }
+                        ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                         resp = requests.put(url="{}://{}/{}/_settings".format(es_cluster_call_protocal, each_es_host, unassgned_indic), headers=get_header(), json=payload, verify=False, timeout=5)
                         logging.info(f"# set_unassigned_shard : {es_cluster_call_protocal}://{each_es_host}/{unassgned_indic}/_settings")
 
@@ -782,6 +788,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     
                     ''' export es metrics from ES cluster with Search Guard'''
                     es_urls = "{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host)
+                    ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                     resp = requests.get(url=es_urls, headers=get_header(), timeout=30, verify=False)
                     # print('\n\n\n')
                     # print(f"es_urls : {es_urls}")
@@ -834,6 +841,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
 
                     ''' Call to get more information '''
+                    ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                     resp_info = requests.get(url="{}://{}/_cat/indices?format=json".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=5, verify=False)
                     '''
                     [
@@ -930,6 +938,7 @@ def get_metrics_all_envs(monitoring_metrics):
             for each_es_host in es_url_hosts_list:
                 try:
                     # -- make a call to cluster for checking the disk space on all nodes in the cluster
+                    ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                     resp = requests.get(url="{}://{}/_cat/nodes?format=json&h=name,ip,h,diskTotal,diskUsed,diskAvail,diskUsedPercent".format(es_cluster_call_protocal, each_es_host), headers=get_header(), verify=False, timeout=5)
                     
                     if not (resp.status_code == 200):
@@ -2239,6 +2248,7 @@ def push_log_to_grafana_loki(env, title_msg, body_msg, logger_level):
         ]
     }
     # payload = json.dumps(payload)
+    ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
     response = requests.post(url, json=payload, headers=headers, verify=False)
     print(response.status_code)
 
