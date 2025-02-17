@@ -783,9 +783,9 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' export es metrics from ES cluster with Search Guard'''
                     es_urls = "{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host)
                     resp = requests.get(url=es_urls, headers=get_header(), timeout=30, verify=False)
-                    print('\n\n\n')
-                    print(f"es_urls : {es_urls}")
-                    print('\n\n\n')
+                    # print('\n\n\n')
+                    # print(f"es_urls : {es_urls}")
+                    # print('\n\n\n')
 
                     if not (resp.status_code == 200):
                         ''' save failure node with a reason into saved_failure_dict'''
@@ -2168,6 +2168,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
         logging.info(f"recheck_WMx : {recheck_WMx}, WMx_backlog_list : {WMx_backlog_list}")
+        logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
@@ -2247,6 +2248,7 @@ def push_log_to_grafana_loki(env, title_msg, body_msg, logger_level):
 global_es_shards_tasks_end_occurs_unassgined = False
 global_out_of_alert_time_range = False
 global_TIME_STAMP,  global_OUT_OF_ALERT_TIME = '', ''
+global_grafana_dasboard_url = ''
 
 ''' alert message to mail with interval?'''
 saved_thread_alert = False
@@ -3408,7 +3410,8 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
 
     try:
         ''' send mail through mailx based on python environment'''
-        grafana_dashboard_url = os.environ["GRAFANA_DASHBOARD_URL"]
+        # grafana_dashboard_url = os.environ["GRAFANA_DASHBOARD_URL"]
+        grafana_dashboard_url = gloabl_configuration.get('config').get('grafana_dashboard_url')
         smtp_host = os.environ["SMTP_HOST"]
         smtp_port = os.environ["SMTP_PORT"]
         
