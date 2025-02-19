@@ -4,10 +4,13 @@ import gradio as gr # type: ignore
 import requests
 import json
 import os
+from dotenv import load_dotenv
 import logging
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
+''' pip install python-dotenv'''
+load_dotenv() # will search for .env file in local folder and load variables 
 
 js_func = """
 function refresh() {
@@ -280,7 +283,7 @@ def run():
                     gr.Markdown(f"* 00 16 17 12 *  /home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 true")
                          
 
-    alert_gradio.launch(server_name="0.0.0.0", server_port=7090)
+    alert_gradio.launch(auth = (os.getenv('GRADIO_USER'),os.getenv('GRADIO_PASSWORD')), server_name="0.0.0.0", server_port=7090)
 
 
 if __name__ == '__main__':
