@@ -39,4 +39,5 @@ if __name__ == '__main__':
     ''' reference : https://www.gradio.app/docs/gradio/checkbox'''
     ''' gradio ./workflow/jupyter_workflow/Alert_Update.py'''
     ''' ./workflow/jupyter_workflow/alert-update-start.sh '''
+    ''' Auth : https://wooiljeong.github.io/etc/intro-gradio/'''
     run()

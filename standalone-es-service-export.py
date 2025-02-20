@@ -2175,10 +2175,13 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
-        logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
-        logging.info(f"recheck_WMx : {recheck_WMx}, WMx_backlog_list : {WMx_backlog_list}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         
+        ''' It can be displayed the log if backlog is enabled'''
+        if backlog:
+            logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
+            logging.info(f"recheck_WMx : {recheck_WMx}, WMx_backlog_list : {WMx_backlog_list}")
+                
         ''' Service are back online and push them into Grafana-Loki '''
         if saved_thread_green_alert:
             """ # Grafana-Loki Log """
@@ -3079,7 +3082,7 @@ def alert_work(db_http_host):
             "history_message" : []
         }
     """
-
+    
     def json_read_config(path):
         ''' read config file with option'''
         with open(path, "r") as read_file:
@@ -3125,7 +3128,6 @@ def alert_work(db_http_host):
             data = json_read_config("./mail/config.json")
             logging.info(f"config json file : {data}")
             '''
-
             # logging.info(f"\n\nmail treading working..")
 
             ''' get db configuration'''
@@ -3160,7 +3162,7 @@ def alert_work(db_http_host):
             # thread_interval = int(data.get("thread_interval"))
             thread_interval = int(data.get(get_es_config_interface_api_host_key).get("thread_interval"))
             logging.info(f"get_mail_config [thread_interval] - {thread_interval}")
-            logging.info(f"get_dashbaord_from_shell- {os.environ['GRAFANA_DASHBOARD_URL']}")
+            # logging.info(f"get_dashbaord_from_shell- {os.environ['GRAFANA_DASHBOARD_URL']}")
             alert_exclude_time = data.get("alert_exclude_time")
 
             '''
@@ -3245,7 +3247,7 @@ def alert_work(db_http_host):
 
             ''' every one day to send an alert email'''
             # time.sleep(60*60*24)
-            
+           
             ''' every one hour to send an alert email'''
             if is_dev_mode:
                 time.sleep(60)
@@ -3685,18 +3687,17 @@ if __name__ == '__main__':
         '''
         
         ''' es/kafka/kibana/logstash prcess check thread'''
-        for host in ['localhost']:
-            ''' main process to collect metrics'''
-            main_th = Thread(target=work, args=(es_http_host, db_http_host, int(port), int(interval), monitoring_metrics))
-            main_th.daemon = True
-            main_th.start()
-            T.append(main_th)
+        ''' main process to collect metrics'''
+        main_th = Thread(target=work, args=(es_http_host, db_http_host, int(port), int(interval), monitoring_metrics))
+        main_th.daemon = True
+        main_th.start()
+        T.append(main_th)
 
-            ''' alert through mailx'''
-            mail_th = Thread(target=alert_work, args=(db_http_host,))
-            mail_th.daemon = True
-            mail_th.start()
-            T.append(mail_th)
+        ''' alert through mailx'''
+        mail_th = Thread(target=alert_work, args=(db_http_host,))
+        mail_th.daemon = True
+        mail_th.start()
+        T.append(mail_th)
 
         
         ''' Set DB connection to validate the status of data pipelines after restart kafka cluster when security patching '''
