@@ -3381,7 +3381,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                        env, host, host, host, status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"),
                        service_status_dict.get("es",""), service_status_dict.get("es_nodes",""),
                        service_status_dict.get("spark",""), service_status_dict.get("spark_custom_apps",""),
-                       str(service_status_dict.get("spark_custom_apps_list","")).replace(" ", ""),
+                       str(service_status_dict.get("spark_custom_apps_list","None")).replace(" ", ""),
                        service_status_dict.get("kafka",""), service_status_dict.get("kafka_nodes",""),
                        service_status_dict.get("kafka_connect",""), service_status_dict.get("kafka_connect_primary_node",""), service_status_dict.get("kafka_connect_nodes",""),
                        service_status_dict.get("zookeeper",""), service_status_dict.get("zookeeper_nodes",""),
