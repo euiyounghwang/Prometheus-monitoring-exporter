@@ -6,3 +6,4 @@ Grafana-log/.venv/
 Playbook/*.docx
 fab/
 .virtual_documents/
+.DS_Store
