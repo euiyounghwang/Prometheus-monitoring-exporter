@@ -1,5 +1,5 @@
 #!/bin/sh
-INFLUXDB="/home/biadmin/monitoring/es_monitoring/influxdb/influxdb2-2.7.11/usr/bin"
+INFLUXDB="/home/devuser/monitoring/es_monitoring/influxdb/influxdb2-2.7.11/usr/bin"
 SERVICE_NAME=influxdb-service
 
 # A self-signed certificate can be generated with openssl. For example, the following command will create a certificate valid for 365 days with both the key and certificate data written to the same file:
