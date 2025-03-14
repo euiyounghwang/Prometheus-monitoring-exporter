@@ -105,6 +105,7 @@ kafka_isr_list_gauge_g = Gauge("kafka_isr_list_metric", 'Metrics scraped from lo
 zookeeper_nodes_gauge_g = Gauge("zookeeper_health_metric", 'Metrics scraped from localhost', ["server_job"])
 spark_nodes_gauge_g = Gauge("spark_health_metric", 'Metrics scraped from localhost', ["server_job"])
 spark_custom_apps_gauge_g = Gauge("spark_custom_apps_health_metric", 'Metrics scraped from localhost', ["server_job"])
+spark_ssk_gauge_g = Gauge("spark_ssl_metric", 'Metrics scraped from localhost', ["server_job"])
 kibana_instance_gauge_g = Gauge("kibana_health_metric", 'Metrics scraped from localhost', ["server_job"])
 redis_instance_gauge_g = Gauge("redis_health_metric", 'Metrics scraped from localhost', ["server_job"])
 es_configuration_instance_gauge_g = Gauge("es_configuration_writing_job_health_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -606,6 +607,8 @@ def get_metrics_all_envs(monitoring_metrics):
 
             ''' clear spark nodes health'''
             spark_nodes_gauge_g.clear()
+            ''' check secured spark cluster'''
+            spark_ssk_gauge_g.clear()
 
             if not node:
                 return None
@@ -628,6 +631,14 @@ def get_metrics_all_envs(monitoring_metrics):
 
             # logging.info(f"activeapps - {resp}, {resp.json()}")
             resp_working_job = resp.json().get("activeapps", [])
+            ''' check secured spark cluster'''
+            resp_workers = resp.json().get("workers", [])
+            if len(resp_workers) > 0:
+                if 'https' in resp_workers[0].get("webuiaddress"):
+                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(1) 
+                else:
+                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(0) 
+
             # response_activeapps = []
             if resp_working_job:
                 logging.info(f"activeapps - {resp_working_job}")
