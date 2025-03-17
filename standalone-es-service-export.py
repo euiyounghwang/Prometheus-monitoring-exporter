@@ -637,7 +637,9 @@ def get_metrics_all_envs(monitoring_metrics):
                 if 'https' in resp_workers[0].get("webuiaddress"):
                     spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(1) 
                 else:
-                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(0) 
+                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            else:
+                spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(2)
 
             # response_activeapps = []
             if resp_working_job:
