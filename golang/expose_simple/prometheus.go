@@ -3,12 +3,56 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	human "github.com/dustin/go-humanize"
+	"github.com/shirou/gopsutil/disk"
 )
+
+var (
+	MyGauge        prometheus.Gauge
+	diskUsageGauge prometheus.GaugeVec
+	opsProcessed   prometheus.Counter
+	hostname       string
+)
+
+func Init() {
+	MyGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "host_disk_usage",
+		Help: "disk usage gauge",
+	})
+
+	diskUsageGauge = *prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "diskUsageGauge",
+			Help: "Number of get requests.",
+		},
+		[]string{"hostname", "path", "disktotal", "diskused", "diskfree", "diskusagepercent"},
+	)
+
+	// diskUsageGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	// 	Namespace: "MyExporter",
+	// 	Name:      "CpuPercentValue",
+	// 	Help:      "CpuPercentValue",
+	// },
+	// 	[]string{
+	// 		"disk",
+	// 	},
+	// )
+
+	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "myapp_processed_ops_total",
+		Help: "The total number of processed events",
+	})
+
+	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
+	prometheus.MustRegister(diskUsageGauge)
+}
 
 func recordMetrics() {
 	go func() {
@@ -19,19 +63,57 @@ func recordMetrics() {
 	}()
 }
 
-var (
-	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "myapp_processed_ops_total",
-		Help: "The total number of processed events",
-	})
-)
+func get_disk_usage() {
+	// formatter := "%-14s %7s %7s %7s %4s %s\n"
+	// fmt.Printf(formatter, "Filesystem", "Size", "Used", "Avail", "Use%", "Mounted on")
+
+	parts, _ := disk.Partitions(true)
+	for _, p := range parts {
+		device := p.Mountpoint
+		s, _ := disk.Usage(device)
+
+		if s.Total == 0 {
+			continue
+		}
+
+		percent := fmt.Sprintf("%2.f%%", s.UsedPercent)
+
+		// fmt.Printf(formatter,
+		// 	s.Fstype,
+		// 	human.Bytes(s.Total),
+		// 	human.Bytes(s.Used),
+		// 	human.Bytes(s.Free),
+		// 	percent,
+		// 	p.Mountpoint,
+		// )
+
+		MyGauge.Set(11)
+
+		hostname, err := os.Hostname()
+		if err != nil {
+			panic(err)
+		}
+
+		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent).Add(1)
+
+		// diskUsageGauge.With(prometheus.Labels{
+		// 	"path":               "/apps",
+		// 	"disk_usage_percent": percent,
+		// })
+	}
+
+}
 
 /* http://localhost:2112/metrics */
 func main() {
-	recordMetrics()
+
+	Init()
+
+	go get_disk_usage()
+
+	go recordMetrics()
 
 	fmt.Println("Starting Prometheus..")
-
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":2112", nil)
 }
