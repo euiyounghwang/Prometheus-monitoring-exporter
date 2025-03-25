@@ -96,6 +96,7 @@ es_nodes_total_info_docs_gauge_g = Gauge("es_node_total_docs_metric", 'Metrics s
 es_nodes_total_info_indices_gauge_g = Gauge("es_node_total_indices_metric", 'Metrics scraped from localhost', ["server_job"])
 es_nodes_group_info_docs_gauge_g = Gauge("es_node_group_docs_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 es_nodes_health_gauge_g = Gauge("es_health_metric", 'Metrics scraped from localhost', ["server_job"])
+search_guard_health_gauge_g = Gauge("searchguard_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_nodes_gauge_g = Gauge("kafka_health_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_connect_nodes_gauge_g = Gauge("kafka_connect_nodes_metric", 'Metrics scraped from localhost', ["server_job"])
 kafka_connect_nodes_health_gauge_g = Gauge("kafka_connect_nodes_health_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -1436,6 +1437,41 @@ def get_metrics_all_envs(monitoring_metrics):
             # pass
 
 
+    def get_search_guard_status():
+        ''' Verify if search guard is running'''
+        try:
+            logging.info(f"get_search_guard_status")
+            
+            es_url_hosts = monitoring_metrics.get("es_url", "")
+            logging.info(f"get_search_guard_status hosts - {es_url_hosts}")
+            es_url_list = es_url_hosts.split(",")
+            
+            ''' default ES configuration API'''
+            es_cluster_call_protocal, disk_usage_threshold_es_config_api = get_es_configuration_api()
+            
+            for each_es_host in es_url_list:
+                try:
+                    resp = requests.get(url=f"{es_cluster_call_protocal}://{each_es_host}/_searchguard/health", headers=None, verify=False, timeout=600)
+                            
+                    if not (resp.status_code == 200):
+                        return -1
+                    
+                    ''' response status 200'''
+                    if resp.json()['status'].upper() == 'UP':
+                        return 1
+                    else:
+                        return 0
+                except Exception as e:
+                    logging.error(e)
+                    # pass
+                    return 0
+                
+        except Exception as e:
+            logging.error(e)
+            # pass
+       
+
+
     def get_all_envs_status(all_env_status, value, types=None, instance=None):
         ''' return all_envs_status status'''
         logging.info('type : {}, get_all_envs_status"s value - {} -> merged list : {}'.format(types, value, all_env_status))
@@ -2057,6 +2093,22 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' save service_status_dict for alerting on all serivces'''
         logstash_status = 'Green' if int(get_Process_Id()) > 0 else 'Red'
         service_status_dict.update({"logstash" : logstash_status})
+
+        ''' update the health of search guard'''
+        sg_status = get_search_guard_status()
+
+        search_guard_health_gauge_g.clear()
+
+        if sg_status == 1:
+            search_guard_health_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 1, types='search_guard')
+        elif sg_status == 0:
+            search_guard_health_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            ''' save failure node with a reason into saved_failure_dict'''
+            saved_failure_dict.update({socket.gethostname() + "_sg": "[SEARCH_GUARD] SG is not running"})
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='search_guard')
+
+        logging.info(f"get_search_guard_status #sg_status : {sg_status}")
 
         logging.info(f"all_envs_status #All : {all_env_status_memory_list}")
         ''' --- '''
