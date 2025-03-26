@@ -26,7 +26,7 @@ If you’re starting a new project, create a new module by running the following
 Prometheus has an official Go client library that you can use to instrument Go applications. In this guide, we'll create a simple Go application that exposes Prometheus metrics via HTTP.
 - Prometheus (https://prometheus.io/docs/guides/go-application/)
 - To expose Prometheus metrics in a Go application, you need to provide a /metrics HTTP endpoint. You can use the prometheus/promhttp library's HTTP Handler as the handler function.
-- You can install the prometheus, promauto, and promhttp libraries necessary for the guide using go get:
+- You can install the prometheus, promauto, and promhttp libraries necessary for the guide using go get: (https://medium.com/devbulls/prometheus-monitoring-with-golang-c0ec035a6e37)
 ```bash
 go get github.com/prometheus/client_golang/prometheus
 go get github.com/prometheus/client_golang/prometheus/promauto

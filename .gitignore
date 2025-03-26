@@ -7,3 +7,4 @@ Playbook/*.docx
 fab/
 .virtual_documents/
 .DS_Store
+golang/expose_simple/liux_server_agent_export

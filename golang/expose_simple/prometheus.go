@@ -12,59 +12,78 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	human "github.com/dustin/go-humanize"
+	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/mem"
 )
 
 var (
-	MyGauge        prometheus.Gauge
-	diskUsageGauge prometheus.GaugeVec
-	opsProcessed   prometheus.Counter
-)
+	// MyGauge        prometheus.Gauge
+	// diskUsageGauge prometheus.GaugeVec
+	// opsProcessed   prometheus.Counter
 
-func Init() {
 	MyGauge = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "host_disk_usage",
 		Help: "disk usage gauge",
 	})
 
-	diskUsageGauge = *prometheus.NewGaugeVec(
+	osInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicosInfoGauge",
+			Help: "osInfo",
+		},
+		[]string{"server_job", "os", "platformversion", "os_active_process", "os_uptime"},
+	)
+
+	cpuModelInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basiccpuModelInfoGauge",
+			Help: "cpuModelInfo",
+		},
+		[]string{"server_job", "cpu_model", "cpu_cores"},
+	)
+
+	basicMemoryInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryInfoGauge",
+			Help: "basicMemoryInfo",
+		},
+		[]string{"server_job", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
+	)
+
+	diskUsageGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "diskUsageGauge",
 			Help: "Disk Usage all drives",
 		},
-		[]string{"hostname", "path", "disktotal", "diskused", "diskfree", "diskusagepercent"},
+		[]string{"server_job", "path", "disktotal", "diskused", "diskfree", "diskusagepercent"},
 	)
-
-	// diskUsageGauge = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-	// 	Namespace: "MyExporter",
-	// 	Name:      "CpuPercentValue",
-	// 	Help:      "CpuPercentValue",
-	// },
-	// 	[]string{
-	// 		"disk",
-	// 	},
-	// )
 
 	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "myapp_processed_ops_total",
 		Help: "The total number of processed events",
 	})
+)
 
+func Init() {
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	// must be registered
+	prometheus.MustRegister(osInfo)
 	prometheus.MustRegister(diskUsageGauge)
+	prometheus.MustRegister(cpuModelInfo)
+	prometheus.MustRegister(basicMemoryInfo)
 }
 
-func recordMetrics() {
-	go func() {
-		for {
-			opsProcessed.Inc()
-			time.Sleep(2 * time.Second)
-		}
-	}()
+func metrics_reset() {
+	// fmt.Println("resetting.")
+	osInfo.MetricVec.Reset()
+	cpuModelInfo.MetricVec.Reset()
+	diskUsageGauge.MetricVec.Reset()
+	basicMemoryInfo.MetricVec.Reset()
 }
 
-func get_disk_usage() {
+func get_disk_usage(hostname string) {
 	// formatter := "%-14s %7s %7s %7s %4s %s\n"
 	// fmt.Printf(formatter, "Filesystem", "Size", "Used", "Avail", "Use%", "Mounted on")
 
@@ -90,12 +109,7 @@ func get_disk_usage() {
 
 		MyGauge.Set(11)
 
-		hostname, err := os.Hostname()
-		if err != nil {
-			panic(err)
-		}
-
-		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent).Add(1)
+		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent).Set(1)
 
 		// diskUsageGauge.With(prometheus.Labels{
 		// 	"path":               "/apps",
@@ -105,16 +119,78 @@ func get_disk_usage() {
 
 }
 
+func basic_resource(hostname string) {
+	// https://rebeccabilbro.github.io/doctor-go/
+	/*
+		The fmt.Sprintf() function in Go language formats according to a format specifier and returns the resulting string
+	*/
+
+	o, err := host.Info()
+	if err != nil {
+		fmt.Println("Could not retrieve OS details.")
+		log.Fatal(err)
+	}
+	// fmt.Printf("* OS: %v Version %v, OS Active Processes: %v, OS Uptime: %v\n", o.OS, o.PlatformVersion, o.Procs, o.Uptime)
+	osInfo.WithLabelValues(hostname, o.OS, o.PlatformVersion, fmt.Sprintf("%d", o.Procs), fmt.Sprintf("%d", o.Uptime)).Set(1)
+
+	c, err := cpu.Info()
+	if err != nil {
+		fmt.Println("Could not retrieve CPU details.")
+		log.Fatal(err)
+	}
+	// fmt.Printf("* CPU Model: %v, CPU Cores: %v \n", c[0].ModelName, c[0].Cores)
+	cpuModelInfo.WithLabelValues(hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores)).Set(1)
+
+	m, err := mem.VirtualMemory()
+	if err != nil {
+		fmt.Println("Could not retrieve RAM details.")
+		log.Fatal(err)
+	}
+	// fmt.Printf("* RAM Total: %v, RAM Available: %v, RAM Used: %v, RAM Used Percent:%f%%\n", m.Total, m.Available, m.Used, m.UsedPercent)
+	basicMemoryInfo.WithLabelValues(hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%f", m.UsedPercent)).Set(1)
+	// basicMemoryInfo.MetricVec.Reset()
+	/*
+		d, err := disk.Usage("/")
+		if err != nil {
+			fmt.Println("Could not retrieve disk details.")
+			log.Fatal(err)
+		}
+		fmt.Printf("* Disk Total: %v , Disk Available: %v, Disk Used: %v, Disk Used Percent:%f%%\n", d.Total, d.Free, d.Used, d.UsedPercent)
+	*/
+
+}
+
+func get_metrics_all() {
+	go func() {
+		hostname, err := os.Hostname()
+		if err != nil {
+			panic(err)
+		}
+
+		for {
+			// Reset metrics
+			metrics_reset()
+
+			get_disk_usage(hostname)
+			// recordMetrics()
+			opsProcessed.Inc()
+			basic_resource(hostname)
+
+			time.Sleep(10 * time.Second)
+		}
+	}()
+}
+
 /* http://localhost:2112/metrics */
 func main() {
+	port := 2112
+	log.Printf("Starting Prometheus HTTP Handler [Port: %d]", port)
 
+	// ''' initialize '''
 	Init()
+	// ''' update metrics '''
+	get_metrics_all()
 
-	go get_disk_usage()
-
-	go recordMetrics()
-
-	log.Println("Starting Prometheus..")
 	// http.Handle("/metrics", promhttp.Handler())
 	// http.ListenAndServe(":2112", nil)
 
@@ -124,7 +200,7 @@ func main() {
 	srv.Handle("/metrics", promhttp.Handler())
 
 	// Prometheus collects metrics by scraping a /metrics HTTP endpoint
-	if err := http.ListenAndServe(":2112", srv); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%d", port), srv); err != nil {
 		log.Fatalf("unable to start server: %v", err)
 	}
 
