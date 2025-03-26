@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -18,7 +19,6 @@ var (
 	MyGauge        prometheus.Gauge
 	diskUsageGauge prometheus.GaugeVec
 	opsProcessed   prometheus.Counter
-	hostname       string
 )
 
 func Init() {
@@ -30,7 +30,7 @@ func Init() {
 	diskUsageGauge = *prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "diskUsageGauge",
-			Help: "Number of get requests.",
+			Help: "Disk Usage all drives",
 		},
 		[]string{"hostname", "path", "disktotal", "diskused", "diskfree", "diskusagepercent"},
 	)
@@ -51,6 +51,7 @@ func Init() {
 	})
 
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
+	// must be registered
 	prometheus.MustRegister(diskUsageGauge)
 }
 
@@ -113,7 +114,18 @@ func main() {
 
 	go recordMetrics()
 
-	fmt.Println("Starting Prometheus..")
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":2112", nil)
+	log.Println("Starting Prometheus..")
+	// http.Handle("/metrics", promhttp.Handler())
+	// http.ListenAndServe(":2112", nil)
+
+	// https://medium.com/devbulls/prometheus-monitoring-with-golang-c0ec035a6e37
+	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
+	srv := http.NewServeMux()
+	srv.Handle("/metrics", promhttp.Handler())
+
+	// Prometheus collects metrics by scraping a /metrics HTTP endpoint
+	if err := http.ListenAndServe(":2112", srv); err != nil {
+		log.Fatalf("unable to start server: %v", err)
+	}
+
 }

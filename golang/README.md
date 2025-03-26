@@ -16,6 +16,7 @@ Linux and macOS Installation Using Standard Go Tools
   go install golang.org/x/tools/cmd/goimports@latest && \
   go install golang.org/x/tools/gopls@latest
 
+- goplay : go install -v github.com/haya14busa/goplay/cmd/goplay@v1.0.0
 
 ## Golang
 If you’re starting a new project, create a new module by running the following command: (https://opensearch.org/docs/latest/clients/go/)
@@ -24,6 +25,7 @@ If you’re starting a new project, create a new module by running the following
 
 Prometheus has an official Go client library that you can use to instrument Go applications. In this guide, we'll create a simple Go application that exposes Prometheus metrics via HTTP.
 - Prometheus (https://prometheus.io/docs/guides/go-application/)
+- To expose Prometheus metrics in a Go application, you need to provide a /metrics HTTP endpoint. You can use the prometheus/promhttp library's HTTP Handler as the handler function.
 - You can install the prometheus, promauto, and promhttp libraries necessary for the guide using go get:
 ```bash
 go get github.com/prometheus/client_golang/prometheus
