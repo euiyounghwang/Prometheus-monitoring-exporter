@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	monitor "prometheus.com/lib"
 
 	human "github.com/dustin/go-humanize"
 	"github.com/shirou/gopsutil/cpu"
@@ -28,6 +30,35 @@ var (
 		Help: "disk usage gauge",
 	})
 
+	// cpuUsageGauge = promauto.NewGauge(prometheus.GaugeOpts{
+	// 	Name: "cpuUsage",
+	// 	Help: "cpuUsage gauge",
+	// })
+
+	cpuUsageGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cpuUsage",
+			Help: "cpuUsage",
+		},
+		[]string{"server_job"},
+	)
+
+	processInfoCpuGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "processInfoCpuGauge",
+			Help: "processInfoCpuGauge",
+		},
+		[]string{"server_job", "process_name"},
+	)
+
+	processInfoMemoryGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "processInfoMemoryGauge",
+			Help: "processInfoMemoryGauge",
+		},
+		[]string{"server_job", "process_name"},
+	)
+
 	osInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "basicosInfoGauge",
@@ -41,7 +72,7 @@ var (
 			Name: "basiccpuModelInfoGauge",
 			Help: "cpuModelInfo",
 		},
-		[]string{"server_job", "cpu_model", "cpu_cores"},
+		[]string{"server_job", "cpu_model", "cpu_cores", "cpu_physicalCnt", "cpu_logicalCnt"},
 	)
 
 	basicMemoryInfo = prometheus.NewGaugeVec(
@@ -69,15 +100,20 @@ var (
 func Init() {
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	// must be registered
+
 	prometheus.MustRegister(osInfo)
+	prometheus.MustRegister(processInfoCpuGauge)
+	prometheus.MustRegister(processInfoMemoryGauge)
+	prometheus.MustRegister(cpuUsageGauge)
 	prometheus.MustRegister(diskUsageGauge)
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
 }
 
 func metrics_reset() {
-	// fmt.Println("resetting.")
+	// log.Printf("resetting.")
 	osInfo.MetricVec.Reset()
+	cpuUsageGauge.MetricVec.Reset()
 	cpuModelInfo.MetricVec.Reset()
 	diskUsageGauge.MetricVec.Reset()
 	basicMemoryInfo.MetricVec.Reset()
@@ -139,13 +175,41 @@ func basic_resource(hostname string) {
 		log.Fatal(err)
 	}
 	// fmt.Printf("* CPU Model: %v, CPU Cores: %v \n", c[0].ModelName, c[0].Cores)
-	cpuModelInfo.WithLabelValues(hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores)).Set(1)
+
+	physicalCnt, _ := cpu.Counts(false)
+	logicalCnt, _ := cpu.Counts(true)
+	// fmt.Printf("* CPU physicalCnt: %v, CPU logicalCnt: %v \n", physicalCnt, logicalCnt)
+
+	totalPercent, _ := cpu.Percent(3*time.Second, false)
+	// perPercents, _ := cpu.Percent(3*time.Second, true)
+	// fmt.Printf("var1 = %T\n", totalPercent)
+
+	var s_totalPercent string
+	var float_totalPercent float64
+	for _, v := range totalPercent {
+		// fmt.Printf("var1 = %f, var2 = %T\n", v, v)
+		s_totalPercent = fmt.Sprintf("%f", v)
+	}
+
+	// perPercents = fmt.Sprintf("%f", perPercents)
+	// perPercents = strings.Replace(perPercents, "[", ",", -1)
+	// perPercents = strings.Replace(perPercents, "]", ",", -1)
+
+	cpuModelInfo.WithLabelValues(hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores), fmt.Sprintf("%d", physicalCnt), fmt.Sprintf("%d", logicalCnt)).Set(1)
 
 	m, err := mem.VirtualMemory()
 	if err != nil {
 		fmt.Println("Could not retrieve RAM details.")
 		log.Fatal(err)
 	}
+
+	float_totalPercent, err = strconv.ParseFloat(s_totalPercent, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// cpuUsageGauge.Set(float_totalPercent)
+	cpuUsageGauge.WithLabelValues(hostname).Set(float_totalPercent)
+
 	// fmt.Printf("* RAM Total: %v, RAM Available: %v, RAM Used: %v, RAM Used Percent:%f%%\n", m.Total, m.Available, m.Used, m.UsedPercent)
 	basicMemoryInfo.WithLabelValues(hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%f", m.UsedPercent)).Set(1)
 	// basicMemoryInfo.MetricVec.Reset()
@@ -158,6 +222,11 @@ func basic_resource(hostname string) {
 		fmt.Printf("* Disk Total: %v , Disk Available: %v, Disk Used: %v, Disk Used Percent:%f%%\n", d.Total, d.Free, d.Used, d.UsedPercent)
 	*/
 
+	// call package monitor.go
+	// monitor.System()
+
+	// fmt.Printf("Type = %T\n", cpuUsageGauge)
+	go monitor.Processes(hostname, processInfoCpuGauge, processInfoMemoryGauge)
 }
 
 func get_metrics_all() {
@@ -174,9 +243,10 @@ func get_metrics_all() {
 			get_disk_usage(hostname)
 			// recordMetrics()
 			opsProcessed.Inc()
+
 			basic_resource(hostname)
 
-			time.Sleep(10 * time.Second)
+			time.Sleep(30 * time.Second)
 		}
 	}()
 }

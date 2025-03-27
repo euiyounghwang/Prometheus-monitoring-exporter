@@ -40,6 +40,7 @@ logging = create_log()
 ''' global variable'''
 remote_prometheus_json = {}
 
+
 def transform_prometheus_txt_to_Json(response):
     ''' transform_prometheus_txt_to_Json '''
     '''  
@@ -61,6 +62,8 @@ def transform_prometheus_txt_to_Json(response):
     body_list = [body for body in response.text.split("\n") if not "#" in body and len(body)>0]
     # print(body_list)
 
+    key_tmp_name = ""
+    sub_key_list = []
     for idx, x in enumerate(body_list):
         # json_key_pairs = x.replace("}","").split(" ")
         if "}" in x:
@@ -77,7 +80,17 @@ def transform_prometheus_txt_to_Json(response):
             key_name = key.split("{")[0]
             value_name = key.split("{")[1].replace('"','')
             # print(f"key_name : {key_name}, value_name : {value_name}")
-            remake_prometheus_to_json.update({key_name : [{'label' : value_name, 'set_value' : value}]})
+            # remake_prometheus_to_json.update({key_name : [{'label' : value_name, 'set_value' : value}]})
+            if key_name not in remake_prometheus_to_json:
+                sub_key_list = []
+                print(f"## key_name : {key_name}, key_tmp_name : {key_tmp_name}, value_name : {value_name}")
+                remake_prometheus_to_json.update({key_name : [{'label' : value_name, 'set_value' : value}]})
+                sub_key_list.append({'label' : value_name, 'set_value' : value})
+            else:
+                print(f"** key_name : {key_name}, key_tmp_name : {key_tmp_name}, sub_key_list : {sub_key_list}")
+                sub_key_list.append({'label' : value_name, 'set_value' : value})
+                print(f"final update: {key_name}, {sub_key_list}")
+                remake_prometheus_to_json.update({key_name : sub_key_list})
       
     # logging.info(f"remake_prometheus_to_json  - {json.dumps(remake_prometheus_to_json, indent=2)}")
     return remake_prometheus_to_json
@@ -96,8 +109,9 @@ def get_exporter_apps():
             logging.error(f"get_exporter_apps api do not reachable")
             return
         
+        remote_prometheus_json = {}
         remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
-        # logging.info(remote_prometheus_json)
+        logging.info(f"** {remote_prometheus_json}")
             
         
     except Exception as e:
@@ -107,8 +121,10 @@ def get_exporter_apps():
 
 def gather_metrics_export():
     ''' export metrics'''
+    global remote_prometheus_json
     try:
-        logging.info(remote_prometheus_json)
+        # logging.info(remote_prometheus_json)
+        pass
 
     except Exception as e:
         logging.error(e)
