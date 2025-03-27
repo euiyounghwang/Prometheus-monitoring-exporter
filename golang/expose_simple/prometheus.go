@@ -181,6 +181,15 @@ func get_metrics_all() {
 	}()
 }
 
+func serveFiles(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.URL.Path)
+	p := "." + r.URL.Path
+	if p == "./" {
+		p = "./bind.html"
+	}
+	http.ServeFile(w, r, p)
+}
+
 /* http://localhost:2112/metrics */
 func main() {
 	port := 2112
@@ -197,6 +206,7 @@ func main() {
 	// https://medium.com/devbulls/prometheus-monitoring-with-golang-c0ec035a6e37
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	srv := http.NewServeMux()
+	srv.HandleFunc("/", serveFiles)
 	srv.Handle("/metrics", promhttp.Handler())
 
 	// Prometheus collects metrics by scraping a /metrics HTTP endpoint

@@ -37,6 +37,8 @@ load_dotenv() # will search for .env file in local folder and load variables
 # Initialize & Inject with only one instance
 logging = create_log()
 
+''' global variable'''
+remote_prometheus_json = {}
 
 def transform_prometheus_txt_to_Json(response):
     ''' transform_prometheus_txt_to_Json '''
@@ -85,19 +87,31 @@ def transform_prometheus_txt_to_Json(response):
 def get_exporter_apps():
     ''' get_exporter_apps''' 
 
+    global remote_prometheus_json
+
     try:
         resp = requests.get(url="http://{}:2112/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
                     
         if not (resp.status_code == 200):
-                logging.error(f"get_exporter_apps api do not reachable")
+            logging.error(f"get_exporter_apps api do not reachable")
+            return
         
-        remake_prometheus_to_json = transform_prometheus_txt_to_Json(resp)
-        logging.info(remake_prometheus_to_json)
+        remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
+        # logging.info(remote_prometheus_json)
             
         
     except Exception as e:
             logging.error(e)
             # pass     
+
+
+def gather_metrics_export():
+    ''' export metrics'''
+    try:
+        logging.info(remote_prometheus_json)
+
+    except Exception as e:
+        logging.error(e)
 
 
 def work(port, interval):
@@ -114,6 +128,9 @@ def work(port, interval):
             ''' call fun'''
             ''' get resource from go exporter application'''
             get_exporter_apps()
+
+            ''' Main export func'''
+            gather_metrics_export()
 
             ''' export application processing time '''
             EndTime = datetime.datetime.now()
