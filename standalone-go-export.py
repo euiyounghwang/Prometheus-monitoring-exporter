@@ -42,6 +42,7 @@ remote_prometheus_json = {}
 
 ''' Prometheus metrics'''
 cpu_usage_gauge_g = Gauge("cpu_usage_metric", 'Metrics scraped from localhost', ["server_job"])
+node_agent_status_gauge_g = Gauge("node_agent_status_metric", 'Metrics scraped from localhost', ["server_job"])
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
 
 
@@ -184,12 +185,16 @@ def get_exporter_apps():
     global remote_prometheus_json
 
     try:
-        resp = requests.get(url="http://{}:2112/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
+        resp = requests.get(url="http://{}:21121/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
                     
         if not (resp.status_code == 200):
             logging.error(f"get_exporter_apps api do not reachable")
+            node_agent_status_gauge_g.labels(server_job=socket.gethostname()).set(0)
             return
         
+        ''' update metrics for the remote nodes export apps to 1 as Green'''
+        node_agent_status_gauge_g.labels(server_job=socket.gethostname()).set(1)
+
         remote_prometheus_json = {}
         remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
         # logging.info(f"** {remote_prometheus_json.get('basiccpuModelInfoGauge')}")
@@ -201,11 +206,11 @@ def get_exporter_apps():
         if remote_prometheus_json.get("cpuUsage"):
             cpu_usage_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("cpuUsage")[0].get('set_value')))
             
-        
     except Exception as e:
-            logging.error(e)
-            # pass     
-
+        ''' update metrics for the remote nodes export apps to 0 as Red'''
+        node_agent_status_gauge_g.labels(server_job=socket.gethostname()).set(0)
+        logging.error(e)
+        
 
 def gather_metrics_export(monitoring_metrics):
     ''' export metrics'''
@@ -311,6 +316,7 @@ def set_initialize():
     ''' initialize metrics'''
     cpu_usage_gauge_g._metrics.clear()
     all_envs_status_gauge_g._metrics.clear()
+    node_agent_status_gauge_g._metrics.clear()
 
 
 def alert_work(thread_interval):
