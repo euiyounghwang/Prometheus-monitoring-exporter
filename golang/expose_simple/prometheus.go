@@ -48,7 +48,7 @@ var (
 			Name: "processInfoCpuGauge",
 			Help: "processInfoCpuGauge",
 		},
-		[]string{"server_job", "process_name"},
+		[]string{"server_job", "process_name", "pid", "cmdline"},
 	)
 
 	processInfoMemoryGauge = prometheus.NewGaugeVec(
@@ -56,7 +56,7 @@ var (
 			Name: "processInfoMemoryGauge",
 			Help: "processInfoMemoryGauge",
 		},
-		[]string{"server_job", "process_name"},
+		[]string{"server_job", "process_name", "pid"},
 	)
 
 	osInfo = prometheus.NewGaugeVec(

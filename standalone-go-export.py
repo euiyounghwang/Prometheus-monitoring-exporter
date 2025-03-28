@@ -83,13 +83,13 @@ def transform_prometheus_txt_to_Json(response):
             # remake_prometheus_to_json.update({key_name : [{'label' : value_name, 'set_value' : value}]})
             if key_name not in remake_prometheus_to_json:
                 sub_key_list = []
-                print(f"## key_name : {key_name}, key_tmp_name : {key_tmp_name}, value_name : {value_name}")
+                # print(f"## key_name : {key_name}, key_tmp_name : {key_tmp_name}, value_name : {value_name}")
                 remake_prometheus_to_json.update({key_name : [{'label' : value_name, 'set_value' : value}]})
                 sub_key_list.append({'label' : value_name, 'set_value' : value})
             else:
-                print(f"** key_name : {key_name}, key_tmp_name : {key_tmp_name}, sub_key_list : {sub_key_list}")
+                # print(f"** key_name : {key_name}, key_tmp_name : {key_tmp_name}, sub_key_list : {sub_key_list}")
                 sub_key_list.append({'label' : value_name, 'set_value' : value})
-                print(f"final update: {key_name}, {sub_key_list}")
+                # print(f"final update: {key_name}, {sub_key_list}")
                 remake_prometheus_to_json.update({key_name : sub_key_list})
       
     # logging.info(f"remake_prometheus_to_json  - {json.dumps(remake_prometheus_to_json, indent=2)}")
@@ -111,7 +111,7 @@ def get_exporter_apps():
         
         remote_prometheus_json = {}
         remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
-        logging.info(f"** {remote_prometheus_json}")
+        logging.info(f"** {remote_prometheus_json.get('basiccpuModelInfoGauge')}")
             
         
     except Exception as e:

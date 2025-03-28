@@ -1,8 +1,10 @@
 package monitor
 
 import (
+	"fmt"
 	"log"
 	"runtime"
+	"sort"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/shirou/gopsutil/process"
@@ -31,30 +33,53 @@ func System() {
 }
 
 type ProcInfo struct {
-	Name   string
-	Usage  float64
-	mUsage float32
+	PID         int32
+	Name        string
+	Usage       float64
+	mUsage      float64
+	NameContext string
 }
 
 type ByUsage []ProcInfo
+
+/* https://rezmoss.com/blog/building-terminal-system-monitor-golang/ */
+func sortByCPU(processes []ProcInfo) []ProcInfo {
+	sort.Slice(processes, func(i, j int) bool {
+		return processes[i].Usage > processes[j].Usage
+	})
+	if len(processes) > 10 {
+		processes = processes[:10]
+	}
+	return processes
+}
 
 func Processes(hostname string, processInfoCpuGauge *prometheus.GaugeVec, processInfoMemoryGauge *prometheus.GaugeVec) {
 	processes, _ := process.Processes()
 
 	var procinfos []ProcInfo
 	for _, p := range processes {
-		a, _ := p.CPUPercent()
-		m, _ := p.MemoryPercent()
-		n, _ := p.Name()
-		procinfos = append(procinfos, ProcInfo{n, a, m})
+		cpu, _ := p.CPUPercent()
+		memory, _ := p.MemoryPercent()
+		name, _ := p.Name()
+		cmdline, _ := p.Cmdline()
+		// procinfos = append(procinfos, ProcInfo{n, p.Pid, a, float64(m), c})
+		procinfos = append(procinfos, ProcInfo{
+			PID:         p.Pid,
+			Name:        name,
+			Usage:       cpu,
+			mUsage:      float64(memory),
+			NameContext: cmdline,
+		})
 	}
 	// sort.Sort(ByUsage(procinfos))
 
-	for _, p := range procinfos[:5] {
-		// for _, p := range procinfos {
+	procinfos = sortByCPU(procinfos)
+	// for _, p := range procinfos[:5] {
+	for _, p := range procinfos {
 		// log.Printf("   %s -> %f", p.Name, p.Usage)
-		processInfoCpuGauge.WithLabelValues(hostname, p.Name).Set(p.Usage)
-		processInfoMemoryGauge.WithLabelValues(hostname, p.Name).Set(float64(p.mUsage))
+		// log.Printf("   %s -> %f %s", p.Name, p.Usage, p.NameContext)
+		processInfoCpuGauge.WithLabelValues(hostname, p.Name, fmt.Sprintf("%d", p.PID), p.NameContext).Set(p.Usage)
+		processInfoMemoryGauge.WithLabelValues(hostname, p.Name, fmt.Sprintf("%d", p.PID)).Set(p.mUsage)
 	}
 
 }
