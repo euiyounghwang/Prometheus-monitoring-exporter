@@ -18,6 +18,7 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 var (
@@ -95,6 +96,22 @@ var (
 		Name: "myapp_processed_ops_total",
 		Help: "The total number of processed events",
 	})
+
+	networkRxInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "networkRxInfoGauge",
+			Help: "networkRxInfoGauge",
+		},
+		[]string{"server_job"},
+	)
+
+	networkTxInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "networkTxInfoGauge",
+			Help: "networkTxInfoGauge",
+		},
+		[]string{"server_job"},
+	)
 )
 
 func Init() {
@@ -108,6 +125,8 @@ func Init() {
 	prometheus.MustRegister(diskUsageGauge)
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
+	prometheus.MustRegister(networkRxInfo)
+	prometheus.MustRegister(networkTxInfo)
 }
 
 func metrics_reset() {
@@ -225,8 +244,20 @@ func basic_resource(hostname string) {
 	// call package monitor.go
 	// monitor.System()
 
+	// Get and display network stats
+	n, _ := net.IOCounters(false)
+	// fmt.Printf("Network - Received: %.2fMB (%d pkts) Sent: %.2fMB (%d pkts)\n",
+	// 	float64(n[0].BytesRecv)/1024/1024,
+	// 	n[0].PacketsRecv,
+	// 	float64(n[0].BytesSent)/1024/1024,
+	// 	n[0].PacketsSent)
+
+	networkRxInfo.WithLabelValues(hostname).Set(float64(n[0].BytesRecv) / 1024 / 1024)
+	networkTxInfo.WithLabelValues(hostname).Set(float64(n[0].BytesSent) / 1024 / 1024)
+
 	// fmt.Printf("Type = %T\n", cpuUsageGauge)
 	go monitor.Processes(hostname, processInfoCpuGauge, processInfoMemoryGauge)
+
 }
 
 func get_metrics_all() {

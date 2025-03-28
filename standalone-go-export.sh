@@ -42,4 +42,4 @@ export REMOTE_AGENT_HOST="localhost"
 
 export PYTHONDONTWRITEBYTECODE=1
 
-python ./standalone-go-export.py
+python ./standalone-go-export.py --env_name localhost --es_url localhost:9200,localhost:9201,localhost:9201,localhost:9200

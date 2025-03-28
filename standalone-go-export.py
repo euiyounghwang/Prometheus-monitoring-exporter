@@ -40,6 +40,89 @@ logging = create_log()
 ''' global variable'''
 remote_prometheus_json = {}
 
+''' Prometheus metrics'''
+cpu_usage_gauge_g = Gauge("cpu_usage_metric", 'Metrics scraped from localhost', ["server_job"])
+all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
+
+
+class monitor:
+    def __init__(self):
+        self.all_env_status = []
+
+    def get_service_port_alive(self, monitoring_metrics):
+        ''' get_service_port_alive'''
+        ''' 
+        socket.connect_ex( <address> ) similar to the connect() method but returns an error indicator of raising an exception for errors returned by C-level connect() call.
+        Other errors like host not found can still raise exception though
+        '''
+        exclude_port_detect = ['redis', 'configuration', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
+        response_dict = {}
+        for k, v in monitoring_metrics.items():
+            response_dict.update({k : ""})
+            response_sub_dict = {}
+            url_lists = v.split(",")
+            # logging.info("url_lists : {}".format(url_lists))
+            totalcount = 0
+            for idx, each_host in enumerate(url_lists):
+                each_urls = each_host.split(":")
+                # logging.info("urls with port : {}".format(each_urls))
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    result = sock.connect_ex((each_urls[0],int(each_urls[1])))
+                    if result == 0:
+                        # print("Port is open")
+                        totalcount +=1
+                        response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "OK"})
+                        response_sub_dict.update({"GREEN_CNT" : totalcount})
+                    else:
+                        # print("Port is not open")
+                        response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
+                        response_sub_dict.update({"GREEN_CNT" : totalcount})
+                        ''' save failure node with a reason into saved_failure_dict'''
+                        # if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                        if str(k) not in exclude_port_detect:
+                            saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                    sock.close()
+                except Exception as e:
+                    print("Port is not open")
+                    response_sub_dict.update({each_urls[0] + ":" + each_urls[1] : "FAIL"})
+                    response_sub_dict.update({"GREEN_CNT" : totalcount})
+                    ''' save failure node with a reason into saved_failure_dict'''
+                    # if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
+                    if str(k) not in exclude_port_detect:
+                        saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                    pass
+                 
+            response_dict.update({k : response_sub_dict})
+            
+        logging.info(json.dumps(response_dict, indent=2))
+        return response_dict
+    
+    def set_all_envs_status(self, active_cnt, instance):
+            ''' return all_envs_status status'''
+            # logging.info(f'get_all_envs_status -> active_cnt : {active_cnt}, instance : {instance}')
+            try:
+                es_node_length = len(instance.get("es_url", "").split(","))
+                # logging.info(f"instance active : {es_node_length}")
+
+                if active_cnt == es_node_length:
+                    ''' green'''
+                    self.all_env_status.append(1)
+                elif active_cnt > 0 and active_cnt < es_node_length:
+                    ''' yellow'''
+                    self.all_env_status.append(0)
+                else:
+                    ''' red'''
+                    self.all_env_status.append(-1)
+      
+            except Exception as e:
+                logging.error(e)
+
+    
+    def get_all_health_status(self):
+        return self.all_env_status
+
+
 
 def transform_prometheus_txt_to_Json(response):
     ''' transform_prometheus_txt_to_Json '''
@@ -94,12 +177,10 @@ def transform_prometheus_txt_to_Json(response):
       
     # logging.info(f"remake_prometheus_to_json  - {json.dumps(remake_prometheus_to_json, indent=2)}")
     return remake_prometheus_to_json
-            
 
 
 def get_exporter_apps():
     ''' get_exporter_apps''' 
-
     global remote_prometheus_json
 
     try:
@@ -111,7 +192,14 @@ def get_exporter_apps():
         
         remote_prometheus_json = {}
         remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
-        logging.info(f"** {remote_prometheus_json.get('basiccpuModelInfoGauge')}")
+        # logging.info(f"** {remote_prometheus_json.get('basiccpuModelInfoGauge')}")
+        # logging.info(f"** {remote_prometheus_json}")
+
+        ''' cpu usage'''
+        ''' [{'label': 'localhost', 'set_value': '13.969631'}] '''
+        # logging.info(f"cpu_usage : {remote_prometheus_json.get('cpuUsage')}")
+        if remote_prometheus_json.get("cpuUsage"):
+            cpu_usage_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("cpuUsage")[0].get('set_value')))
             
         
     except Exception as e:
@@ -119,54 +207,174 @@ def get_exporter_apps():
             # pass     
 
 
-def gather_metrics_export():
+def gather_metrics_export(monitoring_metrics):
     ''' export metrics'''
     global remote_prometheus_json
+    
     try:
-        # logging.info(remote_prometheus_json)
-        pass
+        global saved_thread_alert, saved_thread_alert_message, save_thread_alert_history
+        global saved_status_dict
 
+        ''' create object for class'''
+        monitor_obj = monitor()
+
+        logging.info(f"env_name : {env_name}")
+        logging.info(f"monitoring_metrics : {monitoring_metrics}")
+        
+        ''' check port is alive'''
+        resp = monitor_obj.get_service_port_alive(monitoring_metrics)
+
+        print(resp.get("es_url")['GREEN_CNT'], monitoring_metrics)
+
+        ''' update serer active'''
+        monitor_obj.set_all_envs_status(resp.get("es_url")['GREEN_CNT'], monitoring_metrics)
+        ''' update status for alert'''
+        MAX_NUMBERS = len(monitoring_metrics.get("es_url").split(","))
+        if int(resp["es_url"]["GREEN_CNT"]) == MAX_NUMBERS:
+            status = 'Green' 
+        elif 0 < int(resp["es_url"]["GREEN_CNT"]) < MAX_NUMBERS:
+            status = 'Yellow' 
+        else:
+            status = 'Red'
+        service_status_dict.update({"es" : status})
+
+        logging.info(f"monitor_obj.get_all_health_status() : {monitor_obj.get_all_health_status()}")
+
+        ''' faiure log message '''
+        logging.error(f"saved_failure_dict : {saved_failure_dict}")
+
+        ''' ----------------------------------------------------- '''
+        ''' Set Server Active Graph'''
+        ''' set value for node instance '''
+        if list(set(monitor_obj.get_all_health_status())) == [1]:
+            ''' green '''
+            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(1)
+            saved_status_dict.update({'server_active' : 'Green'})
+        
+        elif list(set(monitor_obj.get_all_health_status())) == [-1]:
+            ''' red '''
+            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(3)
+            ''' update gloabl variable for alert email'''
+            saved_status_dict.update({'server_active' : 'Red'})
+
+        else:
+            ''' yellow '''
+            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(2)
+            ''' update gloabl variable for alert email'''
+            saved_status_dict.update({'server_active' : 'Yellow'})
+        ''' ----------------------------------------------------- '''
+
+        """ create alert audit message"""        
+        failure_message = []
+
+        """ create alert audit message & Update log metrics"""
+        ''' merge'''
+        for v in saved_failure_dict.values():
+            failure_message.append(v)
+        
+         
+        ''' one of services is inactive or any issue with data pieplines or any issue with Kakfa offset like out of range from the kafak offset'''
+        # if not list(set(all_env_status_memory_list)) == [1] or saved_failure_db_dict or saved_failure_db_kafka_dict:
+        if not list(set(monitor_obj.get_all_health_status())) == [1]:
+            ''' if failure mesage has something'''
+            if failure_message:
+                saved_thread_alert = True
+                saved_thread_alert_message = failure_message
+
+                ''' Whenever app does check for the alerts every 10 minutes, sends the first alert, and then resends the alert after 1 hour.'''
+                # get_alert_resend(False)
+    
+                ''' add history for alerting '''
+                save_thread_alert_history.append(True)
+        else:
+            saved_thread_alert = False
+            ''' add history for alerting '''
+            save_thread_alert_history.append(False)
+       
+
+        ''' ------------------------------------------------------'''
+        logging.info(f"saved_thread_alert - {saved_thread_alert}")
+        logging.info(f"save_thread_alert_history - {save_thread_alert_history}")
+        logging.info(f"saved_status_dict - {json.dumps(saved_status_dict, indent=2)}")
+        logging.info(f"service_status_dict - {json.dumps(service_status_dict, indent=2)}")
+        # logging.info(f"Mail Alert mail Configuration - {global_mail_configuration.get(hostname).get('is_mailing','')}, Mail Alert SMS Configuration : {global_mail_configuration.get(hostname).get('is_sms','')}")
+        logging.info(f"current_alert_message : {saved_thread_alert_message}")
+        
     except Exception as e:
         logging.error(e)
 
 
-def work(port, interval):
+def set_initialize():
+    ''' initialize'''
+    ''' clear logs '''
+    saved_failure_dict.clear()
+    ''' initialize metrics'''
+    cpu_usage_gauge_g._metrics.clear()
+    all_envs_status_gauge_g._metrics.clear()
+
+
+def alert_work(thread_interval):
+    ''' alert work '''
+    try:
+        while True:
+            logging.warn(f"saved_thread_alert : {saved_thread_alert}, saved_status_dict : {saved_status_dict}, service_status_dict : {service_status_dict}")
+            ''' Call function to send an email'''
+            if saved_thread_alert:
+                logging.warn(f"saved_thread_alert_message : {saved_thread_alert_message}")
+                logging.warn(f"Will send an alert..")
+                
+            time.sleep(60*thread_interval)
+
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("#Interrupted..")
+
+    except Exception as e:
+        logging.info(e)
+        pass
+    
+
+''' global variable '''
+saved_failure_dict = {}
+
+
+''' alert message to mail with interval?'''
+saved_thread_alert = False
+save_thread_alert_history = []
+saved_thread_alert_message = []
+saved_status_dict = {}
+service_status_dict = {}
+
+def work(port, interval, monitoring_metrics):
     try:
         start_http_server(int(port))
-        logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
-   
+        logging.info(f"Standalone Prometheus Exporter Server started..")
+
         StartedTime = datetime.datetime.now()
         while True:
             print(f"\n")
             logging.info(f"Prometheus Exporter Refreshed..")
             StartTime = datetime.datetime.now()
 
+            ''' initialize prometheus metrics type'''
+            set_initialize()
+
             ''' call fun'''
             ''' get resource from go exporter application'''
             get_exporter_apps()
 
             ''' Main export func'''
-            gather_metrics_export()
+            gather_metrics_export(monitoring_metrics)
 
             ''' export application processing time '''
             EndTime = datetime.datetime.now()
             Delay_Time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
 
+            logging.info("# Running Prometheus Export Application - {}".format("http://{}:{}".format(socket.gethostname(), str(port))))
             logging.info("# StartedTime Application - {}".format(str(StartedTime)))
-            logging.info("# Export Application Running Time - {}\n\n".format(str(Delay_Time)))
+            logging.info("# Export Application Running Time - {}\n".format(str(Delay_Time)))
 
             time.sleep(interval)
-        
-        '''
-        for each_host in ['localhost', 'localhost']:
-            while True:
-                urls = urls.format(each_host)
-                logging.info(urls)
-                get_server_health(each_host)
-                get_metrics_all_envs(each_host, urls)
-                time.sleep(interval)
-        '''
-
+      
     except (KeyboardInterrupt, SystemExit):
         logging.info("#Interrupted..")
        
@@ -178,9 +386,18 @@ if __name__ == '__main__':
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of custom prometheus exporter")
     parser.add_argument('--env_name', dest='env_name', default="env_name", help='env_name')
+    parser.add_argument('--es_url', dest='es_url', default="localhost:9200,localhost:9501,localhost:9503", help='es hosts')
     parser.add_argument('--port', dest='port', default=2113, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
     args = parser.parse_args()
+
+    # global global_env_name
+
+    if args.env_name:
+        env_name = args.env_name
+
+    if args.es_url:
+        es_url = args.es_url
 
     if args.interval:
         interval = args.interval
@@ -188,12 +405,29 @@ if __name__ == '__main__':
     if args.port:
         port = args.port
 
+
+    monitoring_metrics = {
+        "es_url" : es_url
+    }
+
+    ''' alert interval'''
+    thread_interval = 1
+    
     try:
         T = []
-        main_th = Thread(target=work, args=(int(port), int(interval)))
+
+        ''' main active monitoring logic '''
+        main_th = Thread(target=work, args=(int(port), int(interval), monitoring_metrics))
         main_th.daemon = True
         main_th.start()
         T.append(main_th)
+
+        ''' alert through mailx'''
+        mail_th = Thread(target=alert_work, args=(thread_interval,))
+        mail_th.daemon = True
+        mail_th.start()
+        T.append(mail_th)
+
 
         # wait for all threads to terminate
         for t in T:
