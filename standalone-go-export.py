@@ -185,7 +185,7 @@ def get_exporter_apps():
     global remote_prometheus_json
 
     try:
-        resp = requests.get(url="http://{}:21121/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
+        resp = requests.get(url="http://{}:2112/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
                     
         if not (resp.status_code == 200):
             logging.error(f"get_exporter_apps api do not reachable")

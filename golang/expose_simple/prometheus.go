@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -18,7 +19,7 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
-	"github.com/shirou/gopsutil/net"
+	traffic "github.com/shirou/gopsutil/net"
 )
 
 var (
@@ -89,7 +90,7 @@ var (
 			Name: "diskUsageGauge",
 			Help: "Disk Usage all drives",
 		},
-		[]string{"server_job", "path", "disktotal", "diskused", "diskfree", "diskusagepercent"},
+		[]string{"server_job", "path", "disktotal", "diskused", "diskfree", "diskusagepercent", "ipaddress"},
 	)
 
 	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
@@ -138,9 +139,34 @@ func metrics_reset() {
 	basicMemoryInfo.MetricVec.Reset()
 }
 
+func get_local_ip_addr() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		os.Stderr.WriteString("Oops: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+
+	var local_ip_address string
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				// os.Stdout.WriteString(ipnet.IP.String() + "\n")
+				local_ip_address = ipnet.IP.String()
+				break
+			}
+		}
+	}
+
+	return local_ip_address
+}
+
 func get_disk_usage(hostname string) {
 	// formatter := "%-14s %7s %7s %7s %4s %s\n"
 	// fmt.Printf(formatter, "Filesystem", "Size", "Used", "Avail", "Use%", "Mounted on")
+
+	// IP Address
+	local_ip_address := get_local_ip_addr()
+	// fmt.Println((local_ip_address))
 
 	parts, _ := disk.Partitions(true)
 	for _, p := range parts {
@@ -164,7 +190,7 @@ func get_disk_usage(hostname string) {
 
 		MyGauge.Set(11)
 
-		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent).Set(1)
+		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
 
 		// diskUsageGauge.With(prometheus.Labels{
 		// 	"path":               "/apps",
@@ -245,7 +271,7 @@ func basic_resource(hostname string) {
 	// monitor.System()
 
 	// Get and display network stats
-	n, _ := net.IOCounters(false)
+	n, _ := traffic.IOCounters(false)
 	// fmt.Printf("Network - Received: %.2fMB (%d pkts) Sent: %.2fMB (%d pkts)\n",
 	// 	float64(n[0].BytesRecv)/1024/1024,
 	// 	n[0].PacketsRecv,
