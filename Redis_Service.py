@@ -49,7 +49,7 @@ class Redis_Client:
         # self.rd_client = RedisCluster(startup_nodes=self.startup_nodes, decode_responses=True)
         self.rd_client = redis.StrictRedis(host=self.startup_nodes, port=6379, db=0)
         print('\n')
-        logging.info('Redis Client Connected..')
+        logging.info('Redis Set_Connect..')
         
 
     def Set_Close(self):

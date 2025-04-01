@@ -918,12 +918,14 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' default ES configuration API'''
         es_cluster_call_protocal = "http"
+        
+        host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
         if gloabl_configuration:
             if gloabl_configuration.get("config").get("es_cluster_call_protocol_https"):
                 es_https_list = gloabl_configuration.get("config").get("es_cluster_call_protocol_https").split(",")
-                logging.info(f"socket.gethostname().split('.')[0] : {socket.gethostname().split('.')[0]}")
+                logging.info(f"socket.gethostname().split('.')[0] : {host_name}")
                 logging.info(f"es_https_list : {es_https_list}")
-                if socket.gethostname().split(".")[0] in es_https_list:
+                if host_name in es_https_list:
                     es_cluster_call_protocal = "https"
     
         logging.info(f"global configuration [es_cluster_call_protocol as default] : {es_cluster_call_protocal}")
@@ -948,7 +950,7 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"get_elasticsearch_disk_audit_alert : es_cluster_call_protocal - {es_cluster_call_protocal}")
 
             ''' get hostname without domain'''
-            hostname = socket.gethostname().split(".")[0]
+            hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
             
             for each_es_host in es_url_hosts_list:
                 try:
@@ -1105,7 +1107,7 @@ def get_metrics_all_envs(monitoring_metrics):
             global max_disk_used, max_kafka_disk_used
 
             ''' get hostname without domain'''
-            hostname = socket.gethostname().split(".")[0]
+            hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
 
             kafka_url_hosts = monitoring_metrics.get("kafka_url", "")
             logging.info(f"get_kafka_disk_autdit_alert hosts - {kafka_url_hosts}")
@@ -1530,7 +1532,7 @@ def get_metrics_all_envs(monitoring_metrics):
         saved_failure_dict.clear()
 
         ''' get hostname without domain'''
-        hostname = socket.gethostname().split(".")[0]
+        hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
 
         ''' if server status is yellow or red'''
         global saved_thread_alert, saved_thread_alert_message, save_thread_alert_history, saved_thread_green_alert
@@ -2848,7 +2850,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                 get_mail_configuration(db_http_host)
             data = global_mail_configuration
 
-            host_name = socket.gethostname().split(".")[0]
+            host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
             dev_email_list = data[host_name].get("dev_mail_list", "")
             dev_sms_list = data[host_name].get("dev_sms_list", "")
 
@@ -2868,7 +2870,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                     alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}, db_transactin_time_WMx : {}/sec, db_transactin_time_OMx : {}/sec".format(WMx_backlog, db_transactin_time_WMx, db_transactin_time_OMx)
                     ''' send mail'''
                     send_mail(body=alert_msg, 
-                            host= socket.gethostname().split(".")[0], 
+                            host= host_name, 
                             env=data[host_name].get("env"), 
                             status_dict=saved_status_dict, 
                             to=dev_email_list, cc="", _type='mail')
@@ -2935,9 +2937,10 @@ def inserted_post_log(status, message):
     }'
     """
     ''' {"message": "Inserted log successfully."}'''
+    host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
     request_body = {
                     "env" : global_env_name,
-                    "host_name" : socket.gethostname().split(".")[0],
+                    "host_name" : host_name,
                     "status" : str(status).upper(),
                     "message" : str(message)
     }
@@ -3218,7 +3221,8 @@ def alert_work(db_http_host):
             data = resp.json()
             """
 
-            get_es_config_interface_api_host_key = socket.gethostname().split(".")[0]
+            host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+            get_es_config_interface_api_host_key = host_name
 
             ''' ------------------------------------------------------'''
             ''' send an email these warning message if the status of env has an yellow or red'''

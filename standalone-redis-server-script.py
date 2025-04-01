@@ -181,63 +181,70 @@ def work():
             # r = RedisCluster(startup_nodes=startup_nodes, decode_responses=True, skip_full_coverage_check=False)
             r = redis.StrictRedis(host=os.getenv('REDIS_SERVER_HOST'), port=6379, db=0)
             """
-            logging.info("\n\n")
-            if redis_client:
-                logging.info(f"Redis is Active")
-            else:
-                ''' Retry connection'''
-                redis_client = retry_connnection()
+            try:
+                logging.info("\n\n")
+                if redis_client is not None:
+                    logging.info(f"Redis is Active")
+                else:
+                    ''' Retry connection'''
+                    redis_client = retry_connnection()
 
-            """
-            json_test = {
-                "alert" : "false"
-            }
-            jsonDataDict = json.dumps(json_test, ensure_ascii=False).encode('utf-8')
-            r.set("dev", jsonDataDict)
-            """
-            logging.info(f"The number of all keys is {len(list(redis_client.Get_keys()))} ..")
+                """
+                json_test = {
+                    "alert" : "false"
+                }
+                jsonDataDict = json.dumps(json_test, ensure_ascii=False).encode('utf-8')
+                r.set("dev", jsonDataDict)
+                """
+                logging.info(f"The number of all keys is {len(list(redis_client.Get_keys()))} ..")
 
-            ''' --------------- '''
-            ''' get host name matched env name to read their json configuraion'''
-            ''' --------------- '''
-            mapping_host_dict = get_mapping_host_config()
-            
-            is_any_updated = False
-            if len(list(redis_client.Get_keys())) > 0:
-                is_any_updated = True
+                ''' --------------- '''
+                ''' get host name matched env name to read their json configuraion'''
+                ''' --------------- '''
+                mapping_host_dict = get_mapping_host_config()
+                
+                is_any_updated = False
+                if len(list(redis_client.Get_keys())) > 0:
+                    is_any_updated = True
 
-            # Get all keys
-            for key in redis_client.Get_keys():
-                print(key, redis_client.Get_Memory_dict(key), redis_client.Get_Memory_dict(key)["alert"], json.dumps(redis_client.Get_Memory_dict(key), indent=2))
-                transform_json(mapping_host_dict, configuration_data, key, redis_client.Get_Memory_dict(key)["alert"])
+                # Get all keys
+                for key in redis_client.Get_keys():
+                    print(key, redis_client.Get_Memory_dict(key), redis_client.Get_Memory_dict(key)["alert"], json.dumps(redis_client.Get_Memory_dict(key), indent=2))
+                    transform_json(mapping_host_dict, configuration_data, key, redis_client.Get_Memory_dict(key)["alert"])
 
-                key = key.decode('utf-8')
-                message = "[{}] Alert : {}, {}".format(str(key).upper(), redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"]),
-                '''
-                logger.info("Prometheus-Alert-Service - {}".format(message),
-                    extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
-                )
-                '''
-                msg = "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])
-                ''' Push logs to Grafana-Loki'''
-                push_log_to_grafana_loki(title_msg=msg, body_msg=msg, logger_level="info")
+                    key = key.decode('utf-8')
+                    message = "[{}] Alert : {}, {}".format(str(key).upper(), redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"]),
+                    '''
+                    logger.info("Prometheus-Alert-Service - {}".format(message),
+                        extra={"tags": {"service": "prometheus-alert-service", "message" : "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])}},
+                    )
+                    '''
+                    msg = "{} -> {}, notes : {}".format(key, redis_client.Get_Memory_dict(key)["alert"], redis_client.Get_Memory_dict(key)["message"])
+                    ''' Push logs to Grafana-Loki'''
+                    push_log_to_grafana_loki(title_msg=msg, body_msg=msg, logger_level="info")
 
-                ''' delete key'''
-                # r.delete(key)
-                redis_client.Set_Delete_Keys(key)
-            
-            ''' Check all keys'''
-            # logging.info(f"Length of all keys from Redis : {len(list(redis_client.Get_keys()))}")
+                    ''' delete key'''
+                    # r.delete(key)
+                    redis_client.Set_Delete_Keys(key)
+                
+                ''' Check all keys'''
+                # logging.info(f"Length of all keys from Redis : {len(list(redis_client.Get_keys()))}")
 
-            # logging.info(f"configuration_data - {json.dumps(configuration_data, indent=2)}")
-            if is_any_updated:
-                write_es_configuration_files(configuration_data)
+                # logging.info(f"configuration_data - {json.dumps(configuration_data, indent=2)}")
+                if is_any_updated:
+                    write_es_configuration_files(configuration_data)
+                
+            except Exception as e:
+                logging.info(f"Redis is InActive")
+                redis_client = None
+                pass
                                
             time.sleep(3)
 
-    except (KeyboardInterrupt, SystemExit) as e:
-        logging.info("#Interrupted..")
-        message = "[{}]".format(str(key).upper()),
+    # except (KeyboardInterrupt, SystemExit) as e:
+    except Exception as e:
+        logging.info(e)
+        # message = "[{}]".format(str(key).upper()),
         '''
         logger.error("Prometheus-Alert-Service {}".format(message),
                     extra={"tags": {"service": "prometheus-alert-service", "message" : str(e)}},
