@@ -623,12 +623,12 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"get_spark_jobs - response {resp.status_code}")
             
             if not (resp.status_code == 200):
-                spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(0)
+                spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
                 saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
                 return None
             
             ''' expose metrics spark node health is active'''
-            spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
 
             # logging.info(f"activeapps - {resp}, {resp.json()}")
             resp_working_job = resp.json().get("activeapps", [])
@@ -636,11 +636,11 @@ def get_metrics_all_envs(monitoring_metrics):
             resp_workers = resp.json().get("workers", [])
             if len(resp_workers) > 0:
                 if 'https' in resp_workers[0].get("webuiaddress"):
-                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(1) 
+                    spark_ssk_gauge_g.labels(server_job=domain_name_as_nick_name).set(1) 
                 else:
-                    spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(0)
+                    spark_ssk_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
             else:
-                spark_ssk_gauge_g.labels(server_job=socket.gethostname()).set(2)
+                spark_ssk_gauge_g.labels(server_job=domain_name_as_nick_name).set(2)
 
             # response_activeapps = []
             if resp_working_job:
@@ -660,7 +660,7 @@ def get_metrics_all_envs(monitoring_metrics):
         except Exception as e:
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
             saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
-            spark_nodes_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
             logging.error(e)
             return []
             
@@ -675,7 +675,7 @@ def get_metrics_all_envs(monitoring_metrics):
             return 1
         
         ''' save failure node with a reason into saved_failure_dict'''
-        # saved_failure_dict.update({socket.gethostname() : "Logstash is not running.."})
+        # saved_failure_dict.update({domain_name_as_nick_name : "Logstash is not running.."})
         saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
         return 0
     
@@ -815,12 +815,12 @@ def get_metrics_all_envs(monitoring_metrics):
                     
                     ''' export the time for this get_global_configuration'''
                     ''' The Response object returned by requests.post() (and requests.get() etc.) has a property called elapsed '''
-                    es_cluster_search_time_gauge_g.labels(server_job=socket.gethostname(), env=global_env_name, category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
+                    es_cluster_search_time_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
 
                     logging.info(f"activeES - {resp}, {resp.json()}")
                     ''' log if one of ES nodes goes down'''
                     if int(resp.json().get("relocating_shards")) > 0 or int(resp.json().get("initializing_shards")) > 0 or int(resp.json().get("unassigned_shards")) > 0:
-                        saved_failure_dict.update({"{}_1".format(socket.gethostname()) : "[Elasticsearch] {} relocating_shards, {} unassigned shards, {} initializing shards".format(
+                        saved_failure_dict.update({"{}_1".format(domain_name_as_nick_name) : "[Elasticsearch] {} relocating_shards, {} unassigned shards, {} initializing shards".format(
                             resp.json().get("relocating_shards"),
                             resp.json().get("unassigned_shards"),
                             resp.json().get("initializing_shards"))
@@ -847,7 +847,7 @@ def get_metrics_all_envs(monitoring_metrics):
                                 ''' PUT the number of replicas to 0 and set it back to 1'''
                                 # retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
                                 ''' update the message for the failed a list of index name'''
-                                saved_failure_dict.update({"{}_2".format(socket.gethostname())  : "[Elasticsearch] Reset the number of replica to INDEX ['{}']".format(",".join(unassgned_indics_list))})
+                                saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name)  : "[Elasticsearch] Reset the number of replica to INDEX ['{}']".format(",".join(unassgned_indics_list))})
                             else:
                                 global_es_shards_tasks_end_occurs_unassgined = False
                         else:
@@ -919,11 +919,11 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' default ES configuration API'''
         es_cluster_call_protocal = "http"
         
-        host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+        host_name = domain_name_as_nick_name.split(".")[0]
         if gloabl_configuration:
             if gloabl_configuration.get("config").get("es_cluster_call_protocol_https"):
                 es_https_list = gloabl_configuration.get("config").get("es_cluster_call_protocol_https").split(",")
-                logging.info(f"socket.gethostname().split('.')[0] : {host_name}")
+                logging.info(f"domain_name_as_nick_name.split('.')[0] : {host_name}")
                 logging.info(f"es_https_list : {es_https_list}")
                 if host_name in es_https_list:
                     es_cluster_call_protocal = "https"
@@ -950,7 +950,7 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"get_elasticsearch_disk_audit_alert : es_cluster_call_protocal - {es_cluster_call_protocal}")
 
             ''' get hostname without domain'''
-            hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+            hostname = domain_name_as_nick_name.split(".")[0]
             
             for each_es_host in es_url_hosts_list:
                 try:
@@ -973,7 +973,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     for element_dict in resp.json():
                         for k, v in element_dict.items():
                             # logging.info(f"# k - {k}, # v for ES - {v}")
-                            nodes_free_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                            nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
                             ''' disk usages is greater than 90%'''
                             # if float(element_dict.get("diskUsedPercent","-1")) >= int(os.environ["NODES_DISK_AVAILABLE_THRESHOLD"]):
 
@@ -984,9 +984,9 @@ def get_metrics_all_envs(monitoring_metrics):
                                 get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
                           
                             if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
-                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                                nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                             else:
-                                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                                nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskUsed",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
 
                             if k == "diskUsedPercent":
                                 logging.info(f"ES Disk Used : {get_float_number(v)}")
@@ -1107,7 +1107,7 @@ def get_metrics_all_envs(monitoring_metrics):
             global max_disk_used, max_kafka_disk_used
 
             ''' get hostname without domain'''
-            hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+            hostname = domain_name_as_nick_name.split(".")[0]
 
             kafka_url_hosts = monitoring_metrics.get("kafka_url", "")
             logging.info(f"get_kafka_disk_autdit_alert hosts - {kafka_url_hosts}")
@@ -1143,7 +1143,7 @@ def get_metrics_all_envs(monitoring_metrics):
             for element_dict in disk_space_memory_list:
                 for k, v in element_dict.items():
                     # logging.info(f"# k - {k}, # v for ES - {v}")
-                    nodes_free_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                    nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
                     ''' disk usages is greater than 90%'''
                     # if float(element_dict.get("diskUsedPercent","-1")) >= int(os.environ["NODES_DISK_AVAILABLE_THRESHOLD"]):
 
@@ -1154,9 +1154,9 @@ def get_metrics_all_envs(monitoring_metrics):
                         get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
 
                     if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
-                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                        nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                     else:
-                        nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                        nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
 
                     if k == "diskUsedPercent":
                         logging.info(f"Kafka Disk Used : {get_float_number(v)}")
@@ -1242,7 +1242,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     logging.info(f"temp_kafka_isr_dict = {kafka_isr_dict}")  
                     for k, v in kafka_isr_dict.items():
                         logging.info(f"# k - {k}, # v - {v}")
-                        kafka_isr_list_gauge_g.labels(server_job=socket.gethostname(), topic=v.get("Topic",""), partition=v.get("Partition",""), leader=v.get("Leader",""), replicas=v.get("Replicas",""), isr=v.get("Isr","")).set(1)
+                        kafka_isr_list_gauge_g.labels(server_job=domain_name_as_nick_name, topic=v.get("Topic",""), partition=v.get("Partition",""), leader=v.get("Leader",""), replicas=v.get("Replicas",""), isr=v.get("Isr","")).set(1)
             
 
         except Exception as e:
@@ -1262,7 +1262,7 @@ def get_metrics_all_envs(monitoring_metrics):
             if not (resp.status_code == 200):
                 ''' save failure node with a reason into saved_failure_dict'''
                 logging.error(f"es_config_interface api do not reachable")
-                saved_failure_dict.update({socket.gethostname(): "[{}] elasticsearch exporter api do not reachable".format(es_exporter_host)})
+                saved_failure_dict.update({domain_name_as_nick_name: "[{}] elasticsearch exporter api do not reachable".format(es_exporter_host)})
                     
             # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
             # logging.info(f"get_cpu_jvm_metrics - {resp}")
@@ -1307,7 +1307,7 @@ def get_metrics_all_envs(monitoring_metrics):
             for each_json in get_json_metrics_from_es_exporter:
                 ''' expose metrics for CPU Usage on each node'''
                 if 'cpu_usage_percentage' in each_json:
-                    es_exporter_cpu_usage_gauge_g.labels(server_job=socket.gethostname(), type='cpu_usage', name=each_json.get("name"), cluster=each_json.get("cluster")).set(each_json.get("cpu_usage_percentage"))
+                    es_exporter_cpu_usage_gauge_g.labels(server_job=domain_name_as_nick_name, type='cpu_usage', name=each_json.get("name"), cluster=each_json.get("cluster")).set(each_json.get("cpu_usage_percentage"))
                     
                     ''' set memory for checking'''
                     # cpu_memory_buffer.append({each_json.get("name") : each_json.get("cpu_usage_percentage")})
@@ -1352,7 +1352,7 @@ def get_metrics_all_envs(monitoring_metrics):
             jvm_heap_percentage_dict : {'logging-dev-node-4': 7.75, 'logging-dev-node-1': 6.99, 'logging-dev-node-2': 4.36, 'logging-dev-node-3': 7.18}
             '''
             for k, v in jvm_heap_percentage_dict.items():
-                es_exporter_jvm_usage_gauge_g.labels(server_job=socket.gethostname(), type='jvm_usage', name=k, cluster=cluster_name).set(v)
+                es_exporter_jvm_usage_gauge_g.labels(server_job=domain_name_as_nick_name, type='jvm_usage', name=k, cluster=cluster_name).set(v)
 
             ''' get global configuration'''
             ''' initializde configuration'''
@@ -1532,7 +1532,7 @@ def get_metrics_all_envs(monitoring_metrics):
         saved_failure_dict.clear()
 
         ''' get hostname without domain'''
-        hostname = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+        hostname = domain_name_as_nick_name.split(".")[0]
 
         ''' if server status is yellow or red'''
         global saved_thread_alert, saved_thread_alert_message, save_thread_alert_history, saved_thread_green_alert
@@ -1554,42 +1554,42 @@ def get_metrics_all_envs(monitoring_metrics):
         
         if resp_es_health:
             ''' get es nodes from _cluster/health api'''
-            es_nodes_gauge_g.labels(socket.gethostname()).set(int(resp_es_health['number_of_nodes']))
+            es_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(resp_es_health['number_of_nodes']))
             ''' --- '''
             ''' get total docs, total indices, total docs excluded system indices, total indices excluded system indices'''
-            es_nodes_basic_info_docs_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['docs']))
-            es_nodes_basic_info_indices_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['indices']))
-            es_nodes_total_info_docs_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['total_docs']))
-            es_nodes_total_info_indices_gauge_g.labels(server_job=socket.gethostname()).set(int(resp_es_basic_info['total_indices']))
-            es_nodes_group_info_docs_gauge_g.labels(server_job=socket.gethostname(), category="wmx_omx_indices").set(int(resp_es_basic_info['indices']))
-            es_nodes_group_info_docs_gauge_g.labels(server_job=socket.gethostname(), category="total_indices").set(int(resp_es_basic_info['total_indices']))
+            es_nodes_basic_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp_es_basic_info['docs']))
+            es_nodes_basic_info_indices_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp_es_basic_info['indices']))
+            es_nodes_total_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp_es_basic_info['total_docs']))
+            es_nodes_total_info_indices_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp_es_basic_info['total_indices']))
+            es_nodes_group_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name, category="wmx_omx_indices").set(int(resp_es_basic_info['indices']))
+            es_nodes_group_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name, category="total_indices").set(int(resp_es_basic_info['total_indices']))
             ''' --- '''
             if resp_es_health['status'] == 'green':
                 ''' update cluster status if we have all nodes running'''
                 all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list,1)
                 ''' save service_status_dict for alerting on all serivces'''
                 service_status_dict.update({"es" : 'Green'})
-                es_nodes_health_gauge_g.labels(socket.gethostname()).set(2)
+                es_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(2)
                 
             elif resp_es_health['status'] == 'yellow':
                 ''' update cluster status if we have all nodes running'''
                 all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 0)
                 ''' save service_status_dict for alerting on all serivces'''
                 service_status_dict.update({"es" : 'Yellow'})
-                es_nodes_health_gauge_g.labels(socket.gethostname()).set(1)
+                es_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(1)
             else:
                 ''' update cluster status if we have all nodes running'''
                 all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1)
                 ''' save service_status_dict for alerting on all serivces'''
                 service_status_dict.update({"es" : 'Red'})
-                es_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
+                es_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
 
                 ''' update ES status is RED'''
                 ES_CLUSTER_RED = True
                    
         else:
-            es_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
-            es_nodes_gauge_g.labels(socket.gethostname()).set(0)
+            es_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
+            es_nodes_gauge_g.labels(domain_name_as_nick_name).set(0)
             ''' update cluster status if we have empty nodes running or the status of cluster with red '''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1)
             ''' save service_status_dict for alerting on all serivces'''
@@ -1629,11 +1629,11 @@ def get_metrics_all_envs(monitoring_metrics):
         nodes_max_disk_used_gauge_g._metrics.clear()
 
         ''' export max all nodes with es/kafka'''
-        # nodes_max_disk_used_gauge_g.labels(server_job=socket.gethostname()).set(float(max_disk_used))
+        # nodes_max_disk_used_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(max_disk_used))
 
         ''' expose each max disk usage'''
-        nodes_max_disk_used_gauge_g.labels(server_job=socket.gethostname(), category="max_es_disk_used").set(float(max_es_disk_used))
-        nodes_max_disk_used_gauge_g.labels(server_job=socket.gethostname(), category="max_kafka_disk_used").set(float(max_kafka_disk_used))
+        nodes_max_disk_used_gauge_g.labels(server_job=domain_name_as_nick_name, category="max_es_disk_used").set(float(max_es_disk_used))
+        nodes_max_disk_used_gauge_g.labels(server_job=domain_name_as_nick_name, category="max_kafka_disk_used").set(float(max_kafka_disk_used))
         
 
         ''' check the status of nodes on all kibana/kafka/connect except es nodes by using socket '''
@@ -1650,7 +1650,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"response_dict - {response_dict}")
 
         ''' Kafka Health'''
-        kafka_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
+        kafka_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
 
         '''
         # printout Kafka_Connect
@@ -1675,27 +1675,27 @@ def get_metrics_all_envs(monitoring_metrics):
         
         ''' Kafka connect node update'''
         ''' As long as Kafka Connect is running on the primary node, this is fine since it’s not mandatory for Connect to be running on nodes 2,3.'''
-        kafka_connect_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+        kafka_connect_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
         ''' update health of Kafka connect'''
         if master_kafka_active == "OK":
             ''' If Kafka Connect is not running on node #2 or node #3 or a combination of both nodes #2 and #3, then the color code check should show as yellow if Kafka Connect is running on the primary node (node 1).'''
-            kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
         else:
             ''' If Kafka Connect is not running on the primary node, then the color code check should show as “red” since this means data is not being processed for our ES pipeline queue for WMx and OMx. '''
-            kafka_connect_nodes_health_gauge_g.labels(socket.gethostname()).set(0)
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
             
         ''' zookeeper node update'''
-        zookeeper_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["zookeeper_url"]["GREEN_CNT"]))
+        zookeeper_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["zookeeper_url"]["GREEN_CNT"]))
         
         ''' Update the status of kibana instance by using socket.connect_ex'''
-        # es_nodes_gauge_g.labels(socket.gethostname()).set(int(response_dict["es_url"]["GREEN_CNT"]))
-        kibana_instance_gauge_g.labels(socket.gethostname()).set(int(response_dict["kibana_url"]["GREEN_CNT"]))
+        # es_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["es_url"]["GREEN_CNT"]))
+        kibana_instance_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kibana_url"]["GREEN_CNT"]))
 
         ''' alert state'''
         if global_mail_configuration.get(hostname).get('is_mailing',''):
-            alert_state_instance_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
         else:
-            alert_state_instance_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
 
         ''' Update the status of Redis service by using socket.connect_ex only Dev'''
         if 'redis_url' in monitoring_metrics:
@@ -1703,7 +1703,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
-            redis_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+            redis_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of ES Confiuration write job service by using socket.connect_ex only Dev'''
         if 'configuration_job_url' in monitoring_metrics:
@@ -1711,7 +1711,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
-            es_configuration_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+            es_configuration_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of ES Confiuration API service by using socket.connect_ex only Dev'''
         if 'es_configuration_api_url' in monitoring_metrics:
@@ -1719,7 +1719,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
-            es_configuration_api_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+            es_configuration_api_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of LOG DB URL by using socket.connect_ex only Dev'''
         if 'log_db_url' in monitoring_metrics:
@@ -1727,7 +1727,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
-            log_db_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+            log_db_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of Alert Monitoring URL by using socket.connect_ex only Dev'''
         if 'alert_monitoring_url' in monitoring_metrics:
@@ -1735,7 +1735,7 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
-            alert_monitoring_ui_gauge_g.labels(socket.gethostname()).set(active_cnt)
+            alert_monitoring_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         # ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
         # if 'loki_url' in monitoring_metrics:
@@ -1743,7 +1743,7 @@ def get_metrics_all_envs(monitoring_metrics):
         #     ''' Red is 2'''
         #     if active_cnt < 1:
         #         active_cnt = 2
-        #     loki_ui_gauge_g.labels(socket.gethostname()).set(active_cnt)
+        #     loki_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         # ''' Update the status of Loki interface API service by using socket.connect_ex only Dev'''
         # if 'loki_api_url' in monitoring_metrics:
@@ -1751,7 +1751,7 @@ def get_metrics_all_envs(monitoring_metrics):
         #     ''' Red is 2'''
         #     if active_cnt < 1:
         #         active_cnt = 2
-        #     loki_api_instance_gauge_g.labels(socket.gethostname()).set(active_cnt)
+        #     loki_api_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of loki_custom_promtail_agent_url agent by using socket.connect_ex only Dev'''
         # if 'loki_custom_promtail_agent_url' in monitoring_metrics:
@@ -1762,7 +1762,7 @@ def get_metrics_all_envs(monitoring_metrics):
         #     loki_agent_instance_gauge_g.clear()
         #     for k, v in response_dict["loki_custom_promtail_agent_url"].items():
         #         if k != 'GREEN_CNT':
-        #             loki_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+        #             loki_agent_instance_gauge_g.labels(server_job=domain_name_as_nick_name, category=str(k)).set(1 if v == 'OK' else 2)
         
         ''' Update the status of log_aggregation_agent_url agent by using socket.connect_ex only Dev'''
         if 'log_aggregation_agent_url' in monitoring_metrics:
@@ -1773,7 +1773,7 @@ def get_metrics_all_envs(monitoring_metrics):
             """
             for k, v in response_dict["log_aggregation_agent_url"].items():
                 if k != 'GREEN_CNT':
-                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(k)).set(1 if v == 'OK' else 2)
+                    log_agent_instance_gauge_g.labels(server_job=domain_name_as_nick_name, category=str(k)).set(1 if v == 'OK' else 2)
             """
 
             list_of_data_transfer_nodes = monitoring_metrics.get("log_aggregation_agent_url").split(",")
@@ -1794,11 +1794,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     received = client_socket.recv(1024)
                     received = str(received.decode('utf-8'))
                     print(f"# socket client received.. {received}")
-                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(each_dt)).set(1 if received else 2)
+                    log_agent_instance_gauge_g.labels(server_job=domain_name_as_nick_name, category=str(each_dt)).set(1 if received else 2)
                             
                 except Exception as e:
                     logging.error(f"log_aggregation_agent_url error : {e}")
-                    log_agent_instance_gauge_g.labels(server_job=socket.gethostname(), category=str(each_dt)).set(2)
+                    log_agent_instance_gauge_g.labels(server_job=domain_name_as_nick_name, category=str(each_dt)).set(2)
                     pass
                         
                 finally:
@@ -1839,9 +1839,9 @@ def get_metrics_all_envs(monitoring_metrics):
                 for k, v in each_job.items():
                     if k  == 'state':
                         if v.upper() == 'RUNNING':
-                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(1)
+                            spark_jobs_gauge_g.labels(server_job=domain_name_as_nick_name, host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(1)
                         else:
-                            spark_jobs_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(0)
+                            spark_jobs_gauge_g.labels(server_job=domain_name_as_nick_name, host="{}{}".format(str(global_env_name).lower(), master_spark), id=each_job.get('id',''), cores=each_job.get('cores',''), memoryperslave=each_job.get('memoryperslave',''), submitdate= each_job.get('submitdate',''), duration=duration, activeapps=each_job.get('name',''), state=each_job.get('state','')).set(0)
                     
         else:
             ''' all envs update for current server active'''
@@ -1882,10 +1882,10 @@ def get_metrics_all_envs(monitoring_metrics):
                 saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "[SPARK CLUSTER APP] http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
             is_status_spark_custom_app = 'Red'
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
-            spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            spark_custom_apps_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
         else:
             is_status_spark_custom_app = 'Green'
-            spark_custom_apps_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            spark_custom_apps_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
         ''' Update the status of spark custom app in service_status_dict for the alert'''
         service_status_dict.update({"spark" : is_status_spark_custom_app})
 
@@ -1937,10 +1937,10 @@ def get_metrics_all_envs(monitoring_metrics):
                             if element['tasks'][0]['state'].upper() == 'RUNNING':
                                 kafka_state_list.append(1)
                                 is_running_one_of_kafka_listner = True
-                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(1)
+                                kafka_connect_listeners_gauge_g.labels(server_job=domain_name_as_nick_name, host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(1)
                             else:
                                 kafka_state_list.append(-1)
-                                kafka_connect_listeners_gauge_g.labels(server_job=socket.gethostname(), host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(0)
+                                kafka_connect_listeners_gauge_g.labels(server_job=domain_name_as_nick_name, host="{}{}".format(str(global_env_name).lower(), host), name=element.get('name',''), running=element['tasks'][0]['state']).set(0)
                                 ''' add tracking logs'''
                                 if 'trace' in  element['tasks'][0]:
                                     saved_failure_dict.update({"{}_{}".format(host, str(loop)) : "http://{}:8083 - ".format(host) + element.get('name','') + "," + element['tasks'][0]['trace']})
@@ -1995,11 +1995,11 @@ def get_metrics_all_envs(monitoring_metrics):
         """
         logging.info(f"Kafka_Health : {kafka_state_list}")
         if list(set(kafka_state_list)) == [1]:
-            kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(3)
+            kafka_connect_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(3)
         elif list(set(kafka_state_list)) == [-1] or len(kafka_state_list) < 1:
-            kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            kafka_connect_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
         else:
-            kafka_connect_health_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            kafka_connect_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
         """
 
         ''' get Kafka ISR metrics'''
@@ -2009,7 +2009,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' pgrep -f logstash to get process id'''
         ''' set 1 if process id has value otherwise set 0'''
         # -- local instance based
-        logstash_instance_gauge_g.labels(socket.gethostname()).set(int(get_Process_Id()))
+        logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(int(get_Process_Id()))
 
         ''' all envs update for current server active'''
         ''' all_env_status_memory_list -1? 0? 1? at least one?'''
@@ -2102,12 +2102,12 @@ def get_metrics_all_envs(monitoring_metrics):
         search_guard_health_gauge_g.clear()
 
         if sg_status == 1:
-            search_guard_health_gauge_g.labels(server_job=socket.gethostname()).set(1)
+            search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 1, types='search_guard')
         elif sg_status == 0:
-            search_guard_health_gauge_g.labels(server_job=socket.gethostname()).set(0)
+            search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
             ''' save failure node with a reason into saved_failure_dict'''
-            saved_failure_dict.update({socket.gethostname() + "_sg": "[SEARCH_GUARD] SG is not running"})
+            saved_failure_dict.update({domain_name_as_nick_name + "_sg": "[SEARCH_GUARD] SG is not running"})
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='search_guard')
 
         logging.info(f"get_search_guard_status #sg_status : {sg_status}")
@@ -2122,21 +2122,21 @@ def get_metrics_all_envs(monitoring_metrics):
 
         if list(set(all_env_status_memory_list)) == [1]:
             ''' green '''
-            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(1)
+            all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='cluster').set(1)
             saved_status_dict.update({'server_active' : 'Green'})
             global_service_active = True
             logging.info(f"SERVER ACTIVE : Green")
         
         elif list(set(all_env_status_memory_list)) == [-1]:
             ''' red '''
-            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(3)
+            all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='cluster').set(3)
             ''' update gloabl variable for alert email'''
             saved_status_dict.update({'server_active' : 'Red'})
             logging.info(f"SERVER ACTIVE : Red")
 
         else:
             ''' yellow '''
-            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='cluster').set(2)
+            all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='cluster').set(2)
             ''' update gloabl variable for alert email'''
             saved_status_dict.update({'server_active' : 'Yellow'})
             logging.info(f"SERVER ACTIVE : Yellow")
@@ -2169,7 +2169,7 @@ def get_metrics_all_envs(monitoring_metrics):
         saved_failure_dict.update(saved_failure_tasks_dict)
         # saved_failure_dict = {k: v for k, v in sorted(saved_failure_dict.items(), key=lambda item: item[0])}
         for k, v in saved_failure_dict.items():
-            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(),  host="{}{}".format(str(global_env_name).lower(), remove_special_char(k)), reason=v).set(0)
+            es_service_jobs_failure_gauge_g.labels(server_job=domain_name_as_nick_name,  host="{}{}".format(str(global_env_name).lower(), remove_special_char(k)), reason=v).set(0)
             ''' remove waring logs for the alert if our service is online'''
             if not global_service_active:
                 failure_message.append(v)
@@ -2179,14 +2179,14 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' db threads for kafka offset'''
         # for k, v in saved_failure_db_kafka_dict.items():
         #     ''' host_ remove'''
-        #     es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(), host=remove_special_char(k), reason=v).set(0)
+        #     es_service_jobs_failure_gauge_g.labels(server_job=domain_name_as_nick_name, host=remove_special_char(k), reason=v).set(0)
         #     failure_message.append(v)
 
         
         ''' db threads'''
         for k, v in saved_failure_db_dict.items():
             ''' host_ remove'''
-            es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(), host=remove_special_char(k), reason=v).set(0)
+            es_service_jobs_failure_gauge_g.labels(server_job=domain_name_as_nick_name, host=remove_special_char(k), reason=v).set(0)
             failure_message.append(v)
 
         ''' ------------------------------------------------------'''
@@ -2238,7 +2238,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"Mail Alert mail Configuration - {global_mail_configuration.get(hostname).get('is_mailing','')}, Mail Alert SMS Configuration : {global_mail_configuration.get(hostname).get('is_sms','')}")
         logging.info(f"global_es_shards_tasks_end_occurs_unassgined - {global_es_shards_tasks_end_occurs_unassgined}")
         logging.info(f"global_OUT_OF_ALERT_TIME : {global_OUT_OF_ALERT_TIME}, global_TIME_STAMP : {global_TIME_STAMP}, global_out_of_alert_time_range - {global_out_of_alert_time_range}")
-        logging.info(f"global_es_configuration_host : {global_es_configuration_host}, global_loki_host : {os.getenv('LOKI_HOST')}, global_env_name - {global_env_name}")
+        logging.info(f"global_es_configuration_host : {global_es_configuration_host}, global_loki_host : {os.getenv('LOKI_HOST')}, global_env_name - {global_env_name}, domain_name_as_nick_name : {domain_name_as_nick_name}")
         logging.info(f"current_alert_message : {saved_thread_alert_message}")
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
@@ -2407,7 +2407,7 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
                 if not (resp.status_code == 200):
                     db_jobs_gauge_kafka_offset_wmx_g._metrics.clear()
                     saved_failure_db_kafka_dict.update({'db-jobs-{}_{}'.format("WMx","Kafka_Offset") : "{} db -> ".format(resp.json()['message'])})
-                    all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+                    all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
                     saved_status_dict.update({'es_pipeline' : 'Red'})
                     logging.info(f"saved_failure_db_kafka_dict in 404 response - {saved_failure_db_kafka_dict}, saved_status_dict - {saved_status_dict}")
                     WMx_threads_db_Kafka_offset_active = False
@@ -2448,15 +2448,15 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
                     if time_difference_to_hours > KAFKA_OFFSET_EDITTS_UPDATED_THRESHOLD:
                         is_updated_editts_offset = False
                         not_updated_offset_list.append(str(element_each_json.get("PARTITION_NUM")))
-                        db_jobs_gauge_kafka_offset_wmx_g.labels(server_job=socket.gethostname(), topic=element_each_json['TOPIC'], partition_num=element_each_json['PARTITION_NUM'], offset=element_each_json["OFFSET"], addts=element_each_json["ADDTS"], addwho=element_each_json['ADDWHO'], editts=element_each_json['EDITTS'], editwho=element_each_json['EDITWHO'], dbid=element_each_json['DBID']).set(0)
+                        db_jobs_gauge_kafka_offset_wmx_g.labels(server_job=domain_name_as_nick_name, topic=element_each_json['TOPIC'], partition_num=element_each_json['PARTITION_NUM'], offset=element_each_json["OFFSET"], addts=element_each_json["ADDTS"], addwho=element_each_json['ADDWHO'], editts=element_each_json['EDITTS'], editwho=element_each_json['EDITWHO'], dbid=element_each_json['DBID']).set(0)
                     else:
-                        db_jobs_gauge_kafka_offset_wmx_g.labels(server_job=socket.gethostname(), topic=element_each_json['TOPIC'], partition_num=element_each_json['PARTITION_NUM'], offset=element_each_json["OFFSET"], addts=element_each_json["ADDTS"], addwho=element_each_json['ADDWHO'], editts=element_each_json['EDITTS'], editwho=element_each_json['EDITWHO'], dbid=element_each_json['DBID']).set(1)
+                        db_jobs_gauge_kafka_offset_wmx_g.labels(server_job=domain_name_as_nick_name, topic=element_each_json['TOPIC'], partition_num=element_each_json['PARTITION_NUM'], offset=element_each_json["OFFSET"], addts=element_each_json["ADDTS"], addwho=element_each_json['ADDWHO'], editts=element_each_json['EDITTS'], editwho=element_each_json['EDITWHO'], dbid=element_each_json['DBID']).set(1)
          
             ''' Not updated'''
             if not is_updated_editts_offset:
                 ''' red'''
                 logging.info(f"Time Difference with warning from the process - {time_difference_to_hours}")
-                all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+                all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
                 ''' update gloabl variable for alert email'''
                 saved_status_dict.update({'es_pipeline' : 'Red'})
                 ''' expose failure node with a reason'''
@@ -2466,7 +2466,7 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
             else:
                 ''' all status are active for Data Pipelines and Kafka_Offset'''
                 if all([WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active]):
-                    all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(1)
+                    all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(1)
 
         
         except Exception as e:
@@ -2585,7 +2585,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     
                     ''' expose failure node with a reason'''
                     saved_failure_db_dict.update({'db-jobs-{}_{}'.format(db_info,db_info) : "{} db -> ".format(db_info) + resp.json()['message']})
-                    all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+                    all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
                     saved_status_dict.update({'es_pipeline' : 'Red'})
 
                     logging.info(f"saved_failure_db_dict in 404 response - {saved_failure_db_dict}, saved_status_dict - {saved_status_dict}")
@@ -2595,7 +2595,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                 
                 logging.info(f"db/process_table - {resp}")
                 ''' db job performance through db interface restapi'''
-                # db_jobs_performance_gauge_g.labels(server_job=socket.gethostname()).set(int(resp.json["running_time"]))
+                # db_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp.json["running_time"]))
                 result_json_value = resp.json()["results"]
 
                 if db_info == "WMx":
@@ -2634,16 +2634,16 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             # db_transactin_perfomrance = db_transactin_time if db_http_host else Delay_Time
             if db_info == "WMx":
                 ''' update the time it take to establish the db connection and excute the basic query for WMx'''
-                db_jobs_performance_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                db_jobs_performance_WMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(db_transactin_time_WMx))
                 ''' check if wmx db is active'''
-                db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
-                db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_WMx))
+                db_jobs_wmx_db_active_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(1))
+                db_jobs_wmx_sql_data_pipeline_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(db_transactin_time_WMx))
             elif db_info == "OMx":
                 ''' update the time it take to establish the db connection and excute the basic query for OMx'''
-                db_jobs_performance_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
+                db_jobs_performance_OMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(db_transactin_time_OMx))
                 ''' check if omx db is active'''
-                db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(1))
-                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=socket.gethostname()).set(float(db_transactin_time_OMx))
+                db_jobs_omx_db_active_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(1))
+                db_jobs_omx_sql_data_pipeline_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(db_transactin_time_OMx))
 
             
             ''' response same format with list included dicts'''   
@@ -2657,9 +2657,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     
                     ''' updat metrics'''
                     if db_info == "WMx":
-                        db_jobs_gauge_wmx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
+                        db_jobs_gauge_wmx_g.labels(server_job=domain_name_as_nick_name, processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
                     elif db_info == "OMx":
-                        db_jobs_gauge_omx_g.labels(server_job=socket.gethostname(), processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
+                        db_jobs_gauge_omx_g.labels(server_job=domain_name_as_nick_name, processname=element_each_json['PROCESSNAME'], status=element_each_json['STATUS'], cnt=element_each_json["COUNT(*)"], addts=element_each_json["ADDTS"], dbid=element_each_json['DBID'], db_info="{}{}".format(str(global_env_name).lower(), db_info)).set(1)
 
                     if 'PROCESSNAME' in element_each_json:
                         is_exist_process = True
@@ -2687,7 +2687,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                             if time_difference_to_hours > DATA_PIPELINE_THRESHOLD:
                                 ''' red'''
                                 logging.info(f"Time Difference with warning from the process - {time_difference_to_hours}")
-                                all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+                                all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
                                 ''' update gloabl variable for alert email'''
                                 saved_status_dict.update({'es_pipeline' : 'Red'})
                                 ''' expose failure node with a reason'''
@@ -2718,7 +2718,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
                                 # if all([WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active]):
                                 if len(saved_failure_db_dict) < 1 and WMx_threads_db_active and OMx_threads_db_active:
-                                    all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(1)
+                                    all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(1)
 
                         ''' else '''
                         ''' update metrics for the number of process on Grafana tool'''
@@ -2728,9 +2728,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             if not is_exist_process:
                 ''' red'''
                 logging.info(f"No 'Data Pipeline' Process records")
-                all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+                all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
                 ''' expose failure node with a reason'''
-                # es_service_jobs_failure_gauge_g.labels(server_job=socket.gethostname(), reason="No 'ES_PIPELINE_UPLOAD_TEST' Process").set(0)
+                # es_service_jobs_failure_gauge_g.labels(server_job=domain_name_as_nick_name, reason="No 'ES_PIPELINE_UPLOAD_TEST' Process").set(0)
                 # saved_failure_db_dict.update({'db-jobs' : "No 'ES_PIPELINE_UPLOAD_TEST' Process"})
                 saved_failure_db_dict.update({'db-jobs-{}_{}'.format(db_info,db_info) : "{} db -> No 'Data Pipeline' Process records".format(db_info)})
                 saved_status_dict.update({'es_pipeline' : 'Red'})
@@ -2754,15 +2754,15 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
             logging.error(e)
             # saved_failure_db_dict.update({"http-db-interface_jobs-{}".format(db_info) : "{} [{} DB]-> {}".format(http_urls, db_info, str(e))})
             # saved_failure_db_dict.update({"db_jobs-{}".format(db_info) : "{} DB -> {}".format(db_info, str(e))})
-            all_envs_status_gauge_g.labels(server_job=socket.gethostname(), type='data_pipeline').set(2)
+            all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
             saved_status_dict.update({'es_pipeline' : 'Red'})
             ''' Disable to WMx_threads_db_active or OMx_threads_db_active '''
             Initialize_db_status_red(db_info)
             ''' check if wmx/omx db is inactive'''
             if db_info == "WMx":
-                db_jobs_wmx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
+                db_jobs_wmx_db_active_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(2))
             elif db_info == "OMx":
-                db_jobs_omx_db_active_gauge_g.labels(server_job=socket.gethostname()).set(float(2))
+                db_jobs_omx_db_active_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(2))
             pass
         
         finally:
@@ -2816,7 +2816,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                 
                 logging.info(f"db/process_table - {resp}")
                 ''' db job performance through db interface restapi'''
-                # db_jobs_performance_gauge_g.labels(server_job=socket.gethostname()).set(int(resp.json["running_time"]))
+                # db_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name).set(int(resp.json["running_time"]))
                 result_json_value = resp.json()["results"]
 
                 if db_info == "WMx":
@@ -2850,13 +2850,13 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                 get_mail_configuration(db_http_host)
             data = global_mail_configuration
 
-            host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+            host_name = domain_name_as_nick_name.split(".")[0]
             dev_email_list = data[host_name].get("dev_mail_list", "")
             dev_sms_list = data[host_name].get("dev_sms_list", "")
 
             if db_info == "WMx":
                 WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
-                db_jobs_backlogs_WMx_gauge_g.labels(server_job=socket.gethostname()).set(float(WMx_backlog))
+                db_jobs_backlogs_WMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(WMx_backlog))
 
                 WMx_backlog_list.append(WMx_backlog)
                 
@@ -2887,7 +2887,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
 
             elif db_info == "OMx":
                 OMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
-                db_jobs_backlogs_OMx_gauge_g.labels(server_job=socket.gethostname()).set(float(OMx_backlog))
+                db_jobs_backlogs_OMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(OMx_backlog))
        
         except Exception as e:
             logging.error(e)
@@ -2937,7 +2937,7 @@ def inserted_post_log(status, message):
     }'
     """
     ''' {"message": "Inserted log successfully."}'''
-    host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+    host_name = domain_name_as_nick_name.split(".")[0]
     request_body = {
                     "env" : global_env_name,
                     "host_name" : host_name,
@@ -2973,7 +2973,7 @@ def get_global_configuration(es_http_host):
         if not (resp.status_code == 200):
             ''' save failure node with a reason into saved_failure_dict'''
             logging.error(f"get_global_configuration api do not reachable")
-            saved_failure_dict.update({socket.gethostname(): "get_global_configuration api do not reachable"})
+            saved_failure_dict.update({domain_name_as_nick_name: "get_global_configuration api do not reachable"})
                 
         # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
         logging.info(f"get_global_configuration - {resp}")
@@ -3002,7 +3002,7 @@ def get_mail_configuration(db_http_host):
         if not (resp.status_code == 200):
             ''' save failure node with a reason into saved_failure_dict'''
             logging.error(f"es_config_interface api do not reachable")
-            saved_failure_dict.update({socket.gethostname(): "es_config_interface_api/get_mail_config do not reachable"})
+            saved_failure_dict.update({domain_name_as_nick_name: "es_config_interface_api/get_mail_config do not reachable"})
             return None
                 
         # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
@@ -3063,7 +3063,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             
             end_time_func = datetime.datetime.now()
             ''' export the time for this get_global_configuration'''
-            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' get db configuration'''
             start_time_fun = datetime.datetime.now()
@@ -3073,7 +3073,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             
             end_time_func = datetime.datetime.now()
             ''' export the time for this get_global_configuration'''
-            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
             start_time_fun = datetime.datetime.now()
@@ -3083,7 +3083,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
 
             end_time_func = datetime.datetime.now()
             ''' export the time for this get_global_configuration'''
-            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
+            es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
             ''' **** '''
             
             ''' export application processing time '''
@@ -3094,7 +3094,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             logging.info("# Export Application Running Time - {}\n\n".format(str(Delay_Time)))
 
             ''' ES Monitoring Running Time'''
-            es_service_jobs_performance_gauge_g.labels(server_job=socket.gethostname(), category="es_service_all").set(float(Delay_Time))
+            es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_service_all").set(float(Delay_Time))
             
             time.sleep(interval)
         
@@ -3213,7 +3213,7 @@ def alert_work(db_http_host):
             if not (resp.status_code == 200):
                 ''' save failure node with a reason into saved_failure_dict'''
                 logging.error(f"es_config_interface api do not reachable")
-                saved_failure_dict.update({socket.gethostname(): "es_config_interface_api do not reachable"})
+                saved_failure_dict.update({domain_name_as_nick_name: "es_config_interface_api do not reachable"})
                 continue
                 
             # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
@@ -3221,7 +3221,7 @@ def alert_work(db_http_host):
             data = resp.json()
             """
 
-            host_name = socket.gethostname().split(".")[0] if '.' in socket.gethostname() else socket.gethostname()
+            host_name = domain_name_as_nick_name.split(".")[0]
             get_es_config_interface_api_host_key = host_name
 
             ''' ------------------------------------------------------'''
@@ -3529,6 +3529,7 @@ if __name__ == '__main__':
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of custom prometheus exporter")
     parser.add_argument('--env_name', dest='env_name', default="env_name", help='env_name')
+    parser.add_argument('--domain_name_as_nick_name', dest='domain_name_as_nick_name', default="", help='domain_name_as_nick_name')
     parser.add_argument('--kafka_url', dest='kafka_url', default="localhost:29092,localhost:39092,localhost:49092", help='Kafka hosts')
     parser.add_argument('--kafka_connect_url', dest='kafka_connect_url', default="localhost:8083,localhost:8084,localhost:8085", help='Kafka connect hosts')
     parser.add_argument('--zookeeper_url', dest='zookeeper_url', default="localhost:22181,localhost:21811,localhost:21812", help='zookeeper hosts')
@@ -3575,13 +3576,19 @@ if __name__ == '__main__':
     The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service. 
     '''
 
-    global global_env_name, global_es_configuration_host
+    global global_env_name, global_es_configuration_host, domain_name_as_nick_name
 
     if args.env_name:
         env_name = args.env_name
 
     global_env_name = str(env_name).upper()
 
+    ''' set hostname'''
+    if args.domain_name_as_nick_name:
+        domain_name_as_nick_name = args.domain_name_as_nick_name
+    else:
+        domain_name_as_nick_name = socket.gethostname()
+     
     if args.kafka_url:
         kafka_url = args.kafka_url
 
