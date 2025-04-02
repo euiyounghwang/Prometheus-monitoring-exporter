@@ -3445,7 +3445,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 - Alert Date : %s <BR/> \
                 - Grafana Dashboard URL : <a href="%s">%s</a> <BR/> \
                 - Monitoring Configuration API : <a href="%s">%s</a>  <BR/> \
-                - Enviroment: <b>%s</b>, Prometheus Export Application Runnig Host : %s, Export Application URL : <a href="http://%s:9115">http://%s:9115</a> <BR/> \
+                - Enviroment: <b>%s</b>, Prometheus Export Application Runnig Host : %s, Export Application URL : <a href="%s">%s</a> <BR/> \
                 - Service Status: <b>%s</b>, ES_PIPELINE Status : <b>%s</b> <BR/> \
                 - Service Health:  <BR/> \
                     Elasticsearch Health : <b>%s</b>, Elasticsearch Nodes : <b>%s</b> <BR/>\
@@ -3520,6 +3520,11 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         logging.info(f"send_mail -> Mail Alert message : {body}, type(body) : {type(body)}")
     
         ''' sending emiall/sms'''
+        if os.environ["ES_MONITORING_APPS_EXPORTER_URL_HOST"]:
+            host = "http://{}".format(os.environ["ES_MONITORING_APPS_EXPORTER_URL_HOST"])
+        else:
+            host = "http://{}:9115".format(host)
+
         mail_attached(grafana_dashboard_url, smtp_host, smtp_port, host, body, to, cc, _type)
         
     except Exception as e:
