@@ -370,7 +370,7 @@ def get_metrics_all_envs(monitoring_metrics):
         socket.connect_ex( <address> ) similar to the connect() method but returns an error indicator of raising an exception for errors returned by C-level connect() call.
         Other errors like host not found can still raise exception though
         '''
-        exclude_port_detect = ['redis', 'configuration', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
+        exclude_port_detect = ['logstash_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
         response_dict = {}
         for k, v in monitoring_metrics.items():
             response_dict.update({k : ""})
@@ -1512,7 +1512,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' red'''
                     all_env_status.append(-1)
             else:
-                if value == 1:
+                if value >= 1:
                    ''' green'''
                    all_env_status.append(1)
                 else:
@@ -2091,10 +2091,18 @@ def get_metrics_all_envs(monitoring_metrics):
         service_status_dict.update({"kibana" : kibana_status})
 
         ''' update server active status for Logstash'''
-        all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(get_Process_Id()), types='logstash')
-        ''' save service_status_dict for alerting on all serivces'''
-        logstash_status = 'Green' if int(get_Process_Id()) > 0 else 'Red'
-        service_status_dict.update({"logstash" : logstash_status})
+        if logstash_validation_type == 'socket':
+            MAX_NUMBERS = len(monitoring_metrics.get("logstash_url").split(","))
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["logstash_url"]["GREEN_CNT"]), types='logstash')
+            logstash_status = 'Green' if int(response_dict["logstash_url"]["GREEN_CNT"]) > 0 else 'Red'
+            if int(response_dict["logstash_url"]["GREEN_CNT"]) < 1:
+                saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+            service_status_dict.update({"logstash" : logstash_status})
+        else:
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(get_Process_Id()), types='logstash')
+            ''' save service_status_dict for alerting on all serivces'''
+            logstash_status = 'Green' if int(get_Process_Id()) > 0 else 'Red'
+            service_status_dict.update({"logstash" : logstash_status})
 
         ''' update the health of search guard'''
         sg_status = get_search_guard_status()
@@ -2244,6 +2252,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
+        logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name}:{port}")
         
         ''' It can be displayed the log if backlog is enabled'''
         if backlog:
@@ -3534,6 +3543,7 @@ if __name__ == '__main__':
     parser.add_argument('--kafka_connect_url', dest='kafka_connect_url', default="localhost:8083,localhost:8084,localhost:8085", help='Kafka connect hosts')
     parser.add_argument('--zookeeper_url', dest='zookeeper_url', default="localhost:22181,localhost:21811,localhost:21812", help='zookeeper hosts')
     parser.add_argument('--es_url', dest='es_url', default="localhost:9200,localhost:9501,localhost:9503", help='es hosts')
+    parser.add_argument('--logstash_url', dest='logstash_url', default="localhost:5044,localhost:5045,localhost:5046,localhost:5043,localhost:5047,localhost:5048", help='es hosts')
     parser.add_argument('--kibana_url', dest='kibana_url', default="localhost:5601,localhost:15601", help='kibana hosts')
     parser.add_argument('--redis_url', dest='redis_url', default="", help='redis hosts')
     parser.add_argument('--configuration_job_url', dest='configuration_job_url', default="", help='configuration_job hosts')
@@ -3577,6 +3587,7 @@ if __name__ == '__main__':
     '''
 
     global global_env_name, global_es_configuration_host, domain_name_as_nick_name
+    global logstash_validation_type
 
     if args.env_name:
         env_name = args.env_name
@@ -3603,6 +3614,12 @@ if __name__ == '__main__':
 
     if args.kibana_url:
         kibana_url = args.kibana_url
+
+    if args.logstash_url:
+        logstash_validation_type = 'socket'
+        logstash_url = args.logstash_url
+    else:
+        logstash_validation_type = 'process'
 
     redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url = None, None, None, None, None, None, None, None, None
 
@@ -3695,6 +3712,10 @@ if __name__ == '__main__':
         "es_url" : es_url,
         "kibana_url" : kibana_url
     }
+
+    ''' logstash port checking'''
+    if logstash_url:
+        monitoring_metrics.update({"logstash_url" : logstash_url})
 
     ''' Redis port checking'''
     if redis_url:
