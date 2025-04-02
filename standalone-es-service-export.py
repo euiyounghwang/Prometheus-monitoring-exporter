@@ -2005,12 +2005,6 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' get Kafka ISR metrics'''
         # get_kafka_ISR_metrics()
 
-      
-        ''' pgrep -f logstash to get process id'''
-        ''' set 1 if process id has value otherwise set 0'''
-        # -- local instance based
-        logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(int(get_Process_Id()))
-
         ''' all envs update for current server active'''
         ''' all_env_status_memory_list -1? 0? 1? at least one?'''
         logging.info(f"all_envs_status #ES : {all_env_status_memory_list}")
@@ -2097,12 +2091,20 @@ def get_metrics_all_envs(monitoring_metrics):
             logstash_status = 'Green' if int(response_dict["logstash_url"]["GREEN_CNT"]) > 0 else 'Red'
             if int(response_dict["logstash_url"]["GREEN_CNT"]) < 1:
                 saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+                logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(0)
+            else:
+                logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(1)
             service_status_dict.update({"logstash" : logstash_status})
+                        
         else:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(get_Process_Id()), types='logstash')
             ''' save service_status_dict for alerting on all serivces'''
             logstash_status = 'Green' if int(get_Process_Id()) > 0 else 'Red'
             service_status_dict.update({"logstash" : logstash_status})
+
+            ''' pgrep -f logstash to get process id'''
+            ''' set 1 if process id has value otherwise set 0'''
+            logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(int(get_Process_Id()))
 
         ''' update the health of search guard'''
         sg_status = get_search_guard_status()
