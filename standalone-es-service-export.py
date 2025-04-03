@@ -1256,8 +1256,8 @@ def get_metrics_all_envs(monitoring_metrics):
             logging.info(f"is_dev_mode - {is_dev_mode}")
             # es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
             ''' If kibana url is different with argument, you may need to add this environment variable to ./standalone-export-run.sh '''
-            es_exporter_host = str(os.environ["ES_EXPORTER_HOST"]) if os.environ.get("ES_EXPORTER_HOST") is not None else monitoring_metrics.get("kibana_url", "").split(":")[0]
-            resp = requests.get(url="http://{}:9114/metrics".format(es_exporter_host), timeout=5)
+            es_exporter_host = "{}".format(str(os.environ["ES_EXPORTER_HOST"])) if os.environ.get("ES_EXPORTER_HOST") is not None else "{}:9114".format(monitoring_metrics.get("kibana_url", "").split(":")[0])
+            resp = requests.get(url="http://{}/metrics".format(es_exporter_host), timeout=5)
                     
             if not (resp.status_code == 200):
                 ''' save failure node with a reason into saved_failure_dict'''
