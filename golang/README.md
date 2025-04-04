@@ -39,5 +39,20 @@ go get github.com/prometheus/client_golang/prometheus/promhttp
 - gopsutil(https://leapcell.medium.com/gopsutil-powerful-system-stats-for-go-developers-2a1941c40822) is a Golang port of the Python library psutil, which helps us conveniently obtain various system and hardware information. It masks the differences between different systems and has extremely powerful portability. With gopsutil, we don’t need to use syscall to call the corresponding system methods for different systems. 
 - generate package(https://westlife0615.tistory.com/268)
 
+GoConvey(https://github.com/smartystreets/goconvey) supports Go's native testing package. Neither the web UI nor the DSL are required; you can use either one independently. Directly integrates with go test; Fully-automatic web UI (works with native Go tests, too)
+```bash
+go get github.com/smartystreets/goconvey
+go install github.com/smartystreets/goconvey
+
+cd /Users/euiyoung.hwang/go/pkg/mod/github.com/smartystreets/goconvey@v1.8.1
+
+go-search_engine git:(master) ✗ /Users/euiyoung.hwang/go/bin/goconvey --workDir=$SCRIPTDIR/tests
+go-search_engine git:(master) ✗ ./go_convey.sh                                                                                              
+2023/12/27 14:07:14 goconvey.go:116: GoConvey server: 
+2023/12/27 14:07:14 goconvey.go:121:   version: v1.8.1
+2023/12/27 14:07:14 goconvey.go:122:   host: 127.0.0.1
+2023/12/27 14:07:14 goconvey.go:123:   port: 8080
+```
+
 Elasticsearch with golang
 - https://opensearch.org/docs/latest/clients/rust/
