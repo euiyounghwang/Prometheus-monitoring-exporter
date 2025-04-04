@@ -88,8 +88,32 @@ var (
 
 	basicMemoryTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "basicMemoryTotalGauge (GB)",
-			Help: "basicMemoryTotal",
+			Name: "basicMemoryTotalGauge",
+			Help: "basicMemoryTotal (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicMemoryUsed = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryUsedGauge",
+			Help: "basicMemoryUsed (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicMemoryAvailable = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryAvailableGauge",
+			Help: "basicMemoryAvailable (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicMemoryUsedPercent = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryUsedPercentGauge",
+			Help: "basicMemoryUsedPercent (%))",
 		},
 		[]string{"server_job"},
 	)
@@ -136,6 +160,9 @@ func Init() {
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
 	prometheus.MustRegister(basicMemoryTotal)
+	prometheus.MustRegister(basicMemoryUsed)
+	prometheus.MustRegister(basicMemoryAvailable)
+	prometheus.MustRegister(basicMemoryUsedPercent)
 	prometheus.MustRegister(networkRxInfo)
 	prometheus.MustRegister(networkTxInfo)
 }
@@ -148,6 +175,9 @@ func metrics_reset() {
 	diskUsageGauge.MetricVec.Reset()
 	basicMemoryInfo.MetricVec.Reset()
 	basicMemoryTotal.MetricVec.Reset()
+	basicMemoryUsed.MetricVec.Reset()
+	basicMemoryAvailable.MetricVec.Reset()
+	basicMemoryUsedPercent.MetricVec.Reset()
 }
 
 func get_local_ip_addr() string {
@@ -269,7 +299,14 @@ func basic_resource(hostname string) {
 	// fmt.Printf("* RAM Total: %v, RAM Available: %v, RAM Used: %v, RAM Used Percent:%f%%\n", m.Total, m.Available, m.Used, m.UsedPercent)
 	basicMemoryInfo.WithLabelValues(hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%f", m.UsedPercent)).Set(1)
 
+	/* Memeroy Total */
 	basicMemoryTotal.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Total))
+	/* Memeroy Used */
+	basicMemoryUsed.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Used))
+	/* Memeroy Available */
+	basicMemoryAvailable.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Available))
+	/* Memeroy Used Percent */
+	basicMemoryUsedPercent.WithLabelValues(hostname).Set(m.UsedPercent)
 
 	// basicMemoryInfo.MetricVec.Reset()
 	/*

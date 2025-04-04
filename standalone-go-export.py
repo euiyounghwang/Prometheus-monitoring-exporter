@@ -41,7 +41,14 @@ logging = create_log()
 remote_prometheus_json = {}
 
 ''' Prometheus metrics'''
-cpu_usage_gauge_g = Gauge("cpu_usage_metric", 'Metrics scraped from localhost', ["server_job"])
+cpu_usage_gauge_g = Gauge("cpu_usage_metric", 'cpu_usage_metric (percent)', ["server_job"])
+memory_usage_gauge_g = Gauge("memory_usage_metric", 'memory_usage_metric (percent)', ["server_job"])
+memory_total_gauge_g = Gauge("memory_total_metric", 'memory_total_metric (GB)', ["server_job"])
+memory_used_gauge_g = Gauge("memory_used_metric", 'memory_used_metric (GB)', ["server_job"])
+memory_available_gauge_g = Gauge("memory_available_metric", 'memory_available_metric (GB)', ["server_job"])
+
+nodes_diskspace_gauge_g = Gauge("node_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "host", "diskfree", "disktotal", "diskusagepercent", "diskused", "ipaddress", "path"])
+
 node_agent_status_gauge_g = Gauge("node_agent_status_metric", 'Metrics scraped from localhost', ["server_job"])
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
 
@@ -182,7 +189,7 @@ def transform_prometheus_txt_to_Json(response):
 
 def get_exporter_apps():
     ''' get_exporter_apps''' 
-    global remote_prometheus_json
+    global remote_prometheus_json, is_over_free_Disk_space
 
     try:
         resp = requests.get(url="http://{}:2112/metrics".format(os.getenv("REMOTE_AGENT_HOST")), timeout=5)
@@ -199,13 +206,48 @@ def get_exporter_apps():
         remote_prometheus_json = transform_prometheus_txt_to_Json(resp)
         # logging.info(f"** {remote_prometheus_json.get('basiccpuModelInfoGauge')}")
         # logging.info(f"** {remote_prometheus_json}")
+        # logging.info(f"** {remote_prometheus_json.get('diskUsageGauge')}")
 
         ''' cpu usage'''
         ''' [{'label': 'localhost', 'set_value': '13.969631'}] '''
         # logging.info(f"cpu_usage : {remote_prometheus_json.get('cpuUsage')}")
-        if remote_prometheus_json.get("cpuUsage"):
-            cpu_usage_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("cpuUsage")[0].get('set_value')))
-            
+        cpu_usage_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("cpuUsage")[0].get('set_value')))
+        ''' memory usage '''
+        memory_usage_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("basicMemoryUsedPercentGauge")[0].get('set_value')))
+        ''' memory used '''
+        memory_total_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("basicMemoryTotalGauge")[0].get('set_value')))
+        ''' memory used '''
+        memory_used_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("basicMemoryUsedGauge")[0].get('set_value')))
+        ''' memory available '''
+        memory_available_gauge_g.labels(socket.gethostname()).set(float(remote_prometheus_json.get("basicMemoryAvailableGauge")[0].get('set_value')))
+
+        ''' disk usage'''
+        disk_usage_list = remote_prometheus_json.get('diskUsageGauge')
+        for each_disk in disk_usage_list:
+            del each_disk["set_value"]
+            for v in each_disk.values():
+                disk_infos = v.split(",")
+                disk_infos_property_dict = {}
+                for disk_property in disk_infos:
+                    disk_infos_property_dict.update({disk_property.split("=")[0] : disk_property.split("=")[1]})
+                # print(disk_infos_property_dict)
+                
+                current_disk_usages_path = disk_infos_property_dict.get("diskusagepercent")
+                current_disk_usages_path = float(current_disk_usages_path.replace("%", ''))
+                is_disk_fine = 0
+                if current_disk_usages_path < disk_usage_threshold:
+                    is_disk_fine = 1
+                else:
+                    is_over_free_Disk_space = True
+                    ''' set alert log'''  
+                    saved_failure_dict.update({"disk_alert_{}".format(disk_infos_property_dict.get("path")) : "[host : {}]".format(os.getenv("REMOTE_AGENT_HOST")) + " Disk Path : {},".format(disk_infos_property_dict.get("path")) + " Disk Used : " + str(current_disk_usages_path) + "%" + ", Disk Threshold : " + str(disk_usage_threshold) + "%" })
+
+                ''' set metrics for all disk paths'''
+                nodes_diskspace_gauge_g.labels(server_job=socket.gethostname(), category='Remote Node', host=os.getenv("REMOTE_AGENT_HOST"), 
+                                                   diskfree=disk_infos_property_dict.get("diskfree"), disktotal=disk_infos_property_dict.get("disktotal"), diskusagepercent=disk_infos_property_dict.get("diskusagepercent"),
+                                                   diskused=disk_infos_property_dict.get("diskused"), ipaddress=disk_infos_property_dict.get("ipaddress"), path=disk_infos_property_dict.get("path")
+                                                   ).set(is_disk_fine)
+
     except Exception as e:
         ''' update metrics for the remote nodes export apps to 0 as Red'''
         node_agent_status_gauge_g.labels(server_job=socket.gethostname()).set(0)
@@ -315,6 +357,12 @@ def set_initialize():
     saved_failure_dict.clear()
     ''' initialize metrics'''
     cpu_usage_gauge_g._metrics.clear()
+    memory_usage_gauge_g._metrics.clear()
+    memory_total_gauge_g._metrics.clear()
+    memory_used_gauge_g._metrics.clear()
+    memory_available_gauge_g._metrics.clear()
+    nodes_diskspace_gauge_g._metrics.clear()
+
     all_envs_status_gauge_g._metrics.clear()
     node_agent_status_gauge_g._metrics.clear()
 
@@ -349,6 +397,8 @@ save_thread_alert_history = []
 saved_thread_alert_message = []
 saved_status_dict = {}
 service_status_dict = {}
+is_over_free_Disk_space = False
+disk_usage_threshold = 10
 
 def work(port, interval, monitoring_metrics):
     try:
