@@ -84,7 +84,7 @@ def run():
         # resp_json = gr.State({})
         
         ''' main gr.Block'''
-        gr.Markdown(f"# Alert Update for Smart Suit Environments on ES Team <a href='{os.getenv('GRAFANA_DASHBOARD_URL')}'>Monitoring</a> Apps!")
+        gr.Markdown(f"# Alert Update for the ES Monitoring Application on Dev/SMOKE/QA/PROD env's (<a href='{os.getenv('GRAFANA_DASHBOARD_URL')}'>Grafana Dashboard</a>)")
         
         def alert_on_off(env):
             ''' check alert for the particular env'''            
