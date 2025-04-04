@@ -12,7 +12,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	monitor "prometheus.com/lib"
+	"prometheus.com/metrics"
+	"prometheus.com/utility"
 
 	human "github.com/dustin/go-humanize"
 	"github.com/shirou/gopsutil/cpu"
@@ -85,6 +86,14 @@ var (
 		[]string{"server_job", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
 	)
 
+	basicMemoryTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryTotalGauge (GB)",
+			Help: "basicMemoryTotal",
+		},
+		[]string{"server_job"},
+	)
+
 	diskUsageGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "diskUsageGauge",
@@ -126,6 +135,7 @@ func Init() {
 	prometheus.MustRegister(diskUsageGauge)
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
+	prometheus.MustRegister(basicMemoryTotal)
 	prometheus.MustRegister(networkRxInfo)
 	prometheus.MustRegister(networkTxInfo)
 }
@@ -137,6 +147,7 @@ func metrics_reset() {
 	cpuModelInfo.MetricVec.Reset()
 	diskUsageGauge.MetricVec.Reset()
 	basicMemoryInfo.MetricVec.Reset()
+	basicMemoryTotal.MetricVec.Reset()
 }
 
 func get_local_ip_addr() string {
@@ -257,6 +268,9 @@ func basic_resource(hostname string) {
 
 	// fmt.Printf("* RAM Total: %v, RAM Available: %v, RAM Used: %v, RAM Used Percent:%f%%\n", m.Total, m.Available, m.Used, m.UsedPercent)
 	basicMemoryInfo.WithLabelValues(hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%f", m.UsedPercent)).Set(1)
+
+	basicMemoryTotal.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Total))
+
 	// basicMemoryInfo.MetricVec.Reset()
 	/*
 		d, err := disk.Usage("/")
@@ -282,7 +296,7 @@ func basic_resource(hostname string) {
 	networkTxInfo.WithLabelValues(hostname).Set(float64(n[0].BytesSent) / 1024 / 1024)
 
 	// fmt.Printf("Type = %T\n", cpuUsageGauge)
-	go monitor.Processes(hostname, processInfoCpuGauge, processInfoMemoryGauge)
+	go metrics.Processes(hostname, processInfoCpuGauge, processInfoMemoryGauge)
 
 }
 
