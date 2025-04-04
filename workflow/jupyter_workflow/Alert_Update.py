@@ -272,15 +272,15 @@ def run():
             with gr.Tab("Scheduled by Cronjob"):
                 with gr.Column():
                     gr.Markdown(f"# Will update alert directly via command or add cronjob!")
-                    gr.Markdown(f"* Go to Logstash Instance({os.getenv('API_HOST')}) on Dev and will update the alert if you run this command")
-                    gr.Markdown(f"* Enable Alert (example) → '/home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 True'")
-                    gr.Markdown(f"* Disable Alert (example) → '/home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 false'")
-                    gr.Markdown(f"* If you want to add new cronjob for the security patching..")
+                    gr.Markdown(f"* Go to {os.getenv('API_HOST')} instance and it will update the alert if you run this command")
+                    gr.Markdown(f"* Enable Alert (example) → {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 True")
+                    gr.Markdown(f"* Disable Alert (example) → {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 false")
+                    gr.Markdown(f"* If you want to add new cronjob for the security patching, go to {os.getenv('API_HOST')} instance")
                     gr.Markdown(f"* sudo crontab -e")
-                    gr.Markdown(f"* 40 06 17 12 *  /home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa1 false")
-                    gr.Markdown(f"* 00 16 17 12 *  /home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa1 true")
-                    gr.Markdown(f"* 40 06 17 12 *  /home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 false")
-                    gr.Markdown(f"* 00 16 17 12 *  /home/{os.getenv('USER')}/es_config_interface/scripts/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 true")
+                    gr.Markdown(f"* 40 06 16 04 *  {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa1 false")
+                    gr.Markdown(f"* 00 16 16 04 *  {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa1 true")
+                    gr.Markdown(f"* 40 06 16 04 *  {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 false")
+                    gr.Markdown(f"* 00 16 16 04 *  {os.getenv('CRONJOB_PATH')}/alert_job_batch.sh {os.getenv('API_HOST')} qa13,qa14 true")
                          
 
     alert_gradio.launch(auth = (os.getenv('GRADIO_USER'),os.getenv('GRADIO_PASSWORD')), server_name="0.0.0.0", server_port=7090)

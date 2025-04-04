@@ -25,7 +25,7 @@ API_HOST="localhost"
 QA_LIST="QA1,QA2"
 PROD_LIST="PROD1:company1,PROD2:company2"
 GRAFANA_DASHBOARD_URL="http://localhost:3000/d/adm08055cf3lsa/es-team-dashboard?orgId=1&refresh=5s&from=now-5m&to=now"
-USER="devuser"
+CRONJOB_PATH="/apps/rest_api/es_config_interface/scripts"
 GRADIO_USER="admin"
 GRADIO_PASSWORD="1"
 
@@ -34,7 +34,7 @@ export API_HOST
 export QA_LIST
 export PROD_LIST
 export GRAFANA_DASHBOARD_URL
-export USER
+export CRONJOB_PATH
 export GRADIO_USER
 export GRADIO_PASSWORD
 
