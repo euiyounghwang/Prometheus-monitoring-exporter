@@ -8,4 +8,4 @@ fab/
 .virtual_documents/
 .DS_Store
 logs/
-golang/expose_simple/output
+golang/golang_exporter/output

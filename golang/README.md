@@ -56,3 +56,15 @@ go-search_engine git:(master) ✗ ./go_convey.sh
 
 Elasticsearch with golang
 - https://opensearch.org/docs/latest/clients/rust/
+
+
+Go Test
+- Run this command `./go_convey.sh` or `goconvey --workDir=$SCRIPTDIR/tests --port=7090` or `go test -v ./tests/`
+```bash
+=== RUN   TestHealthCheckHandler
+&{GET /metrics HTTP/1.1 1 1 map[] {} <nil> 0 [] false example.com map[] map[] <nil> map[] 192.0.2.1:1234 /metrics <nil> <nil> <nil>  {{}} <nil> [] map[]}
+&{200 map[]  false <nil> map[] false}
+--- PASS: TestHealthCheckHandler (0.00s)
+PASS
+ok      prometheus.com/tests    (cached)
+```
