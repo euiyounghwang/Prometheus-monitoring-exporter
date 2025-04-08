@@ -287,6 +287,7 @@ func basic_resource(hostname string) {
 	// reset
 	cpuModelInfo.MetricVec.Reset()
 	// set
+	// grep -c processor /proc/cpuinfo
 	cpuModelInfo.WithLabelValues(hostname, hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores), fmt.Sprintf("%d", physicalCnt), fmt.Sprintf("%d", logicalCnt)).Set(1)
 
 	m, err := mem.VirtualMemory()
