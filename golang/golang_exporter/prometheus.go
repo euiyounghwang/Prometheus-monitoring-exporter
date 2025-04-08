@@ -75,15 +75,23 @@ var (
 			Name: "basiccpuModelInfoGauge",
 			Help: "cpuModelInfo",
 		},
-		[]string{"server_job", "cpu_model", "cpu_cores", "cpu_physicalCnt", "cpu_logicalCnt"},
+		[]string{"server_job", "hostname", "cpu_model", "cpu_cores", "cpu_physicalCnt", "cpu_logicalCnt"},
 	)
 
 	basicMemoryInfo = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "basicMemoryInfoGauge",
-			Help: "basicMemoryInfo",
+			Help: "basicMemoryInfo (Byte)",
 		},
-		[]string{"server_job", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
+		[]string{"server_job", "hostname", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
+	)
+
+	basicMemoryInfoGB = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicMemoryInfoGBGauge",
+			Help: "basicMemoryInfo (GB)",
+		},
+		[]string{"server_job", "hostname", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
 	)
 
 	basicMemoryTotal = prometheus.NewGaugeVec(
@@ -123,7 +131,7 @@ var (
 			Name: "diskUsageGauge",
 			Help: "Disk Usage all drives",
 		},
-		[]string{"server_job", "path", "disktotal", "diskused", "diskfree", "diskusagepercent", "ipaddress"},
+		[]string{"server_job", "hostname", "path", "disktotal", "diskused", "diskfree", "diskusagepercent", "ipaddress"},
 	)
 
 	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
@@ -159,25 +167,13 @@ func Init() {
 	prometheus.MustRegister(diskUsageGauge)
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
+	prometheus.MustRegister(basicMemoryInfoGB)
 	prometheus.MustRegister(basicMemoryTotal)
 	prometheus.MustRegister(basicMemoryUsed)
 	prometheus.MustRegister(basicMemoryAvailable)
 	prometheus.MustRegister(basicMemoryUsedPercent)
 	prometheus.MustRegister(networkRxInfo)
 	prometheus.MustRegister(networkTxInfo)
-}
-
-func metrics_reset() {
-	// log.Printf("resetting.")
-	osInfo.MetricVec.Reset()
-	cpuUsageGauge.MetricVec.Reset()
-	cpuModelInfo.MetricVec.Reset()
-	diskUsageGauge.MetricVec.Reset()
-	basicMemoryInfo.MetricVec.Reset()
-	basicMemoryTotal.MetricVec.Reset()
-	basicMemoryUsed.MetricVec.Reset()
-	basicMemoryAvailable.MetricVec.Reset()
-	basicMemoryUsedPercent.MetricVec.Reset()
 }
 
 func get_local_ip_addr() string {
@@ -209,6 +205,9 @@ func get_disk_usage(hostname string) {
 	local_ip_address := get_local_ip_addr()
 	// fmt.Println((local_ip_address))
 
+	// reset
+	diskUsageGauge.MetricVec.Reset()
+
 	parts, _ := disk.Partitions(true)
 	for _, p := range parts {
 		device := p.Mountpoint
@@ -231,7 +230,8 @@ func get_disk_usage(hostname string) {
 
 		MyGauge.Set(11)
 
-		diskUsageGauge.WithLabelValues(hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
+		// set
+		diskUsageGauge.WithLabelValues(hostname, hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
 
 		// diskUsageGauge.With(prometheus.Labels{
 		// 	"path":               "/apps",
@@ -253,6 +253,9 @@ func basic_resource(hostname string) {
 		log.Fatal(err)
 	}
 	// fmt.Printf("* OS: %v Version %v, OS Active Processes: %v, OS Uptime: %v\n", o.OS, o.PlatformVersion, o.Procs, o.Uptime)
+	// reset
+	osInfo.MetricVec.Reset()
+	// set
 	osInfo.WithLabelValues(hostname, o.OS, o.PlatformVersion, fmt.Sprintf("%d", o.Procs), fmt.Sprintf("%d", o.Uptime)).Set(1)
 
 	c, err := cpu.Info()
@@ -281,7 +284,10 @@ func basic_resource(hostname string) {
 	// perPercents = strings.Replace(perPercents, "[", ",", -1)
 	// perPercents = strings.Replace(perPercents, "]", ",", -1)
 
-	cpuModelInfo.WithLabelValues(hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores), fmt.Sprintf("%d", physicalCnt), fmt.Sprintf("%d", logicalCnt)).Set(1)
+	// reset
+	cpuModelInfo.MetricVec.Reset()
+	// set
+	cpuModelInfo.WithLabelValues(hostname, hostname, c[0].ModelName, fmt.Sprintf("%d", c[0].Cores), fmt.Sprintf("%d", physicalCnt), fmt.Sprintf("%d", logicalCnt)).Set(1)
 
 	m, err := mem.VirtualMemory()
 	if err != nil {
@@ -293,18 +299,43 @@ func basic_resource(hostname string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// cpuUsageGauge.Set(float_totalPercent)
+	// reset
+	cpuUsageGauge.MetricVec.Reset()
+	// set
 	cpuUsageGauge.WithLabelValues(hostname).Set(float_totalPercent)
 
 	// fmt.Printf("* RAM Total: %v, RAM Available: %v, RAM Used: %v, RAM Used Percent:%f%%\n", m.Total, m.Available, m.Used, m.UsedPercent)
-	basicMemoryInfo.WithLabelValues(hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%f", m.UsedPercent)).Set(1)
+	// reset
+	basicMemoryInfo.MetricVec.Reset()
+	// set
+	basicMemoryInfo.WithLabelValues(hostname, hostname, fmt.Sprintf("%d", m.Total), fmt.Sprintf("%d", m.Available), fmt.Sprintf("%d", m.Used), fmt.Sprintf("%0.2f%%", m.UsedPercent)).Set(1)
 
+	// reset
+	basicMemoryInfoGB.MetricVec.Reset()
+	// set
+	basicMemoryInfoGB.WithLabelValues(hostname, hostname, fmt.Sprintf("%d GB", m.Total/1024/1024/1024), fmt.Sprintf("%d GB", m.Available/1024/1024/1024), fmt.Sprintf("%d GB", m.Used/1024/1024/1024), fmt.Sprintf("%0.2f%%", m.UsedPercent)).Set(1)
+
+	// reset
+	basicMemoryTotal.MetricVec.Reset()
+	// set
 	/* Memeroy Total */
 	basicMemoryTotal.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Total))
+
+	// reset
+	basicMemoryUsed.MetricVec.Reset()
+	// set
 	/* Memeroy Used */
 	basicMemoryUsed.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Used))
+
+	// reset
+	basicMemoryAvailable.MetricVec.Reset()
+	// set
 	/* Memeroy Available */
 	basicMemoryAvailable.WithLabelValues(hostname).Set(utility.String_to_float_giga(m.Available))
+
+	// reset
+	basicMemoryUsedPercent.MetricVec.Reset()
+	// set
 	/* Memeroy Used Percent */
 	basicMemoryUsedPercent.WithLabelValues(hostname).Set(m.UsedPercent)
 
@@ -329,6 +360,10 @@ func basic_resource(hostname string) {
 	// 	float64(n[0].BytesSent)/1024/1024,
 	// 	n[0].PacketsSent)
 
+	// reset
+	networkRxInfo.MetricVec.Reset()
+	networkTxInfo.MetricVec.Reset()
+	// set
 	networkRxInfo.WithLabelValues(hostname).Set(float64(n[0].BytesRecv) / 1024 / 1024)
 	networkTxInfo.WithLabelValues(hostname).Set(float64(n[0].BytesSent) / 1024 / 1024)
 
@@ -345,14 +380,12 @@ func get_metrics_all() {
 		}
 
 		for {
-			// Reset metrics
-			metrics_reset()
 
-			get_disk_usage(hostname)
+			go get_disk_usage(hostname)
 			// recordMetrics()
 			opsProcessed.Inc()
 
-			basic_resource(hostname)
+			go basic_resource(hostname)
 
 			time.Sleep(30 * time.Second)
 		}

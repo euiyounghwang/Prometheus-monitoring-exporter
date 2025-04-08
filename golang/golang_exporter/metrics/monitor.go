@@ -78,6 +78,10 @@ func Processes(hostname string, processInfoCpuGauge *prometheus.GaugeVec, proces
 	for _, p := range procinfos {
 		// log.Printf("   %s -> %f", p.Name, p.Usage)
 		// log.Printf("   %s -> %f %s", p.Name, p.Usage, p.NameContext)
+		// reset
+		processInfoCpuGauge.MetricVec.Reset()
+		processInfoMemoryGauge.MetricVec.Reset()
+		// set
 		processInfoCpuGauge.WithLabelValues(hostname, p.Name, fmt.Sprintf("%d", p.PID), p.NameContext).Set(p.Usage)
 		processInfoMemoryGauge.WithLabelValues(hostname, p.Name, fmt.Sprintf("%d", p.PID)).Set(p.mUsage)
 	}
