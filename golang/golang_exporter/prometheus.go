@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"os"
@@ -134,6 +135,14 @@ var (
 		[]string{"server_job", "hostname", "path", "disktotal", "diskused", "diskfree", "diskusagepercent", "ipaddress"},
 	)
 
+	diskUsagePerDiskGauge = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "diskUsagePerDiskGauge",
+			Help: "Disk Usage all drives details",
+		},
+		[]string{"server_job", "hostname", "path"},
+	)
+
 	opsProcessed = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "myapp_processed_ops_total",
 		Help: "The total number of processed events",
@@ -165,6 +174,7 @@ func Init() {
 	prometheus.MustRegister(processInfoMemoryGauge)
 	prometheus.MustRegister(cpuUsageGauge)
 	prometheus.MustRegister(diskUsageGauge)
+	prometheus.MustRegister(diskUsagePerDiskGauge)
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
 	prometheus.MustRegister(basicMemoryInfoGB)
@@ -207,6 +217,7 @@ func get_disk_usage(hostname string) {
 
 	// reset
 	diskUsageGauge.MetricVec.Reset()
+	diskUsagePerDiskGauge.MetricVec.Reset()
 
 	parts, _ := disk.Partitions(true)
 	for _, p := range parts {
@@ -232,7 +243,8 @@ func get_disk_usage(hostname string) {
 
 		// set
 		diskUsageGauge.WithLabelValues(hostname, hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
-
+		// set
+		diskUsagePerDiskGauge.WithLabelValues(hostname, hostname, p.Mountpoint).Set(math.Round(s.UsedPercent))
 		// diskUsageGauge.With(prometheus.Labels{
 		// 	"path":               "/apps",
 		// 	"disk_usage_percent": percent,

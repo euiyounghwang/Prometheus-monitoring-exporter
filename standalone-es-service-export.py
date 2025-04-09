@@ -625,7 +625,7 @@ def get_metrics_all_envs(monitoring_metrics):
             if not (resp.status_code == 200):
                 spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
                 saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
-                return None
+                return []
             
             ''' expose metrics spark node health is active'''
             spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
