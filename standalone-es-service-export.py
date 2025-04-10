@@ -2106,21 +2106,22 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' set 1 if process id has value otherwise set 0'''
             logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(int(get_Process_Id()))
 
-        ''' update the health of search guard'''
-        sg_status = get_search_guard_status()
+        ''' update the health of search guard if search_guard is True'''
+        if search_guard:
+            sg_status = get_search_guard_status()
 
-        search_guard_health_gauge_g.clear()
+            search_guard_health_gauge_g.clear()
 
-        if sg_status == 1:
-            search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 1, types='search_guard')
-        elif sg_status == 0:
-            search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
-            ''' save failure node with a reason into saved_failure_dict'''
-            saved_failure_dict.update({domain_name_as_nick_name + "_sg": "[SEARCH_GUARD] SG is not running"})
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='search_guard')
+            if sg_status == 1:
+                search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
+                all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 1, types='search_guard')
+            elif sg_status == 0:
+                search_guard_health_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+                ''' save failure node with a reason into saved_failure_dict'''
+                saved_failure_dict.update({domain_name_as_nick_name + "_sg": "[SEARCH_GUARD] SG is not running"})
+                all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1, types='search_guard')
 
-        logging.info(f"get_search_guard_status #sg_status : {sg_status}")
+            logging.info(f"get_search_guard_status #sg_status : {sg_status}")
 
         logging.info(f"all_envs_status #All : {all_env_status_memory_list}")
         ''' --- '''
@@ -3550,6 +3551,7 @@ if __name__ == '__main__':
     parser.add_argument('--kafka_connect_url', dest='kafka_connect_url', default="localhost:8083,localhost:8084,localhost:8085", help='Kafka connect hosts')
     parser.add_argument('--zookeeper_url', dest='zookeeper_url', default="localhost:22181,localhost:21811,localhost:21812", help='zookeeper hosts')
     parser.add_argument('--es_url', dest='es_url', default="localhost:9200,localhost:9501,localhost:9503", help='es hosts')
+    parser.add_argument('--search_guard', dest='search_guard', default="false", help='search_guard')
     parser.add_argument('--logstash_url', dest='logstash_url', default="localhost:5044,localhost:5045,localhost:5046,localhost:5043,localhost:5047,localhost:5048", help='es hosts')
     parser.add_argument('--kibana_url', dest='kibana_url', default="localhost:5601,localhost:15601", help='kibana hosts')
     parser.add_argument('--redis_url', dest='redis_url', default="", help='redis hosts')
@@ -3593,7 +3595,7 @@ if __name__ == '__main__':
     The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service. 
     '''
 
-    global global_env_name, global_es_configuration_host, domain_name_as_nick_name
+    global global_env_name, global_es_configuration_host, domain_name_as_nick_name, search_guard
     global logstash_validation_type
 
     if args.env_name:
@@ -3619,6 +3621,9 @@ if __name__ == '__main__':
     if args.es_url:
         es_url = args.es_url
 
+    if args.search_guard:
+        search_guard = args.search_guard
+        
     if args.kibana_url:
         kibana_url = args.kibana_url
 
@@ -3763,10 +3768,12 @@ if __name__ == '__main__':
     logging.info(json.dumps(monitoring_metrics, indent=2))
     logging.info(interval)
 
+    search_guard = True if str(search_guard).upper() == "TRUE" else False
     db_run = True if str(db_run).upper() == "TRUE" else False
     multiple_db = True if str(omx_db_con).upper() == "TRUE" else False
     backlog = True if str(backlog).upper() == "TRUE" else False
-    print(interface, db_run, multiple_db, type(db_run), sql, backlog)
+
+    print(interface, search_guard, db_run, multiple_db, type(db_run), sql, backlog)
 
     if interface == 'db' and db_run:
         database_object_WMx = oracle_database(db_url)
