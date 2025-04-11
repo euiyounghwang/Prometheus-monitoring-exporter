@@ -36,7 +36,7 @@ go get github.com/prometheus/client_golang/prometheus/promhttp
 - go build
 - http://localhost:2112/metrics (curl http://localhost:2112/metrics)
 - compile a go file/project on windows for Linux: `env GOOS=linux go build -o ./bin/prometheus` (Run this command `chmod 755 filname` after copying to linux server)
-- gopsutil(https://leapcell.medium.com/gopsutil-powerful-system-stats-for-go-developers-2a1941c40822) is a Golang port of the Python library psutil, which helps us conveniently obtain various system and hardware information. It masks the differences between different systems and has extremely powerful portability. With gopsutil, we don’t need to use syscall to call the corresponding system methods for different systems. 
+- gopsutil(https://leapcell.medium.com/gopsutil-powerful-system-stats-for-go-developers-2a1941c40822, https://dev.to/leapcell/gopsutil-powerful-system-stats-for-go-developers-53e0) is a Golang port of the Python library psutil, which helps us conveniently obtain various system and hardware information. It masks the differences between different systems and has extremely powerful portability. With gopsutil, we don’t need to use syscall to call the corresponding system methods for different systems. 
 - generate package(https://westlife0615.tistory.com/268)
 
 GoConvey(https://github.com/smartystreets/goconvey) supports Go's native testing package. Neither the web UI nor the DSL are required; you can use either one independently. Directly integrates with go test; Fully-automatic web UI (works with native Go tests, too)

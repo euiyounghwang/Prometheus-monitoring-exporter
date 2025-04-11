@@ -53,6 +53,20 @@ func sortByCPU(processes []ProcInfo) []ProcInfo {
 	return processes
 }
 
+/*
+// Unused function
+func get_cpu_Info() {
+	stats, e := cpu.Info()
+	if e != nil {
+		log.Fatalln(e)
+	}
+	for i := 0; i < len(stats); i++ {
+		fmt.Println(i, stats[i])
+	}
+}
+*/
+
+// process can be used to obtain information about the processes currently running in the system
 func Processes(hostname string, processInfoCpuGauge *prometheus.GaugeVec, processInfoMemoryGauge *prometheus.GaugeVec) {
 	processes, _ := process.Processes()
 

@@ -39,6 +39,14 @@ var (
 	// 	Help: "cpuUsage gauge",
 	// })
 
+	bootStartTime = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "bootStartTimeGauge",
+			Help: "bootStartTimeGauge",
+		},
+		[]string{"server_job", "hostname", "boot_time"},
+	)
+
 	cpuUsageGauge = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cpuUsage",
@@ -95,6 +103,22 @@ var (
 		[]string{"server_job", "hostname", "ram_total", "ram_available", "ram_used", "ram_used_percent"},
 	)
 
+	basicSwapMemoryInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryInfoGauge",
+			Help: "basicSwapMemoryInfo (Byte)",
+		},
+		[]string{"server_job", "hostname", "swap_total", "swap_available", "swap_used", "swap_used_percent"},
+	)
+
+	basicSwapMemoryInfoGB = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryInfoGBGauge",
+			Help: "basicSwapMemoryInfo (GB)",
+		},
+		[]string{"server_job", "hostname", "swap_total", "swap_available", "swap_used", "swap_used_percent"},
+	)
+
 	basicMemoryTotal = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "basicMemoryTotalGauge",
@@ -123,6 +147,38 @@ var (
 		prometheus.GaugeOpts{
 			Name: "basicMemoryUsedPercentGauge",
 			Help: "basicMemoryUsedPercent (%))",
+		},
+		[]string{"server_job"},
+	)
+
+	basicSwapMemoryTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryTotalGauge",
+			Help: "basicSwapMemoryTotal (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicSwapMemoryUsed = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryUsedGauge",
+			Help: "basicSwapMemoryUsed (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicSwapMemoryAvailable = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryAvailableGauge",
+			Help: "basicSwapMemoryAvailable (GB)",
+		},
+		[]string{"server_job"},
+	)
+
+	basicSwapMemoryUsedPercent = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "basicSwapMemoryUsedPercentGauge",
+			Help: "basicSwapMemoryUsedPercent (%))",
 		},
 		[]string{"server_job"},
 	)
@@ -169,6 +225,7 @@ func Init() {
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	// must be registered
 
+	prometheus.MustRegister(bootStartTime)
 	prometheus.MustRegister(osInfo)
 	prometheus.MustRegister(processInfoCpuGauge)
 	prometheus.MustRegister(processInfoMemoryGauge)
@@ -178,10 +235,16 @@ func Init() {
 	prometheus.MustRegister(cpuModelInfo)
 	prometheus.MustRegister(basicMemoryInfo)
 	prometheus.MustRegister(basicMemoryInfoGB)
+	prometheus.MustRegister(basicSwapMemoryInfo)
+	prometheus.MustRegister(basicSwapMemoryInfoGB)
 	prometheus.MustRegister(basicMemoryTotal)
 	prometheus.MustRegister(basicMemoryUsed)
 	prometheus.MustRegister(basicMemoryAvailable)
 	prometheus.MustRegister(basicMemoryUsedPercent)
+	prometheus.MustRegister(basicSwapMemoryTotal)
+	prometheus.MustRegister(basicSwapMemoryUsed)
+	prometheus.MustRegister(basicSwapMemoryAvailable)
+	prometheus.MustRegister(basicSwapMemoryUsedPercent)
 	prometheus.MustRegister(networkRxInfo)
 	prometheus.MustRegister(networkTxInfo)
 }
@@ -328,6 +391,21 @@ func basic_resource(hostname string) {
 	// set
 	basicMemoryInfoGB.WithLabelValues(hostname, hostname, fmt.Sprintf("%d GB", m.Total/1024/1024/1024), fmt.Sprintf("%d GB", m.Available/1024/1024/1024), fmt.Sprintf("%d GB", m.Used/1024/1024/1024), fmt.Sprintf("%0.2f%%", m.UsedPercent)).Set(1)
 
+	swapMemory, _ := mem.SwapMemory()
+	// fmt.Println(swapMemory)
+	// fmt.Println(swapMemory.Total)
+	// data, _ := json.MarshalIndent(swapMemory, "", " ")
+	// fmt.Println(string(data))
+
+	//reset
+	basicSwapMemoryInfo.MetricVec.Reset()
+	basicSwapMemoryInfo.WithLabelValues(hostname, hostname, fmt.Sprintf("%d", swapMemory.Total), fmt.Sprintf("%d", swapMemory.Free), fmt.Sprintf("%d", swapMemory.Used), fmt.Sprintf("%0.2f%%", swapMemory.UsedPercent)).Set(1)
+
+	// reset
+	basicSwapMemoryInfoGB.MetricVec.Reset()
+	// set
+	basicSwapMemoryInfoGB.WithLabelValues(hostname, hostname, fmt.Sprintf("%d GB", swapMemory.Total/1024/1024/1024), fmt.Sprintf("%d GB", swapMemory.Free/1024/1024/1024), fmt.Sprintf("%d GB", swapMemory.Used/1024/1024/1024), fmt.Sprintf("%0.2f%%", swapMemory.UsedPercent)).Set(1)
+
 	// reset
 	basicMemoryTotal.MetricVec.Reset()
 	// set
@@ -351,6 +429,30 @@ func basic_resource(hostname string) {
 	// set
 	/* Memeroy Used Percent */
 	basicMemoryUsedPercent.WithLabelValues(hostname).Set(m.UsedPercent)
+
+	// reset
+	basicSwapMemoryTotal.MetricVec.Reset()
+	// set
+	/* Memeroy Total */
+	basicSwapMemoryTotal.WithLabelValues(hostname).Set(utility.String_to_float_giga(swapMemory.Total))
+
+	// reset
+	basicSwapMemoryUsed.MetricVec.Reset()
+	// set
+	/* Memeroy Used */
+	basicSwapMemoryUsed.WithLabelValues(hostname).Set(utility.String_to_float_giga(swapMemory.Used))
+
+	// reset
+	basicMemoryAvailable.MetricVec.Reset()
+	// set
+	/* Memeroy Available */
+	basicSwapMemoryAvailable.WithLabelValues(hostname).Set(utility.String_to_float_giga(swapMemory.Used))
+
+	// reset
+	basicSwapMemoryUsedPercent.MetricVec.Reset()
+	// set
+	/* Memeroy Used Percent */
+	basicSwapMemoryUsedPercent.WithLabelValues(hostname).Set(swapMemory.UsedPercent)
 
 	// basicMemoryInfo.MetricVec.Reset()
 	/*
@@ -385,6 +487,18 @@ func basic_resource(hostname string) {
 
 }
 
+func get_basic_metrics(hostname string) {
+	// host.BootTime() returns the timestamp of the host's boot time
+	timestamp, _ := host.BootTime()
+	t := time.Unix(int64(timestamp), 0)
+	// fmt.Println(t.Local().Format("2006-01-02 15:04:05"))
+
+	// reset
+	bootStartTime.MetricVec.Reset()
+	// set
+	bootStartTime.WithLabelValues(hostname, hostname, t.Local().Format("2006-01-02 15:04:05")).Set(1)
+}
+
 func get_metrics_all() {
 	go func() {
 		hostname, err := os.Hostname()
@@ -393,6 +507,8 @@ func get_metrics_all() {
 		}
 
 		for {
+
+			go get_basic_metrics(hostname)
 
 			go get_disk_usage(hostname)
 			// recordMetrics()
