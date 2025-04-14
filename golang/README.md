@@ -68,3 +68,13 @@ Go Test
 PASS
 ok      prometheus.com/tests    (cached)
 ```
+
+# Docker
+- docker images
+- When you type docker images on your local system, you might see a list of all the Docker images on your system. Those can be “normal” ones with a proper repository name and tag or “dangling” ones, indicated via the <none> text 
+- In this case, you can use the following concise command to clean up your space for none tags: `docker rmi $(docker images -f "dangling=true" -q)`
+```bash
+- docker rmi $(docker images -f "dangling=true" -q)
+Deleted: sha256:80656b6d54a746420b701ae14afeafe0cc2127f948f8accf356ec66aa2115191
+...
+```
