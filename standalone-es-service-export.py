@@ -3525,7 +3525,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         logging.info(f"send_mail -> Mail Alert message : {body}, type(body) : {type(body)}")
     
         ''' sending emiall/sms'''
-        if os.environ["ES_MONITORING_APPS_EXPORTER_URL_HOST"]:
+        if "ES_MONITORING_APPS_EXPORTER_URL_HOST" in os.environ:
             host = "http://{}".format(os.environ["ES_MONITORING_APPS_EXPORTER_URL_HOST"])
         else:
             host = "http://{}:9115".format(host)
