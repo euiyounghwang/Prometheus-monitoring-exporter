@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"math"
 	"net"
 	"net/http"
 	"os"
@@ -16,7 +15,6 @@ import (
 	"prometheus.com/metrics"
 	"prometheus.com/utility"
 
-	human "github.com/dustin/go-humanize"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
@@ -291,7 +289,7 @@ func get_disk_usage(hostname string) {
 			continue
 		}
 
-		percent := fmt.Sprintf("%2.f%%", s.UsedPercent)
+		// percent := fmt.Sprintf("%2.f%%", s.UsedPercent)
 
 		// fmt.Printf(formatter,
 		// 	s.Fstype,
@@ -305,11 +303,21 @@ func get_disk_usage(hostname string) {
 		MyGauge.Set(11)
 
 		// set
-		diskUsageGauge.WithLabelValues(hostname, hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
+		// diskUsageGauge.WithLabelValues(hostname, hostname, p.Mountpoint, human.Bytes(s.Total), human.Bytes(s.Used), human.Bytes(s.Free), percent, local_ip_address).Set(1)
+		diskTotal := s.Total / 1024 / 1024 / 1024
+		diskUsed := s.Used / 1024 / 1024 / 1024
+		diskFree := s.Free / 1024 / 1024 / 1024
+		// var diskUsedPercent float64
+		diskUsedPercent := (float64(s.Used) / float64(s.Total)) * 100.0
+		// fmt.Println(s.Used, s.Total, float64(s.Used)/float64(s.Total))
+
+		diskUsageGauge.WithLabelValues(hostname, hostname, p.Mountpoint, fmt.Sprintf("%d GB", diskTotal), fmt.Sprintf("%d GB", diskUsed), fmt.Sprintf("%d GB", diskFree), fmt.Sprintf("%0.2f%%", diskUsedPercent), local_ip_address).Set(1)
 		// set
-		diskUsagePerDiskGauge.WithLabelValues(hostname, hostname, p.Mountpoint).Set(math.Round(s.UsedPercent))
+		diskUsagePerDiskGauge.WithLabelValues(hostname, hostname, p.Mountpoint).Set(utility.RoundFloat(diskUsedPercent, 3))
+		// diskUsagePerDiskGauge.WithLabelValues(hostname, hostname, p.Mountpoint).Set(diskUsedPercent)
 		// diskUsageGauge.With(prometheus.Labels{
 		// 	"path":               "/apps",
+		// 	"disk_usage_percent": percent,
 		// 	"disk_usage_percent": percent,
 		// })
 	}
@@ -522,11 +530,16 @@ func get_metrics_all() {
 }
 
 func serveFiles(w http.ResponseWriter, r *http.Request) {
-	// fmt.Println(r.URL.Path)
+	log.Printf(r.URL.Path)
 	p := "." + r.URL.Path
 	if p == "./" {
 		p = "./bind.html"
 	}
+	// path, err := os.Getwd()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// log.Printf("Path [%s]", path)
 	http.ServeFile(w, r, p)
 }
 

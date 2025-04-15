@@ -27,3 +27,15 @@ func Test_PrettyJSon(t *testing.T) {
 	// fmt.Println(expected_query)
 	assert.Equal(t, transformed_query_string, expected_query)
 }
+
+func Test_Round_Float(t *testing.T) {
+	expected_round_float := 90.567
+	assert.Equal(t, utility.RoundFloat(90.56666, 3), expected_round_float)
+
+	expected_round_float = -12
+	assert.Equal(t, utility.RoundFloat(-12.3456789, 0), expected_round_float)
+	expected_round_float = -12.3
+	assert.Equal(t, utility.RoundFloat(-12.3456789, 1), expected_round_float)
+	expected_round_float = -12.3456789
+	assert.Equal(t, utility.RoundFloat(-12.3456789, 10), expected_round_float)
+}

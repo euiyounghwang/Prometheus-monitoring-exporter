@@ -22,6 +22,9 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```
 
   - Run : /home/prometheus/prometheus-2.35.0.linux-amd64/prometheus --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 --web.enable-lifecycle --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
+ 
+  - Query: Prometheus Query via API (http://localhost:9090/api/v1/query?query=es_health_metric{server_job="localhost"})
+
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
