@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -543,6 +544,19 @@ func serveFiles(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, p)
 }
 
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	b, err := os.ReadFile(exPath + "/bind.html")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	fmt.Fprintf(w, string(b))
+}
+
 /* http://localhost:2112/metrics */
 func main() {
 	port := 2112
@@ -559,7 +573,8 @@ func main() {
 	// https://medium.com/devbulls/prometheus-monitoring-with-golang-c0ec035a6e37
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	srv := http.NewServeMux()
-	srv.HandleFunc("/", serveFiles)
+	// srv.HandleFunc("/", serveFiles)
+	srv.HandleFunc("/", indexHandler)
 	srv.Handle("/metrics", promhttp.Handler())
 
 	// Prometheus collects metrics by scraping a /metrics HTTP endpoint
