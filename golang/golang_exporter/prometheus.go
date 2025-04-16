@@ -551,6 +551,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	exPath := filepath.Dir(ex)
 	b, err := os.ReadFile(exPath + "/bind.html")
+	// fmt.Println(exPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -573,8 +574,10 @@ func main() {
 	// https://medium.com/devbulls/prometheus-monitoring-with-golang-c0ec035a6e37
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	srv := http.NewServeMux()
-	// srv.HandleFunc("/", serveFiles)
-	srv.HandleFunc("/", indexHandler)
+	// local
+	srv.HandleFunc("/", serveFiles)
+	// remote
+	// srv.HandleFunc("/", indexHandler)
 	srv.Handle("/metrics", promhttp.Handler())
 
 	// Prometheus collects metrics by scraping a /metrics HTTP endpoint
