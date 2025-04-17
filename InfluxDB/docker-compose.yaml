@@ -1,0 +1,78 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - '9090:9090'
+    networks:
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  influxdb:
+    image: influxdb:1.8-alpine
+    container_name: influxdb
+    restart: always
+    environment:
+      - INFLUXDB_DB=influx
+      - INFLUXDB_ADMIN_USER=admin
+      - INFLUXDB_ADMIN_PASSWORD=admin
+    ports:
+      - '8086:8086'  # Expose InfluxDB on port 8086
+    volumes:
+      - influxdb_data:/var/lib/influxdb  # Mount the InfluxDB data directory
+    networks:
+      - monitoring  # Connect the InfluxDB container to the monitoring network
+
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    restart: always
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro  # Mount the Telegraf configuration file
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Mount the Docker socket to collect Docker metrics
+    depends_on:
+      - influxdb
+      - nginx
+    links:
+      - influxdb
+      - nginx
+    ports:
+      - '8125:8125'  # Expose Telegraf's StatsD port
+    networks:
+      - monitoring  # Connect the Telegraf container to the monitoring network
+
+  telegraf_second:
+    image: telegraf
+    container_name: telegraf_second
+    restart: always
+    volumes:
+      - ./telegraf/telegraf_second.conf:/etc/telegraf/telegraf.conf:ro  # Mount the second Telegraf configuration file
+    depends_on:
+      - influxdb
+    links:
+      - influxdb
+    ports:
+      - '8126:8126'  # Expose the second Telegraf's StatsD port
+    networks:
+      - monitoring  # Connect the second Telegraf container to the monitoring network
+
+volumes:
+  influxdb_data: {}  # Volume for InfluxDB data
+
+networks:
+  monitoring:
+    driver: bridge

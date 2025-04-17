@@ -39,6 +39,9 @@ services:
     networks:
       - bridge
 
+# volumes:
+#   influxdb_data: {}  # Volume for InfluxDB data
+
 networks:
   monitoring:
     driver: bridge
