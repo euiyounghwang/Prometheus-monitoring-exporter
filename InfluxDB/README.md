@@ -4,6 +4,8 @@
 
 InfluxDB(https://docs.influxdata.com/influxdb/v2/install/?t=Linux#manually-download-and-install-the-influxd-binary) is a time series database (TSDB) developed by the company InfluxData. It is used for storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics.
 
+InfluxDB is a push-based system. It requires an application to actively push data into InfluxDB. Prometheus is a pull-based system. An application publishes the metrics at a given endpoint, and Prometheus fetches them periodically.
+
 - Telegraf Download: Telegraf is written in Go and compiles into a single binary with no external dependencies, requiring a minimal memory footprint. It can easily collect and send metrics and events from databases, systems, and IoT sensors. 
 ```bash
 wget https://dl.influxdata.com/telegraf/releases/telegraf-1.34.2_linux_amd64.tar.gz
