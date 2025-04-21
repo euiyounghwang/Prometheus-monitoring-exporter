@@ -84,6 +84,9 @@ es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metric
 es_exporter_cpu_usage_gauge_g = Gauge("es_exporter_cpu_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
 es_exporter_jvm_usage_gauge_g = Gauge("es_exporter_jvm_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
 
+''' es ssl certifcats expired date'''
+es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "expired_date"])
+
 ''' type : cluster/data_pipeline'''
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
 nodes_diskspace_gauge_g = Gauge("node_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "host", "name", "ip", "disktotal", "diskused", "diskavail", "diskusedpercent"])
@@ -351,6 +354,8 @@ saved_failure_dict, saved_failure_tasks_dict = {}, {}
 ''' expose this metric to see maximu disk space among ES/Kafka nodes'''
 max_disk_used, max_es_disk_used, max_kafka_disk_used = 0, 0, 0
 each_es_instance_cpu_history, each_es_instance_jvm_history = {}, {}
+
+ssl_certificates_expired_date = ""
 
 
 def get_metrics_all_envs(monitoring_metrics):
@@ -793,6 +798,7 @@ def get_metrics_all_envs(monitoring_metrics):
             es_cluster_call_protocal, disk_usage_threshold_es_config_api = get_es_configuration_api()
 
             global global_es_shards_tasks_end_occurs_unassgined
+            global ssl_certificates_expired_date
             
             for each_es_host in es_url_hosts_list:
 
@@ -888,6 +894,21 @@ def get_metrics_all_envs(monitoring_metrics):
                         total_indices += 1
                             
                     es_basic_info.update({"total_docs" : total_docs, "total_indices" : total_indices, "docs" : not_system_docs, "indices" : not_system_indices})
+
+                    logging.info(f"\n\n\nssl_certificates_expired_date")
+                    ''' Get expired date for the ssl certs '''
+                    es_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}".format(global_es_configuration_host, each_es_host)
+                    resp_ssl_certs = requests.get(url=es_configuration_urls, timeout=30, verify=False)
+                    logging.info(f"{es_configuration_urls}")
+                    ssl_certificates_expired_date = resp_ssl_certs.json()['ssl_certs_expire_date'] 
+
+                    logging.info(f"{resp_ssl_certs}")
+                    logging.info(f"\n\n\n")
+                    
+                    ''' clear '''
+                    es_ssl_certificates_expired_date_gauge_g._metrics.clear()
+                    ''' set value'''
+                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, expired_date=ssl_certificates_expired_date).set(resp_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
 
                     return resp.json(), es_basic_info
                 
@@ -2254,6 +2275,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
+        logging.info(f"ssl_certificates_expired_date : {ssl_certificates_expired_date}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name}:{port}")
         
