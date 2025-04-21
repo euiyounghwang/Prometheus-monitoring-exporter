@@ -61,7 +61,16 @@ telegraf --config https://localhost:8086/api/v2/telegrafs/0ebbdc1f95098000
     [outputs.http.headers]
       Content-Type = "application/json"
 ```
-telegraf --config telegraf.conf
+telegraf option to run (https://yundevnote.tistory.com/80)
+- telegraf --config /path/to/telegraf.conf
+- telegraf --config-directory /path/to/config-directory
+- telegraf --config /path/to/telegraf.conf --test
+- telegraf --debug
+- telegraf --config /path/to/telegraf.conf --once
+- telegraf --config /path/to/telegraf.conf --watch-config
+
+- telegraf --config telegraf.conf
+
 
 - Gafana : Telegraf System Dashboard (https://grafana.com/grafana/dashboards/928-telegraf-system-dashboard/), Grafana Datasource/Create Graph with Flux Query (https://docs.influxdata.com/influxdb/v2/query-data/get-started/query-influxdb/)
 ```bash
@@ -90,4 +99,14 @@ docker run -p 8086:8086 \
       -e DOCKER_INFLUXDB_INIT_BUCKET=my-bucket \  — 초기 생성할 버킷명
       influxdb
 docker exec -it influxdb /bin/bash
+
+docker run -d -p 8086:8086 --name influxdb2 -v /tmp/influxdb2:/var/lib/influxdb2 influxdb:2.0
+docker stop influxdb2
+docker run -d -p 8086:8086 --name influxdb -v /tmp/influxdb2:/var/lib/influxdb2 influxdb:latest
+docker run -d --name=telegraf -v [download_file]:/etc/telegraf/telegraf.conf:ro telegraf
+docker logs telegraf -f
 ```
+
+Metricbeat is designed for Elasticsearch, while Telegraf is mainly used with Influxdb. The decision between the two is more of a decision between the Elastic stack and the TICK stack.
+
+If you have the requirment, or might have in the future, to also collect logs and tracing data besides metrics, then the Elastic stack and Metricbeat are IMO a better choice, because the TICK stack(Telegraf, InfluxDB, Chronograf, Kapacitor) is focused only on metrics.

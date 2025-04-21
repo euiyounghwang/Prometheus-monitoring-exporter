@@ -37,6 +37,7 @@ services:
     networks:
       - monitoring  # Connect the InfluxDB container to the monitoring network
 
+  # https://velog.io/@leesjpr/Grafana-InfluxDB2-Telegraf-Monitoring
   telegraf:
     image: telegraf
     container_name: telegraf
