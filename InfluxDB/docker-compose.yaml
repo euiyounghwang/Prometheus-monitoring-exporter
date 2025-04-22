@@ -6,7 +6,7 @@ services:
     ports:
       - '9090:9090'
     networks:
-      - monitoring
+      - bridge
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
 
@@ -18,9 +18,22 @@ services:
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     networks:
-      - monitoring
+      - bridge
     depends_on:
       - prometheus
+
+  # This creates rabbit and opens the port.
+  #docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 8080:15672 rabbitmq:3
+  # Creates the RabbitMQ UI management and opens to port 9000   Then you can do http://localhost:9000/#/ to see rabbit working.
+  #docker run -d --hostname my-rabbit --name some-rabbit-management -p 9000:15672 rabbitmq:3-management
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - bridge
 
   influxdb:
     image: influxdb:1.8-alpine
@@ -35,7 +48,7 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb  # Mount the InfluxDB data directory
     networks:
-      - monitoring  # Connect the InfluxDB container to the monitoring network
+      - bridge  # Connect the InfluxDB container to the monitoring network
 
   # https://velog.io/@leesjpr/Grafana-InfluxDB2-Telegraf-Monitoring
   telegraf:
@@ -47,14 +60,14 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Mount the Docker socket to collect Docker metrics
     depends_on:
       - influxdb
-      - nginx
+      # - nginx
     links:
       - influxdb
-      - nginx
+      # - nginx
     ports:
       - '8125:8125'  # Expose Telegraf's StatsD port
     networks:
-      - monitoring  # Connect the Telegraf container to the monitoring network
+      - bridge  # Connect the Telegraf container to the monitoring network
 
   telegraf_second:
     image: telegraf
@@ -69,11 +82,11 @@ services:
     ports:
       - '8126:8126'  # Expose the second Telegraf's StatsD port
     networks:
-      - monitoring  # Connect the second Telegraf container to the monitoring network
+      - bridge  # Connect the second Telegraf container to the monitoring network
 
 volumes:
   influxdb_data: {}  # Volume for InfluxDB data
 
 networks:
-  monitoring:
+  bridge:
     driver: bridge

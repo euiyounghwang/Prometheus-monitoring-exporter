@@ -3,6 +3,7 @@
 <i>Influx-DB
 
 InfluxDB(https://docs.influxdata.com/influxdb/v2/install/?t=Linux#manually-download-and-install-the-influxd-binary) is a time series database (TSDB) developed by the company InfluxData. It is used for storage and retrieval of time series data in fields such as operations monitoring, application metrics, Internet of Things sensor data, and real-time analytics.
+  - Install : https://velog.io/@nari120/InfluxDB-2.0-install
 
 InfluxDB is a push-based system. It requires an application to actively push data into InfluxDB. Prometheus is a pull-based system. An application publishes the metrics at a given endpoint, and Prometheus fetches them periodically.
 
@@ -110,3 +111,7 @@ docker logs telegraf -f
 Metricbeat is designed for Elasticsearch, while Telegraf is mainly used with Influxdb. The decision between the two is more of a decision between the Elastic stack and the TICK stack.
 
 If you have the requirment, or might have in the future, to also collect logs and tracing data besides metrics, then the Elastic stack and Metricbeat are IMO a better choice, because the TICK stack(Telegraf, InfluxDB, Chronograf, Kapacitor) is focused only on metrics.
+
+- Python Client
+  - InfluxDB : This repository contains the Python client library for use with InfluxDB and InfluxQL like SQL statements. (https://influxdb-python.readthedocs.io/en/latest/examples.html)
+  - InfluxDB2 : This repository contains the Python client library for use with InfluxDB 2.x and Flux.(https://influxdb-client.readthedocs.io/en/latest/), Flux Docs (https://datamoney.tistory.com/369, https://danawalab.github.io/common/2021/10/08/Common-influx-period-statistics.html)

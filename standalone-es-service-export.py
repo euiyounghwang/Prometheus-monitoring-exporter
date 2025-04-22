@@ -1891,6 +1891,27 @@ def get_metrics_all_envs(monitoring_metrics):
             if running_spark not in custom_apps:
                 is_runnng_spark = False
                 _not_running_app_name.append(running_spark)
+
+        ''' --------------------------- '''
+        ''' We need to check automatically whether the indepenent ES Data Pipeline is being processed even if SPARK_APP_CHECK has opnly "StreamProcess_EXP" '''
+        if len(spark_app_check_list) < 2:
+            independent_prcess = []
+            ''' Get the names of data pipenlies from the es configuration APIs'''
+            Streaming_Process = gloabl_configuration.get('config').get('streaming_process')
+            if Streaming_Process:
+                Streaming_Process = Streaming_Process.split(",")
+                for running_spark in Streaming_Process:
+                    if running_spark in custom_apps:
+                        independent_prcess.append(True)
+                    else:
+                        independent_prcess.append(False)
+            else:
+                independent_prcess = [False]
+
+            ''' Update the overall health of the spark custom app is running correctly with the independent pipelines'''
+            if all(independent_prcess):
+                is_runnng_spark = True
+        ''' --------------------------- '''
         
         ''' Check spark custom app if this is running on spark cluster'''
         ''' Get a list of spark custom app from environment in shell script'''
