@@ -85,7 +85,7 @@ es_exporter_cpu_usage_gauge_g = Gauge("es_exporter_cpu_metrics", 'Metrics scrape
 es_exporter_jvm_usage_gauge_g = Gauge("es_exporter_jvm_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
 
 ''' es ssl certifcats expired date'''
-es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "expired_date"])
+es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "service", "node", "expired_date"])
 
 ''' type : cluster/data_pipeline'''
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
@@ -895,16 +895,23 @@ def get_metrics_all_envs(monitoring_metrics):
                             
                     es_basic_info.update({"total_docs" : total_docs, "total_indices" : total_indices, "docs" : not_system_docs, "indices" : not_system_indices})
 
-                    ''' Get expired date for the ssl certs '''
+                    ''' Get expired date for the ssl certs from the ES cluster '''
                     es_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}".format(global_es_configuration_host, each_es_host)
-                    resp_ssl_certs = requests.get(url=es_configuration_urls, timeout=30, verify=False)
+                    resp_es_ssl_certs = requests.get(url=es_configuration_urls, timeout=30, verify=False)
                     logging.info(f"{es_configuration_urls}")
-                    ssl_certificates_expired_date = resp_ssl_certs.json()['ssl_certs_expire_date'] 
+                    ssl_es_certificates_expired_date = resp_es_ssl_certs.json()['ssl_certs_expire_date'] 
+
+                    ''' Get expired date for the ssl certs from the Spark cluster '''
+                    spark_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}:8480".format(global_es_configuration_host, global_spark_master_node.split(":")[0])
+                    resp_spark_ssl_certs = requests.get(url=spark_configuration_urls, timeout=30, verify=False)
+                    logging.info(f"{spark_configuration_urls}")
+                    ssl_spark_certificates_expired_date = resp_spark_ssl_certs.json()['ssl_certs_expire_date'] 
 
                     ''' clear '''
                     es_ssl_certificates_expired_date_gauge_g._metrics.clear()
                     ''' set value'''
-                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, expired_date=ssl_certificates_expired_date).set(resp_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expired_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expired_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
 
                     return resp.json(), es_basic_info
                 
@@ -3640,6 +3647,7 @@ if __name__ == '__main__':
 
     global global_env_name, global_es_configuration_host, domain_name_as_nick_name, search_guard
     global logstash_validation_type
+    global global_spark_master_node
 
     if args.env_name:
         env_name = args.env_name
@@ -3767,6 +3775,8 @@ if __name__ == '__main__':
         "es_url" : es_url,
         "kibana_url" : kibana_url
     }
+
+    global_spark_master_node = kafka_url.split(",")[0]
 
     ''' logstash port checking'''
     if logstash_url:
