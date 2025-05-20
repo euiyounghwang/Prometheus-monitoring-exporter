@@ -624,12 +624,16 @@ def get_metrics_all_envs(monitoring_metrics):
 
             # -- make a call to master node to get the information of activeapps
             ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-            resp = requests.get(url="http://{}:8080/json".format(master_node), timeout=5, verify=False)
+            
+            ''' https url checking for the spark cluster'''
+            spark_url = "https://{}:8480/json".format(master_node) if global_spark_cluster_https else "http://{}:8080/json".format(master_node)
+            
+            resp = requests.get(url=spark_url.format(master_node), timeout=5, verify=False)
             logging.info(f"get_spark_jobs - response {resp.status_code}")
             
             if not (resp.status_code == 200):
                 spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
-                saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
+                saved_failure_dict.update({node : "[SPARK CLUSTER] {} API do not reachable".format(spark_url)})
                 return []
             
             ''' expose metrics spark node health is active'''
@@ -657,14 +661,14 @@ def get_metrics_all_envs(monitoring_metrics):
                 '''
             else:
                 logging.info(f"get_active_jobs [No] {resp_working_job}") 
-                saved_failure_dict.update({"{}:8080_#1".format(master_node) : "Spark cluster - http://{}:8080/json, no active jobs. Please run 'Spark Custom Apps'".format(master_node)})
+                saved_failure_dict.update({"{}:8080_#1".format(master_node) : "Spark cluster - {}, no active jobs. Please run 'Spark Custom Apps'".format(spark_url)})
 
             return resp_working_job
             # return []
 
         except Exception as e:
             ''' add tracking logs and save failure node with a reason into saved_failure_dict'''
-            saved_failure_dict.update({node : "[SPARK CLUSTER] http://{}:8080/json API do not reachable".format(master_node)})
+            saved_failure_dict.update({node : "[SPARK CLUSTER] {} API do not reachable".format(spark_url)})
             spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
             logging.error(e)
             return []
@@ -823,7 +827,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' The Response object returned by requests.post() (and requests.get() etc.) has a property called elapsed '''
                     es_cluster_search_time_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, category="es_cluster_cat_search").set(float(resp.elapsed.total_seconds()))
 
-                    logging.info(f"activeES - {resp}, {resp.json()}")
+                    # logging.info(f"activeES - {resp}, {resp.json()}")
                     ''' log if one of ES nodes goes down'''
                     if int(resp.json().get("relocating_shards")) > 0 or int(resp.json().get("initializing_shards")) > 0 or int(resp.json().get("unassigned_shards")) > 0:
                         saved_failure_dict.update({"{}_1".format(domain_name_as_nick_name) : "[Elasticsearch] {} relocating_shards, {} unassigned shards, {} initializing shards".format(
@@ -862,7 +866,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
                     ''' Call to get more information '''
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-                    resp_info = requests.get(url="{}://{}/_cat/indices?format=json".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=5, verify=False)
+                    resp_info = requests.get(url="{}://{}/_cat/indices?format=json".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=30, verify=False)
                     '''
                     [
                         {
@@ -910,12 +914,18 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' clear '''
                     es_ssl_certificates_expired_date_gauge_g._metrics.clear()
                     ''' set value'''
-                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expired_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
-                    es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expired_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                    if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expired_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                    
+                    if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expired_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
 
                     return resp.json(), es_basic_info
                 
                 except Exception as e:
+                    print('\n\n\n')
+                    print(e)
+                    print('\n\n\n')
                     pass
                 
             return None, None
@@ -1922,9 +1932,10 @@ def get_metrics_all_envs(monitoring_metrics):
         
         ''' Check spark custom app if this is running on spark cluster'''
         ''' Get a list of spark custom app from environment in shell script'''
+        spark_url = "https://{}:8480/json".format(master_spark) if global_spark_cluster_https else "http://{}:8080/json".format(master_spark)
         if not is_runnng_spark:
             for idx, _each_not_running_spark_app in enumerate(_not_running_app_name):
-                saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "[SPARK CLUSTER APP] http://{}:8080/json, no spark custom job ({}). Please confirm/run this.".format(master_spark, _each_not_running_spark_app)})
+                saved_failure_dict.update({"{}:8080_spark_#{}".format(master_spark, idx) : "[SPARK CLUSTER APP] {}, no spark custom job ({}). Please confirm/run this.".format(spark_url, _each_not_running_spark_app)})
             is_status_spark_custom_app = 'Red'
             get_all_envs_status(all_env_status_memory_list, -1, types='spark')
             spark_custom_apps_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
@@ -3597,6 +3608,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of custom prometheus exporter")
     parser.add_argument('--env_name', dest='env_name', default="env_name", help='env_name')
     parser.add_argument('--domain_name_as_nick_name', dest='domain_name_as_nick_name', default="", help='domain_name_as_nick_name')
+    parser.add_argument('--spark_cluster_https', dest='spark_cluster_https', default="false", help='spark_cluster_https')
     parser.add_argument('--kafka_url', dest='kafka_url', default="localhost:29092,localhost:39092,localhost:49092", help='Kafka hosts')
     parser.add_argument('--kafka_connect_url', dest='kafka_connect_url', default="localhost:8083,localhost:8084,localhost:8085", help='Kafka connect hosts')
     parser.add_argument('--zookeeper_url', dest='zookeeper_url', default="localhost:22181,localhost:21811,localhost:21812", help='zookeeper hosts')
@@ -3648,6 +3660,7 @@ if __name__ == '__main__':
     global global_env_name, global_es_configuration_host, domain_name_as_nick_name, search_guard
     global logstash_validation_type
     global global_spark_master_node
+    global global_spark_cluster_https
 
     if args.env_name:
         env_name = args.env_name
@@ -3659,6 +3672,9 @@ if __name__ == '__main__':
         domain_name_as_nick_name = args.domain_name_as_nick_name
     else:
         domain_name_as_nick_name = socket.gethostname()
+
+    if args.spark_cluster_https:
+        spark_cluster_https = args.spark_cluster_https
      
     if args.kafka_url:
         kafka_url = args.kafka_url
@@ -3821,10 +3837,14 @@ if __name__ == '__main__':
     logging.info(json.dumps(monitoring_metrics, indent=2))
     logging.info(interval)
 
+    spark_cluster_https = True if str(spark_cluster_https).upper() == "TRUE" else False
     search_guard = True if str(search_guard).upper() == "TRUE" else False
     db_run = True if str(db_run).upper() == "TRUE" else False
     multiple_db = True if str(omx_db_con).upper() == "TRUE" else False
     backlog = True if str(backlog).upper() == "TRUE" else False
+
+    ''' global '''
+    global_spark_cluster_https = spark_cluster_https
 
     print(interface, search_guard, db_run, multiple_db, type(db_run), sql, backlog)
 
