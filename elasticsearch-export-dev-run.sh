@@ -1,4 +1,5 @@
 #!/bin/sh
+# -- Elasticsearch Exporter GitHub : https://github.com/prometheus-community/elasticsearch_exporter
 ELASTICSEARCH_EXPORT_PATH=/home/devuser/monitoring/es_exporter/elasticsearch_exporter-1.6.0.linux-386/
 #PATH=$PATH:$ELASTICSEARCH_EXPORT_PATH/bin
 SERVICE_NAME=elasticsearch-export-service
