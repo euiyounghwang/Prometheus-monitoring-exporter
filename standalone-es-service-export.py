@@ -802,7 +802,10 @@ def get_metrics_all_envs(monitoring_metrics):
             es_cluster_call_protocal, disk_usage_threshold_es_config_api = get_es_configuration_api()
 
             global global_es_shards_tasks_end_occurs_unassgined
-            global ssl_certificates_expired_date
+
+            global ssl_certificates_expired_date_es, ssl_certificates_expired_date_spark
+            ssl_certificates_expired_date_es = ""
+            ssl_certificates_expired_date_spark = ""
             
             for each_es_host in es_url_hosts_list:
 
@@ -916,9 +919,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' set value'''
                     if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
                         es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expired_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        ssl_certificates_expired_date_es = ssl_es_certificates_expired_date
                     
                     if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
                         es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expired_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        ssl_certificates_expired_date_spark = ssl_spark_certificates_expired_date
 
                     return resp.json(), es_basic_info
                 
@@ -2310,7 +2315,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
-        logging.info(f"ssl_certificates_expired_date : {ssl_certificates_expired_date}")
+        logging.info(f"ssl_certificates_expired_date_es : {ssl_certificates_expired_date_es}, ssl_certificates_expired_date_spark : {ssl_certificates_expired_date_spark}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
         
@@ -2943,13 +2948,13 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                     logging.info(f"db_jobs_backlogs_work alert : {WMx_backlog}, WMx_backlog_list : {WMx_backlog_list}")
                     alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}, db_transactin_time_WMx : {}/sec, db_transactin_time_OMx : {}/sec".format(WMx_backlog, db_transactin_time_WMx, db_transactin_time_OMx)
                     ''' send mail'''
-                    send_mail(body=alert_msg, 
-                            host= host_name, 
-                            env=data[host_name].get("env"), 
-                            status_dict=saved_status_dict, 
-                            to=dev_email_list, cc="", _type='mail')
+                    # send_mail(body=alert_msg, 
+                    #         host= host_name, 
+                    #         env=data[host_name].get("env"), 
+                    #         status_dict=saved_status_dict, 
+                    #         to=dev_email_list, cc="", _type='mail')
                     ''' send sms'''
-                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
+                    # send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
 
                     ''' disbaled this variable for sending every 1 hour'''
                     recheck_WMx = False
