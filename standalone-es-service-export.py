@@ -2312,7 +2312,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"ssl_certificates_expired_date : {ssl_certificates_expired_date}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
-        logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name}:{port}")
+        logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
         
         ''' It can be displayed the log if backlog is enabled'''
         if backlog:
@@ -2924,6 +2924,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             data = global_mail_configuration
 
             host_name = domain_name_as_nick_name.split(".")[0]
+            # host_name = domain_name_as_nick_name_running_host.split(".")[0]
             dev_email_list = data[host_name].get("dev_mail_list", "")
             dev_sms_list = data[host_name].get("dev_sms_list", "")
 
@@ -3294,7 +3295,8 @@ def alert_work(db_http_host):
             data = resp.json()
             """
 
-            host_name = domain_name_as_nick_name.split(".")[0]
+            # host_name = domain_name_as_nick_name.split(".")[0]
+            host_name = domain_name_as_nick_name_running_host.split(".")[0]
             get_es_config_interface_api_host_key = host_name
 
             ''' ------------------------------------------------------'''
@@ -3657,7 +3659,7 @@ if __name__ == '__main__':
     The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service. 
     '''
 
-    global global_env_name, global_es_configuration_host, domain_name_as_nick_name, search_guard
+    global global_env_name, global_es_configuration_host, domain_name_as_nick_name, domain_name_as_nick_name_running_host, search_guard
     global logstash_validation_type
     global global_spark_master_node
     global global_spark_cluster_https
@@ -3672,6 +3674,9 @@ if __name__ == '__main__':
         domain_name_as_nick_name = args.domain_name_as_nick_name
     else:
         domain_name_as_nick_name = socket.gethostname()
+    
+    # -- GET host name running the ES Monitoring Apps
+    domain_name_as_nick_name_running_host = socket.gethostname()
 
     if args.spark_cluster_https:
         spark_cluster_https = args.spark_cluster_https
