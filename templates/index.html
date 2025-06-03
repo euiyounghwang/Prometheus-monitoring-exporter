@@ -1,0 +1,46 @@
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Resource Exporter</title>
+    <link rel="icon" href="golang.svg" type="image/svg+xml">
+    <style>body {
+  font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,Liberation Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+  margin: 0;
+}
+header {
+  background-color: #e6522c;
+  color: #fff;
+  font-size: 1rem;
+  padding: 1rem;
+}
+main {
+  padding: 1rem;
+}
+label {
+  display: inline-block;
+  width: 0.5em;
+}
+
+</style>
+  </head>
+  <body>
+    <header>
+      <h1>Prometheus Exporter for the ES Services</h1>
+    </header>
+    <main>
+      <h2>ES Monitoring Application (ENV: {{service_host}})</h2>
+      <div>Version: (version=0.0.1)</div>
+      <div>
+        <ul>
+          
+          <li><a href="http://{{ host_name }}:{{ linked_port }}">Metrics</a></li>
+          
+        </ul>
+      </div>
+      
+      
+    </main>
+  </body>
+</html>

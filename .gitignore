@@ -9,3 +9,4 @@ fab/
 .DS_Store
 logs/
 golang/golang_exporter/output
+config/__pycache__/

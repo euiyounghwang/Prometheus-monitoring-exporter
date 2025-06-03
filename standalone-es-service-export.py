@@ -1,6 +1,7 @@
 import os
 import requests
 import time
+from flask import Flask, render_template
 from prometheus_client import start_http_server, Enum, Histogram, Counter, Summary, Gauge, CollectorRegistry
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from prometheus_client.core import (
@@ -139,6 +140,14 @@ db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped 
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
 
+
+app = Flask(__name__)
+
+
+@app.route('/')
+def hello():
+    return render_template('./index.html', host_name=os.getenv("ES_CONFIGURATION_HOST"), linked_port=port, service_host=env_name)
+    # return "Hello"
 
 
 class oracle_database:
@@ -3966,6 +3975,9 @@ if __name__ == '__main__':
                 T.append(db_http_thread_Omx_Backlog)
                 """
 
+        ''' Expose this app to acesss index.html (./templates/index.html)'''
+        app.run(host="0.0.0.0", port=int(port)-4000)
+
         # wait for all threads to terminate
         for t in T:
             while t.is_alive():
@@ -3983,7 +3995,6 @@ if __name__ == '__main__':
             # database_object_OMx.set_db_disconnection()
             # database_object_OMx.set_init_JVM_shutdown()
 
-        
     logging.info("Standalone Prometheus Exporter Server exited..!")
     
     
