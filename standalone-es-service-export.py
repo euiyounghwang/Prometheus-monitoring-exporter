@@ -3976,7 +3976,13 @@ if __name__ == '__main__':
                 """
 
         ''' Expose this app to acesss index.html (./templates/index.html)'''
-        app.run(host="0.0.0.0", port=int(port)-4000)
+        ''' Flask at first run: Do not use the development server in a production environment '''
+        ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
+        # app.run(host="0.0.0.0", port=int(port)-4000)
+        from waitress import serve
+        _flask_port = 1000 + (int(port)-9000)
+        serve(app, host="0.0.0.0", port=_flask_port)
+        logging.info(f"# Flask App's Port : {_flask_port}")
 
         # wait for all threads to terminate
         for t in T:
