@@ -2948,13 +2948,13 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                     logging.info(f"db_jobs_backlogs_work alert : {WMx_backlog}, WMx_backlog_list : {WMx_backlog_list}")
                     alert_msg = "Backlog for unprocessed data  in the WMx ES pipeline queue tables: {:,}, db_transactin_time_WMx : {}/sec, db_transactin_time_OMx : {}/sec".format(WMx_backlog, db_transactin_time_WMx, db_transactin_time_OMx)
                     ''' send mail'''
-                    # send_mail(body=alert_msg, 
-                    #         host= host_name, 
-                    #         env=data[host_name].get("env"), 
-                    #         status_dict=saved_status_dict, 
-                    #         to=dev_email_list, cc="", _type='mail')
+                    send_mail(body=alert_msg, 
+                            host= host_name, 
+                            env=data[host_name].get("env"), 
+                            status_dict=saved_status_dict, 
+                            to=dev_email_list, cc="", _type='mail')
                     ''' send sms'''
-                    # send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
+                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
 
                     ''' disbaled this variable for sending every 1 hour'''
                     recheck_WMx = False
@@ -3300,8 +3300,8 @@ def alert_work(db_http_host):
             data = resp.json()
             """
 
-            # host_name = domain_name_as_nick_name.split(".")[0]
-            host_name = domain_name_as_nick_name_running_host.split(".")[0]
+            host_name = domain_name_as_nick_name.split(".")[0]
+            # host_name = domain_name_as_nick_name_running_host.split(".")[0]
             get_es_config_interface_api_host_key = host_name
 
             ''' ------------------------------------------------------'''
