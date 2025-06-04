@@ -38,6 +38,7 @@ export MAIL_SENDER="mymail"
 export ES_CONFIGURATION_URL="http://localhost:8004/docs"
 export ES_CONFIGURATION_HOST="localhost"
 export ES_EXPORTER_HOST="localhost"
+export ES_MONITORING_APPS_EXPORTER_RUN_HOST="localhost:1001"
 export ES_MONITORING_APPS_EXPORTER_URL_HOST="localhost:9001"
 export SPARK_APP_CEHCK="StreamProcessEXP"
 

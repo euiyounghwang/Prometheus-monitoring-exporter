@@ -3523,7 +3523,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 - Alert Date : %s <BR/> \
                 - Grafana Dashboard URL : <a href="%s">%s</a> <BR/> \
                 - Monitoring Configuration API : <a href="%s">%s</a>  <BR/> \
-                - Enviroment: <b>%s</b>, Prometheus Export Application Runnig Host : %s, Export Application URL : <a href="%s">%s</a> <BR/> \
+                - Enviroment: <b>%s</b>, Prometheus Export Application Runnig Host : <a href="%s">%s</a>, Export Application URL : <a href="%s">%s</a> <BR/> \
                 - Service Status: <b>%s</b>, ES_PIPELINE Status : <b>%s</b> <BR/> \
                 - Service Health:  <BR/> \
                     Elasticsearch Health : <b>%s</b>, Elasticsearch Nodes : <b>%s</b> <BR/>\
@@ -3537,7 +3537,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 - <b>Alert Message : </b><BR/>%s \
                 """ % (alert_date, grafana_dashboard_url, grafana_dashboard_url, 
                        os.environ["ES_CONFIGURATION_URL"],os.environ["ES_CONFIGURATION_URL"],
-                       env, host, host, host, status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"),
+                       env, os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], host, host, host, status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"),
                        service_status_dict.get("es",""), service_status_dict.get("es_nodes",""),
                        service_status_dict.get("spark",""), service_status_dict.get("spark_custom_apps",""),
                        str(service_status_dict.get("spark_custom_apps_list","None")).replace(" ", ""),
