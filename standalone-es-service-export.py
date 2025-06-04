@@ -487,6 +487,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         active_listner_connect = resp.json()
                         break
                 except Exception as e:
+                    logging.error(e)
                     pass
 
             logging.info(f"active_listener_list - {json.dumps(active_listner_connect, indent=2)}")
@@ -574,6 +575,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         if loop > 1:
                             failure_check = True
                         # failure_check = True
+                        logging.error(e)
                         pass
                 listener_apis_dict.update({node : listeners_list})
                 node_lists_loop +=1
@@ -938,7 +940,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 
                 except Exception as e:
                     print('\n\n\n')
-                    print(e)
+                    logging.error(e)
                     print('\n\n\n')
                     pass
                 
@@ -1178,6 +1180,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     # ssh_connection(str(each_server).split(":")[0].strip(), os.getenv("credentials_id"), os.getenv("credentials_pw"), "/apps/", loop)
                     socket_connection(str(each_server).split(":")[0].strip(), "/apps/", loop)
                 except Exception as e:
+                    logging.error(e)
                     pass
                 loop +=1
             logging.info(f"disk space : {json.dumps(disk_space_memory_list, indent=2)}")
@@ -2408,6 +2411,7 @@ def push_log_to_grafana_loki(env, title_msg, body_msg, logger_level):
         print(response.status_code)
 
     except Exception as e:
+        logging.error(e)
         pass
 
 
@@ -3198,6 +3202,8 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
 
     except (KeyboardInterrupt, SystemExit):
         logging.info("#Interrupted..")
+    except Exception as e:
+        logging.error(e)
        
 
 ''' Alert'''
