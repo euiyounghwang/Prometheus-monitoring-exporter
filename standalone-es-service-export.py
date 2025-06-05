@@ -3445,6 +3445,14 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         text = re.sub('[-=+,#/\?:^$.@*\"※~&%ㆍ!』\\‘|\[\]\(\)\<\>`\'…》]', '', readData)
         return text
     
+    def html_color(status):
+        _color = 'green'
+        if status.lower() == 'yellow':
+            _color = 'yellow'
+        elif status.lower() == 'red':
+            _color = 'red'
+        return "<font color='{}'>{}</font>".format(_color, status) 
+    
     def mail_attached(grafana_dashboard_url, smtp_host, smtp_port, host, message, to, cc, _type):
         ''' using mailx'''
         # body = body.encode('utf-8')
@@ -3545,15 +3553,15 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                        grafana_dashboard_url, grafana_dashboard_url, 
                        os.environ["ES_CONFIGURATION_URL"],os.environ["ES_CONFIGURATION_URL"],
                        env, os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], host, host, 
-                       status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"),
-                       service_status_dict.get("es",""), service_status_dict.get("es_nodes",""),
-                       service_status_dict.get("spark",""), service_status_dict.get("spark_custom_apps",""),
+                       html_color(status_dict.get("server_active","Green")), html_color(status_dict.get("es_pipeline","Green")),
+                       html_color(service_status_dict.get("es","")), service_status_dict.get("es_nodes",""),
+                       html_color(service_status_dict.get("spark","")), service_status_dict.get("spark_custom_apps",""),
                        str(service_status_dict.get("spark_custom_apps_list","None")).replace(" ", ""),
-                       service_status_dict.get("kafka",""), service_status_dict.get("kafka_nodes",""),
-                       service_status_dict.get("kafka_connect",""), service_status_dict.get("kafka_connect_primary_node",""), service_status_dict.get("kafka_connect_nodes",""),
-                       service_status_dict.get("zookeeper",""), service_status_dict.get("zookeeper_nodes",""),
-                       service_status_dict.get("kibana",""),
-                       service_status_dict.get("logstash",""),
+                       html_color(service_status_dict.get("kafka","")), service_status_dict.get("kafka_nodes",""),
+                       html_color(service_status_dict.get("kafka_connect","")), html_color(service_status_dict.get("kafka_connect_primary_node","")), service_status_dict.get("kafka_connect_nodes",""),
+                       html_color(service_status_dict.get("zookeeper","")), service_status_dict.get("zookeeper_nodes",""),
+                       html_color(service_status_dict.get("kibana","")),
+                       html_color(service_status_dict.get("logstash","")),
                        message)
         
         elif _type == "sms":
