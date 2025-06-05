@@ -51,6 +51,39 @@ demo = gr.Interface(fn=greet, inputs="text", outputs="text")
 demo.launch()   
 ```
 
+- Fabric: Fabric(https://www.fabfile.org/) is a high level Python (2.7, 3.4+) library designed to execute shell commands remotely over SSH,
+```bash
+#!/bin/bash
+set -e
+
+SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+# cd $SCRIPTDIR
+echo $SCRIPTDIR
+# echo $BASE_DIR
+
+VENV=".venv"
+
+# Python 3.11.7 with Window
+if [ -d "$VENV/bin" ]; then
+    source $BASE_DIR/$VENV/bin/activate
+else
+    source $BASE_DIR/$VENV/Scripts/activate
+fi
+
+export PYTHONDONTWRITEBYTECODE=1
+
+cd $SCRIPTDIR
+
+#-- Generial
+# fab dev_nodes:user="test",services="update_node_deploy_service"
+
+#-- ES Monitoring Apps on the instance
+# fab dev_same_instance:user="test",services="update_deploy_service"
+
+#-- ES Expoter on the instance
+# fab es_exporter:user="test",services="update_deploy_service"
+
+```
 
 #### Python V3.9 Install
 ```bash
