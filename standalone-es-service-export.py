@@ -146,7 +146,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return render_template('./index.html', host_name=os.getenv("ES_CONFIGURATION_HOST"), linked_port=port, service_host=env_name)
+    return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
     # return "Hello"
 
 
