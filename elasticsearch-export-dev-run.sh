@@ -26,9 +26,12 @@ case "$1" in
         fi
         ;;
   restart)
+        #$0 stop
+        #sleep 2
+        #$0 start
         $0 stop
-        sleep 2
         $0 start
+        sleep 5
         ;;
   status)
         pid=`ps ax | grep -i '/elasticsearch_exporter --es.uri=http://'$ES_HOST | grep -v grep | awk '{print $1}'`
