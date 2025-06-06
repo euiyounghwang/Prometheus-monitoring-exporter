@@ -33,7 +33,7 @@ sudo apt-get -y install puppetserver
     sudo service puppet stop
     ```
     - Step 3: Install and Configure Puppet Agent (Client Node): The client node, or Puppet Agent, is a machine that retrieves configurations from the Puppet Server and applies them to maintain the desired system state.
-     ```bash
+    ```bash
     sudo apt-get install systemd
     sudo apt install puppet-agent -y
     sudo vi /etc/hosts
@@ -44,4 +44,9 @@ sudo apt-get -y install puppetserver
     sudo service puppet status
     sudo service puppet start
     sudo service puppet stop
+    ```
+    - Step 4: Sign Puppet Agent Certificate: Sign the Puppet Agent certificate to establish a secure connection between the Puppet Agent and Puppet Master, which ensures trusted communication.
+    ```bash
+    sudo /usr/bin/puppet ca list --all
+    sudo /usr/bin/puppet ca sign --all
     ```
