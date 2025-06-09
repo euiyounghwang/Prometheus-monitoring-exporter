@@ -12,4 +12,4 @@ golang/golang_exporter/output
 config/__pycache__/
 Vagrant/master_node/.vagrant
 Vagrant/data_node1/.vagrant
-
+golang/.env
