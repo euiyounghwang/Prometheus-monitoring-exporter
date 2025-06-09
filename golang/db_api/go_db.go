@@ -12,6 +12,7 @@ import (
 )
 
 // https://medium.com/data-science/use-environment-variable-in-your-next-golang-project-39e17c3aaa66
+// There are a few major disadvantages to this approach, but there can be many - Security Issue, Code Management.
 // go get github.com/joho/godotenv
 
 type Payload struct {
@@ -25,6 +26,36 @@ func PrettyString(str string) string {
 		return ""
 	}
 	return prettyJSON.String()
+}
+
+func Json_Parsing(body string) map[string]interface{} {
+	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
+	resBytes := []byte(body)
+	_ = json.Unmarshal(resBytes, &jsonRes) // Unmarshalling
+
+	return jsonRes
+}
+
+func get_configuration() {
+	// requestURL := fmt.Sprintf("http://localhost:%d", serverPort)
+	requestURL := os.Getenv("CONFIGURATION")
+	res, err := http.Get(requestURL)
+	if err != nil {
+		fmt.Printf("error making http request: %s\n", err)
+		os.Exit(1)
+	}
+
+	defer res.Body.Close()
+
+	fmt.Printf("client: got response!\n")
+	body, _ := ioutil.ReadAll(res.Body)
+	fmt.Println("response Body:", PrettyString(string(body)))
+	fmt.Printf("client: status code: %d\n", res.StatusCode)
+
+	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
+	jsonRes = Json_Parsing(string(body))
+
+	fmt.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
 }
 
 func db_api() {
@@ -65,6 +96,11 @@ func db_api() {
 	fmt.Println("response Headers:", response.Header)
 	body, _ := ioutil.ReadAll(response.Body)
 	fmt.Println("response Body:", PrettyString(string(body)))
+
+	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
+	jsonRes = Json_Parsing(string(body))
+
+	fmt.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
 }
 
 func main() {
@@ -72,6 +108,11 @@ func main() {
 	// godotenv.Load()
 	// or
 	godotenv.Load("../.env")
-	fmt.Println("Go DB..")
+
+	fmt.Println("Go DB GET..")
+	get_configuration()
+	fmt.Sprintf("%s", "\n\n")
+
+	fmt.Println("Go DB POST..")
 	db_api()
 }
