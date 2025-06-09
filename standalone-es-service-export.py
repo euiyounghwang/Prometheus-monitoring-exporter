@@ -3446,11 +3446,15 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         return text
     
     def html_color(status):
-        _color = 'green'
+        ''' https://www.figma.com/colors/chili-red/ '''
+        if status == "" or status is None:
+            _color = '#008000'
         if status.lower() == 'yellow':
             _color = 'orange'
         elif status.lower() == 'red':
             _color = 'red'
+        else:
+            _color = '#008000'
         return "<font color='{}'>{}</font>".format(_color, status) 
     
     def mail_attached(grafana_dashboard_url, smtp_host, smtp_port, host, message, to, cc, _type):
