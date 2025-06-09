@@ -3448,7 +3448,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
     def html_color(status):
         _color = 'green'
         if status.lower() == 'yellow':
-            _color = 'yellow'
+            _color = 'orange'
         elif status.lower() == 'red':
             _color = 'red'
         return "<font color='{}'>{}</font>".format(_color, status) 
@@ -3532,6 +3532,9 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         
         alert_date = datetime.datetime.now()
 
+        ''' set the default value if env name doesn't exist from the shell script'''
+        ES_MONITORING_APPS_EXPORTER_RUN_HOST = os.environ.get("ES_MONITORING_APPS_EXPORTER_RUN_HOST","http://{}:9115".format(socket.gethostname()))
+
         if _type == "mail":
             body = """
                 - Alert Date : %s <BR/> \
@@ -3544,7 +3547,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                     Spark Health : <b>%s</b>, Spark Custom Apps : <b>%s</b> <BR/>\
                     - Active Spark Custom Apps : <b>%s</b> <BR/>\
                     Kafka Health : <b>%s</b>, Kafka Nodes : <b>%s</b> <BR/>\
-                    Kafka_connect Health : <b>%s</b>, Kafka_connect_primary_node Health : <b>%s</b>, Kafka Connect Nodes : <b>%s</b> <BR/>\
+                    Kafka Connect Health : <b>%s</b>, Kafka Connect Primary Node Health : <b>%s</b>, Kafka Connect Nodes : <b>%s</b> <BR/>\
                     Zookeeper Health : <b>%s</b>, Zookeeper Nodes : <b>%s</b> <BR/>\
                     Kibana Health : <b>%s</b> <BR/>\
                     Logstash Health : <b>%s</b> <BR/>\
@@ -3552,7 +3555,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 """ % (alert_date, 
                        grafana_dashboard_url, grafana_dashboard_url, 
                        os.environ["ES_CONFIGURATION_URL"],os.environ["ES_CONFIGURATION_URL"],
-                       env, os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], os.environ["ES_MONITORING_APPS_EXPORTER_RUN_HOST"], host, host, 
+                       env, ES_MONITORING_APPS_EXPORTER_RUN_HOST, ES_MONITORING_APPS_EXPORTER_RUN_HOST, host, host, 
                        html_color(status_dict.get("server_active","Green")), html_color(status_dict.get("es_pipeline","Green")),
                        html_color(service_status_dict.get("es","")), service_status_dict.get("es_nodes",""),
                        html_color(service_status_dict.get("spark","")), service_status_dict.get("spark_custom_apps",""),
