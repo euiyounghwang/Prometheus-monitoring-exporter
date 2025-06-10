@@ -6,8 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
+	"reflect"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -72,6 +75,11 @@ type API_Results struct {
 	} `json:"results"`
 }
 
+type ARG struct {
+	ES_URL    string `json:"es_url"`
+	KAFKA_URL string `json:"kafka_url"`
+}
+
 func db_api() {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
@@ -114,6 +122,7 @@ func db_api() {
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
 	jsonRes = Json_Parsing(string(body))
 
+	// fmt.Printf("Body type : %s", reflect.TypeOf(body))
 	fmt.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
 
 	// using struct to parse the Json Format
@@ -130,17 +139,85 @@ func db_api() {
 		if i == 0 {
 			fmt.Println("Body Json sequence : ", i+1)
 			fmt.Println("Body Json records : ", rows.PROCESSNAME)
+			fmt.Println("Body Json records-time : ", rows.ADDTS)
 		}
 	}
 }
 
-func initialize_args() {
-	es_args := flag.String("es_url", "localhost:9200", "string")
+func get_port_open(host string) bool {
+	// Connect to the server
+	conn, err := net.Dial("tcp", host)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return false
+	}
+	defer conn.Close()
+
+	return true
+}
+
+func get_port_list_open(host string) (bool, string) {
+	result := strings.Split(strings.Trim(host, " "), ",")
+	fmt.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
+
+	flag := true
+	flag_value := 0
+	server_status := "red"
+
+	for i, rows := range result {
+		rows = strings.Trim(rows, " ")
+		fmt.Println("get_port_list_opensequence : ", i+1)
+		// rows = strings.Replace(rows, " ", ",", -1)
+		fmt.Println("get_port_list_open records : ", rows)
+
+		// Connect to the server
+		conn, err := net.Dial("tcp", rows)
+		if err != nil {
+			fmt.Println("Error:", err)
+			flag = flag && false
+			flag_value = flag_value + 0
+			// fmt.Println("flag : ", flag)
+			continue
+		}
+		defer conn.Close()
+		flag = flag && true
+		flag_value = flag_value + 1
+		// fmt.Println("flag : ", flag)
+	}
+
+	if len(result) == flag_value {
+		server_status = "Green"
+	} else if flag_value < 1 {
+		server_status = "Red"
+	} else {
+		server_status = "Yellow"
+	}
+
+	fmt.Println("** flag ** : ", flag)
+	fmt.Println("** len(result) ** : ", len(result))
+	fmt.Println("** flag_value ** : ", flag_value)
+	// fmt.Println("** server_status ** : ", server_status)
+
+	return flag, server_status
+}
+
+func initialize_args() map[string]interface{} {
+	es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
 	kafka_args := flag.String("kafka_url", "localhost:9092", "string")
 
 	flag.Parse()
 	fmt.Println("es_args:", *es_args)
 	fmt.Println("kafka_args:", *kafka_args)
+
+	m := make(map[string]interface{})
+	m["es_url"] = *es_args
+	m["kafka_url"] = *kafka_args
+
+	// m := make(map[string]interface{})
+	// m["key1"] = make(map[string]interface{})
+	// m["key1"].(map[string]interface{})["key2"] = "value"
+
+	return m
 }
 
 func main() {
@@ -148,7 +225,25 @@ func main() {
 	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
 
 	// String
-	initialize_args()
+	m := initialize_args()
+	jsonData, _ := json.Marshal(m)
+	args_map := ARG{}
+	if err := json.Unmarshal(jsonData, &args_map); err != nil {
+		// do error check
+		fmt.Println(err)
+	}
+
+	fmt.Println("globla(map) *es_args: ", m["es_url"])
+	fmt.Println("args_map.ES_URL: ", args_map.ES_URL)
+	fmt.Println("Arguments Json:", PrettyString(string(jsonData)))
+	fmt.Print("\n\n")
+
+	fmt.Println("** PORT OPEN ** ")
+	// is_port_open := get_port_open(args_map.ES_URL)
+	is_port_open, server_status := get_port_list_open(args_map.ES_URL)
+	fmt.Println("** is_port_open: ** ", is_port_open)
+	fmt.Println("** server_status ** : ", server_status)
+
 	fmt.Print("\n\n")
 
 	// Load the .env file in the current directory
