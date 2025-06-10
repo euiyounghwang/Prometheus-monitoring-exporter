@@ -80,6 +80,11 @@ type ARG struct {
 	KAFKA_URL string `json:"kafka_url"`
 }
 
+type SERVER_STATUS struct {
+	ES    string `json:"es"`
+	KAFKA string `json:"kafka"`
+}
+
 func db_api() {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
@@ -220,6 +225,18 @@ func initialize_args() map[string]interface{} {
 	return m
 }
 
+func map_to_json(m map[string]interface{}) *SERVER_STATUS {
+	json_server_data, _ := json.Marshal(m)
+	server_status_map := SERVER_STATUS{}
+	if err := json.Unmarshal(json_server_data, &server_status_map); err != nil {
+		// do error check
+		fmt.Println(err)
+	}
+
+	return &server_status_map
+
+}
+
 func main() {
 
 	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
@@ -238,11 +255,30 @@ func main() {
 	fmt.Println("Arguments Json:", PrettyString(string(jsonData)))
 	fmt.Print("\n\n")
 
-	fmt.Println("** PORT OPEN ** ")
+	m_server_status := make(map[string]interface{})
+
+	fmt.Println("** ES PORT OPEN ** ")
 	// is_port_open := get_port_open(args_map.ES_URL)
 	is_port_open, server_status := get_port_list_open(args_map.ES_URL)
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
+	m_server_status["es"] = server_status
+	fmt.Print("\n\n")
+
+	fmt.Println("** KAFKA PORT OPEN ** ")
+	// is_port_open := get_port_open(args_map.ES_URL)
+	is_port_open, server_status = get_port_list_open(args_map.KAFKA_URL)
+	fmt.Println("** is_port_open: ** ", is_port_open)
+	fmt.Println("** server_status ** : ", server_status)
+	m_server_status["kafka"] = server_status
+
+	// json_server_data, _ := json.Marshal(m_server_status)
+	// server_status_map := SERVER_STATUS{}
+	// if err := json.Unmarshal(json_server_data, &server_status_map); err != nil {
+	// 	// do error check
+	// 	fmt.Println(err)
+	// }
+	server_status_map := map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
 
@@ -258,4 +294,6 @@ func main() {
 	fmt.Println("** HTTP POST ** ")
 	db_api()
 
+	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
+	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
 }
