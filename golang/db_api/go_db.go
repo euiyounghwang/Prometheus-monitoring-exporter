@@ -86,6 +86,36 @@ type SERVER_STATUS struct {
 	KAFKA string `json:"kafka"`
 }
 
+func time_difference_is_ative(inputTime string) string {
+	time_gap := 0.51
+	// Specific time zone
+	nyLocation, _ := time.LoadLocation("America/New_York")
+	currentTime := time.Now().In(nyLocation)
+	// currentTime.Format("2006-01-02 15:04:05")
+	fmt.Println("time_difference func - currentTime : ", currentTime)
+
+	// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
+	// s := "2022-03-23T07:00:00+01:00"
+	loc, _ := time.LoadLocation("America/New_York")
+	date, error := time.ParseInLocation(time.DateTime, inputTime, loc)
+	if error != nil {
+		fmt.Println(error)
+		return "Red"
+	}
+
+	fmt.Println("time_difference func - inputTime", date)
+
+	diff := currentTime.Sub(date)
+	fmt.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
+	fmt.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
+
+	if time_gap > diff.Hours() {
+		return "Green"
+	} else {
+		return "Red"
+	}
+}
+
 func db_api() {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
@@ -146,28 +176,8 @@ func db_api() {
 			fmt.Println("Body Json sequence : ", i+1)
 			fmt.Println("Body Json records : ", rows.PROCESSNAME)
 
-			// currentTime := time.Now()
-
-			// Specific time zone
-			nyLocation, _ := time.LoadLocation("America/New_York")
-			currentTime := time.Now().In(nyLocation)
-			// currentTime.Format("2006-01-02 15:04:05")
-			fmt.Println("Body Json currentTime : ", currentTime)
-
-			// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
-			// s := "2022-03-23T07:00:00+01:00"
-			loc, _ := time.LoadLocation("America/New_York")
-			date, error := time.ParseInLocation(time.DateTime, rows.ADDTS, loc)
-			if error != nil {
-				fmt.Println(error)
-				return
-			}
-
-			fmt.Println("Body Json records-time : ", date)
-
-			diff := currentTime.Sub(date)
-			fmt.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
-			fmt.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
+			DATA_PIPELINE_ACITVE = time_difference_is_ative(rows.ADDTS)
+			// fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 		}
 	}
 }
@@ -260,6 +270,8 @@ func map_to_json(m map[string]interface{}) *SERVER_STATUS {
 
 }
 
+var DATA_PIPELINE_ACITVE = ""
+
 func main() {
 
 	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
@@ -317,6 +329,9 @@ func main() {
 	fmt.Println("** HTTP POST ** ")
 	db_api()
 
+	fmt.Print("\n\n")
+	fmt.Print("** STATUS **\n")
+	fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
 	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
 }
