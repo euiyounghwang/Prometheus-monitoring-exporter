@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -144,7 +145,29 @@ func db_api() {
 		if i == 0 {
 			fmt.Println("Body Json sequence : ", i+1)
 			fmt.Println("Body Json records : ", rows.PROCESSNAME)
-			fmt.Println("Body Json records-time : ", rows.ADDTS)
+
+			// currentTime := time.Now()
+
+			// Specific time zone
+			nyLocation, _ := time.LoadLocation("America/New_York")
+			currentTime := time.Now().In(nyLocation)
+			// currentTime.Format("2006-01-02 15:04:05")
+			fmt.Println("Body Json currentTime : ", currentTime)
+
+			// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
+			// s := "2022-03-23T07:00:00+01:00"
+			loc, _ := time.LoadLocation("America/New_York")
+			date, error := time.ParseInLocation(time.DateTime, rows.ADDTS, loc)
+			if error != nil {
+				fmt.Println(error)
+				return
+			}
+
+			fmt.Println("Body Json records-time : ", date)
+
+			diff := currentTime.Sub(date)
+			fmt.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
+			fmt.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
 		}
 	}
 }
