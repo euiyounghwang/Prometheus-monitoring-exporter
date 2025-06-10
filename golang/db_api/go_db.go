@@ -58,6 +58,19 @@ func get_configuration() {
 	fmt.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
 }
 
+// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
+type API_Results struct {
+	Running_time float32 `json:"running_time"`
+	Request_dbid string  `json:"request_dbid"`
+	Results      []struct {
+		PROCESSNAME string `json:"processname"`
+		STATUS      string `json:"status"`
+		ADDTS       string `json:"addts"`
+		COUNT       int    `json:"count"`
+		DBID        string `json:"dbid"`
+	} `json:"results"`
+}
+
 func db_api() {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
@@ -101,6 +114,22 @@ func db_api() {
 	jsonRes = Json_Parsing(string(body))
 
 	fmt.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
+
+	// using struct to parse the Json Format
+	// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
+	response_map := API_Results{}
+	if err := json.Unmarshal(body, &response_map); err != nil {
+		// do error check
+		fmt.Println(err)
+	}
+	fmt.Printf("Body Json : %s", response_map.Request_dbid)
+
+	for i, rows := range response_map.Results {
+		if i == 0 {
+			fmt.Println("Body Json sequence : ", i+1)
+			fmt.Println("Body Json records : ", rows.PROCESSNAME)
+		}
+	}
 }
 
 func main() {
@@ -109,10 +138,10 @@ func main() {
 	// or
 	godotenv.Load("../.env")
 
-	fmt.Println("Go DB GET..")
+	fmt.Println("** HTTP GET **")
 	get_configuration()
-	fmt.Sprintf("%s", "\n\n")
+	fmt.Print("\n\n")
 
-	fmt.Println("Go DB POST..")
+	fmt.Println("** HTTP POST ** ")
 	db_api()
 }
