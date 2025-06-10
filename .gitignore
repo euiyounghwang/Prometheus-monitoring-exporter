@@ -13,3 +13,4 @@ config/__pycache__/
 Vagrant/master_node/.vagrant
 Vagrant/data_node1/.vagrant
 golang/.env
+golang/db_api/output/

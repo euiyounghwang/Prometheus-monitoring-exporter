@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -123,6 +124,7 @@ func db_api() {
 		fmt.Println(err)
 	}
 	fmt.Printf("Body Json : %s", response_map.Request_dbid)
+	fmt.Print("\n")
 
 	for i, rows := range response_map.Results {
 		if i == 0 {
@@ -132,16 +134,33 @@ func db_api() {
 	}
 }
 
+func initialize_args() {
+	es_args := flag.String("es_url", "localhost:9200", "string")
+	kafka_args := flag.String("kafka_url", "localhost:9092", "string")
+
+	flag.Parse()
+	fmt.Println("es_args:", *es_args)
+	fmt.Println("kafka_args:", *kafka_args)
+}
+
 func main() {
+
+	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
+
+	// String
+	initialize_args()
+	fmt.Print("\n\n")
+
 	// Load the .env file in the current directory
 	// godotenv.Load()
 	// or
 	godotenv.Load("../.env")
 
-	fmt.Println("** HTTP GET **")
-	get_configuration()
-	fmt.Print("\n\n")
+	// fmt.Println("** HTTP GET **")
+	// get_configuration()
+	// fmt.Print("\n\n")
 
 	fmt.Println("** HTTP POST ** ")
 	db_api()
+
 }
