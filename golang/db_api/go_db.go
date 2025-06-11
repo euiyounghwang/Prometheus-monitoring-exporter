@@ -83,10 +83,10 @@ type ARG struct {
 }
 
 type SERVER_STATUS struct {
-	ES            string `json:"es"`
-	KAFKA         string `json:"kafka"`
-	SERVER_ACTIVE string `json:"server_active"`
-	DATA_PIPELINE string `json:"data_pipeline"`
+	ES            string `json:"ES"`
+	KAFKA         string `json:"KAFKA"`
+	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
+	DATA_PIPELINE string `json:"DATA_PIPELINE"`
 }
 
 func time_difference_is_ative(inputTime string) string {
@@ -189,20 +189,20 @@ func db_api(db_url string, db_type string) {
 
 			if db_type == "WMx" {
 				DATA_PIPELINE_ACITVE_WMX = time_difference_is_ative(rows.ADDTS)
-				active_update_func(DATA_PIPELINE_ACITVE_WMX)
-				// if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
-				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-				// } else {
-				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-				// }
+				if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
+					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+				} else {
+					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				}
+
 			} else {
 				DATA_PIPELINE_ACITVE_OMX = time_difference_is_ative(rows.ADDTS)
-				active_update_func(DATA_PIPELINE_ACITVE_OMX)
-				// if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
-				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-				// } else {
-				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-				// }
+				if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
+					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+				} else {
+					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				}
+
 			}
 			// fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 		}
@@ -212,15 +212,16 @@ func db_api(db_url string, db_type string) {
 func active_update_func(status string) {
 	SERVER_ACTIVE_TOTAL_CNT += 1
 	if strings.ToLower(status) == "green" {
-		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 		SERVER_ACTIVE_CNT += 1
 	} else if strings.ToLower(status) == "yellow" {
-		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 		SERVER_ACTIVE_CNT -= 1
 	} else {
-		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 		SERVER_ACTIVE_CNT += 0
 	}
+	// fmt.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
 }
 
 func get_port_open(host string) bool {
@@ -344,7 +345,7 @@ func main() {
 	is_port_open, server_status := get_port_list_open(args_map.ES_URL)
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
-	m_server_status["es"] = server_status
+	m_server_status["ES"] = server_status
 	// update server_active to global variable
 	active_update_func(server_status)
 
@@ -355,7 +356,7 @@ func main() {
 	is_port_open, server_status = get_port_list_open(args_map.KAFKA_URL)
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
-	m_server_status["kafka"] = server_status
+	m_server_status["KAFKA"] = server_status
 	// update server_active to global variable
 	active_update_func(server_status)
 
@@ -410,8 +411,8 @@ func main() {
 	} else {
 		DATA_PIPELINE_ACITVE_TXT = "Red"
 	}
-	m_server_status["server_active"] = SERVER_ACITVE_TXT
-	m_server_status["data_pipeline"] = DATA_PIPELINE_ACITVE_TXT
+	m_server_status["SERVER_ACTIVE"] = SERVER_ACITVE_TXT
+	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
 
 	// update all status to server_status_map
 	server_status_map := map_to_json(m_server_status)
