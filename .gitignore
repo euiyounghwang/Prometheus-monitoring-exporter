@@ -14,3 +14,4 @@ Vagrant/master_node/.vagrant
 Vagrant/data_node1/.vagrant
 golang/.env
 golang/db_api/output/
+golang/db_api/go_run_dev.sh

@@ -79,11 +79,14 @@ type API_Results struct {
 type ARG struct {
 	ES_URL    string `json:"es_url"`
 	KAFKA_URL string `json:"kafka_url"`
+	DB_URL    string `json:"db_url"`
 }
 
 type SERVER_STATUS struct {
-	ES    string `json:"es"`
-	KAFKA string `json:"kafka"`
+	ES            string `json:"es"`
+	KAFKA         string `json:"kafka"`
+	SERVER_ACTIVE string `json:"server_active"`
+	DATA_PIPELINE string `json:"data_pipeline"`
 }
 
 func time_difference_is_ative(inputTime string) string {
@@ -116,7 +119,7 @@ func time_difference_is_ative(inputTime string) string {
 	}
 }
 
-func db_api() {
+func db_api(db_url string, db_type string) {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
 	fmt.Println("HTTP JSON POST URL:", httpposturl)
@@ -132,7 +135,8 @@ func db_api() {
 	// }`)
 
 	u := map[string]interface{}{
-		"db_url": os.Getenv("DB_URL"),
+		// "db_url": os.Getenv("DB_URL"),
+		"db_url": db_url,
 		"sql":    os.Getenv("SQL"),
 	}
 	jsonData, _ := json.Marshal(u)
@@ -168,17 +172,54 @@ func db_api() {
 		// do error check
 		fmt.Println(err)
 	}
-	fmt.Printf("Body Json : %s", response_map.Request_dbid)
+	fmt.Printf("Body Json : %s\n", response_map.Request_dbid)
+	fmt.Printf("len(response_map.Results) : %d", len(response_map.Results))
 	fmt.Print("\n")
+
+	// return when the number of records is zero
+	if len(response_map.Results) < 1 {
+		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+		return
+	}
 
 	for i, rows := range response_map.Results {
 		if i == 0 {
 			fmt.Println("Body Json sequence : ", i+1)
 			fmt.Println("Body Json records : ", rows.PROCESSNAME)
 
-			DATA_PIPELINE_ACITVE = time_difference_is_ative(rows.ADDTS)
+			if db_type == "WMx" {
+				DATA_PIPELINE_ACITVE_WMX = time_difference_is_ative(rows.ADDTS)
+				active_update_func(DATA_PIPELINE_ACITVE_WMX)
+				// if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
+				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+				// } else {
+				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				// }
+			} else {
+				DATA_PIPELINE_ACITVE_OMX = time_difference_is_ative(rows.ADDTS)
+				active_update_func(DATA_PIPELINE_ACITVE_OMX)
+				// if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
+				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+				// } else {
+				// 	DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				// }
+			}
 			// fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 		}
+	}
+}
+
+func active_update_func(status string) {
+	SERVER_ACTIVE_TOTAL_CNT += 1
+	if strings.ToLower(status) == "green" {
+		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+		SERVER_ACTIVE_CNT += 1
+	} else if strings.ToLower(status) == "yellow" {
+		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+		SERVER_ACTIVE_CNT -= 1
+	} else {
+		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+		SERVER_ACTIVE_CNT += 0
 	}
 }
 
@@ -242,14 +283,17 @@ func get_port_list_open(host string) (bool, string) {
 func initialize_args() map[string]interface{} {
 	es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
 	kafka_args := flag.String("kafka_url", "localhost:9092", "string")
+	db_url_args := flag.String("db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
 
 	flag.Parse()
 	fmt.Println("es_args:", *es_args)
 	fmt.Println("kafka_args:", *kafka_args)
+	fmt.Println("db_url_args:", *db_url_args)
 
 	m := make(map[string]interface{})
 	m["es_url"] = *es_args
 	m["kafka_url"] = *kafka_args
+	m["db_url"] = *db_url_args
 
 	// m := make(map[string]interface{})
 	// m["key1"] = make(map[string]interface{})
@@ -270,7 +314,10 @@ func map_to_json(m map[string]interface{}) *SERVER_STATUS {
 
 }
 
-var DATA_PIPELINE_ACITVE = ""
+var SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
+var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
+var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
+var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 
 func main() {
 
@@ -298,6 +345,9 @@ func main() {
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
 	m_server_status["es"] = server_status
+	// update server_active to global variable
+	active_update_func(server_status)
+
 	fmt.Print("\n\n")
 
 	fmt.Println("** KAFKA PORT OPEN ** ")
@@ -306,6 +356,8 @@ func main() {
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
 	m_server_status["kafka"] = server_status
+	// update server_active to global variable
+	active_update_func(server_status)
 
 	// json_server_data, _ := json.Marshal(m_server_status)
 	// server_status_map := SERVER_STATUS{}
@@ -313,7 +365,7 @@ func main() {
 	// 	// do error check
 	// 	fmt.Println(err)
 	// }
-	server_status_map := map_to_json(m_server_status)
+	// server_status_map := map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
 
@@ -327,11 +379,49 @@ func main() {
 	// fmt.Print("\n\n")
 
 	fmt.Println("** HTTP POST ** ")
-	db_api()
+	fmt.Println("args_map.DB_URL : ", args_map.DB_URL)
+	result := strings.Split(strings.Trim(args_map.DB_URL, " "), ",")
+	fmt.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
+	db_type := ""
+	// data_pipeline_flag := true
+	for i, rows := range result {
+		fmt.Println("db_api call : ", i+1)
+		fmt.Println("db_api call rows: ", rows)
+
+		if i == 0 {
+			db_type = "WMx"
+		} else {
+			db_type = "OMx"
+		}
+		db_api(rows, db_type)
+	}
+
+	// verify the Server Active
+	if SERVER_ACTIVE_CNT == SERVER_ACTIVE_TOTAL_CNT {
+		SERVER_ACITVE_TXT = "Green"
+	} else if SERVER_ACTIVE_CNT == 0 {
+		SERVER_ACITVE_TXT = "Red"
+	} else {
+		SERVER_ACITVE_TXT = "Yellow"
+	}
+
+	if DATA_PIPELINE_ACITVE {
+		DATA_PIPELINE_ACITVE_TXT = "Green"
+	} else {
+		DATA_PIPELINE_ACITVE_TXT = "Red"
+	}
+	m_server_status["server_active"] = SERVER_ACITVE_TXT
+	m_server_status["data_pipeline"] = DATA_PIPELINE_ACITVE_TXT
+
+	// update all status to server_status_map
+	server_status_map := map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
 	fmt.Print("** STATUS **\n")
-	fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
+	json_server_status, _ := json.Marshal(m_server_status)
+	fmt.Println("json_server_status Json:", PrettyString(string(json_server_status)))
+	fmt.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
 	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
 	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
+	fmt.Println("* SERVER Active: ", server_status_map.SERVER_ACTIVE, ", * DATA PIPELINE Active: ", server_status_map.DATA_PIPELINE)
 }

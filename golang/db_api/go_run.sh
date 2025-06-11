@@ -1,2 +1,2 @@
 
-go run ./go_db.go -es_url localhost:9201,localhost:9202,localhost:9203 -kafka_url localhost:9092
+go run ./go_db.go -es_url localhost:9201,localhost:9202,localhost:9203 -kafka_url localhost:9092 --db_url jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2
