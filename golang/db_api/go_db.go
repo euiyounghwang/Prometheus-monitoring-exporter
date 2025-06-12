@@ -177,37 +177,7 @@ var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
 var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
 var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 
-func main() {
-
-	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
-	figure.NewFigure("Service Metrics Exporter", "thick", true).Print()
-	// os.Exit(0)
-
-	// String
-	m := configuration.Get_initialize_args()
-	jsonData, _ := json.Marshal(m)
-	args_map := repository.ARG{}
-	if err := json.Unmarshal(jsonData, &args_map); err != nil {
-		// do error check
-		fmt.Println(err)
-	}
-
-	fmt.Println("globla(map) *es_args: ", m["es_url"])
-	fmt.Println("args_map.ES_URL: ", args_map.ES_URL)
-	fmt.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
-	fmt.Print("\n\n")
-
-	m_server_status := make(map[string]interface{})
-
-	set_service_port("ES", args_map.ES_URL, m_server_status)
-	set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
-	set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
-
-	// Load the .env file in the current directory
-	// godotenv.Load()
-	// or
-	godotenv.Load("../.env")
-
+func Get_service_health(args_map repository.ARG, m_server_status map[string]interface{}) {
 	// fmt.Println("** HTTP GET **")
 	// get_configuration()
 	// fmt.Print("\n\n")
@@ -258,4 +228,56 @@ func main() {
 	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
 	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
 	fmt.Println("* SERVER Active: ", server_status_map.SERVER_ACTIVE, ", * DATA PIPELINE Active: ", server_status_map.DATA_PIPELINE)
+}
+
+func work(args_map repository.ARG, m_server_status map[string]interface{}) {
+	/*
+		for {
+			fmt.Printf("\n\nwork runnning..\n")
+			go Get_service_health(args_map, m_server_status)
+			time.Sleep(5 * time.Second)
+		}
+	*/
+
+	/*
+		difference go Get_service_health(args_map, m_server_status) and Get_service_health(args_map, m_server_status)
+	*/
+	Get_service_health(args_map, m_server_status)
+
+}
+
+func main() {
+
+	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
+	figure.NewFigure("Service Metrics Exporter", "thick", true).Print()
+	// os.Exit(0)
+
+	// Load the .env file in the current directory
+	// godotenv.Load()
+	// or
+	godotenv.Load("../.env")
+
+	// String
+	m := configuration.Get_initialize_args()
+	jsonData, _ := json.Marshal(m)
+	args_map := repository.ARG{}
+	if err := json.Unmarshal(jsonData, &args_map); err != nil {
+		// do error check
+		fmt.Println(err)
+	}
+
+	fmt.Println("globla(map) *es_args: ", m["es_url"])
+	fmt.Println("args_map.ES_URL: ", args_map.ES_URL)
+	fmt.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
+	fmt.Print("\n\n")
+
+	m_server_status := make(map[string]interface{})
+
+	set_service_port("ES", args_map.ES_URL, m_server_status)
+	set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
+	set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
+
+	// main_func
+	work(args_map, m_server_status)
+
 }
