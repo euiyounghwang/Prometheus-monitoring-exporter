@@ -54,8 +54,11 @@ go-search_engine git:(master) ✗ ./go_convey.sh
 2023/12/27 14:07:14 goconvey.go:123:   port: 8080
 ```
 
-Elasticsearch with golang
+Elasticsearch with golang: An online playground to convert JSON to Go Struct.
 - https://opensearch.org/docs/latest/clients/rust/
+
+Transform tools
+- https://transform.tools/json-to-go
 
 
 Go Test

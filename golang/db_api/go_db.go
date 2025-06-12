@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,6 +15,14 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+)
+
+// https://transform.tools/json-to-go
+// repository > model.go
+var (
+	IndexNameEmptyStringError = errors.New("index name cannot be empty string")
+	IndexAlreadyExistsError   = errors.New("elasticsearch index already exists")
+	ESInstanceError           = errors.New("elasticsearch goes down")
 )
 
 // https://medium.com/data-science/use-environment-variable-in-your-next-golang-project-39e17c3aaa66
@@ -281,12 +290,22 @@ func get_port_list_open(host string) (bool, string) {
 	return flag, server_status
 }
 
+/*
+-------
+same worker for Python like the following
+parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
+parser.add_argument('-e', '--es', dest='es', default="http://localhost:9250", help='host target')
+args = parser.parse_args()
+go run ./tools/bulk_index_script.go --es_host=http://localhost:9209 --index_name=test_ominisearch_v1_go
+-------
+*/
 func initialize_args() map[string]interface{} {
 	es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
 	kafka_args := flag.String("kafka_url", "localhost:9092", "string")
 	db_url_args := flag.String("db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
 
 	flag.Parse()
+
 	fmt.Println("es_args:", *es_args)
 	fmt.Println("kafka_args:", *kafka_args)
 	fmt.Println("db_url_args:", *db_url_args)
