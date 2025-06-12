@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/common-nighthawk/go-figure"
 	"github.com/joho/godotenv"
 )
 
@@ -28,6 +29,8 @@ var (
 // https://medium.com/data-science/use-environment-variable-in-your-next-golang-project-39e17c3aaa66
 // There are a few major disadvantages to this approach, but there can be many - Security Issue, Code Management.
 // go get github.com/joho/godotenv
+// ascill art
+// go get github.com/common-nighthawk/go-figure
 
 type Payload struct {
 	db_url string
@@ -85,19 +88,6 @@ type API_Results struct {
 	} `json:"results"`
 }
 
-type ARG struct {
-	ES_URL    string `json:"es_url"`
-	KAFKA_URL string `json:"kafka_url"`
-	DB_URL    string `json:"db_url"`
-}
-
-type SERVER_STATUS struct {
-	ES            string `json:"ES"`
-	KAFKA         string `json:"KAFKA"`
-	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
-	DATA_PIPELINE string `json:"DATA_PIPELINE"`
-}
-
 func time_difference_is_ative(inputTime string) string {
 	time_gap := 0.51
 	// Specific time zone
@@ -128,9 +118,9 @@ func time_difference_is_ative(inputTime string) string {
 	}
 }
 
-func db_api(db_url string, db_type string) {
+func db_api(db_url string, sql string, db_type string) {
 	// """ POST """
-	httpposturl := "http://" + os.Getenv("HOST") + ":8002/db/get_db_query"
+	httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
 	fmt.Println("HTTP JSON POST URL:", httpposturl)
 
 	// u := Payload{
@@ -145,8 +135,9 @@ func db_api(db_url string, db_type string) {
 
 	u := map[string]interface{}{
 		// "db_url": os.Getenv("DB_URL"),
+		// "sql":    os.Getenv("SQL"),
 		"db_url": db_url,
-		"sql":    os.Getenv("SQL"),
+		"sql":    sql,
 	}
 	jsonData, _ := json.Marshal(u)
 	fmt.Println("Payload: ", string(jsonData))
@@ -291,6 +282,25 @@ func get_port_list_open(host string) (bool, string) {
 }
 
 /*
+Result Struct
+*/
+type ARG struct {
+	ES_URL     string `json:"es_url"`
+	KIBANA_URL string `json:"kibana_url"`
+	KAFKA_URL  string `json:"kafka_url"`
+	DB_URL     string `json:"db_url"`
+	SQL        string `json:"sql"`
+}
+
+type SERVER_STATUS struct {
+	ES            string `json:"ES"`
+	KIBANA        string `json:"KIBANA"`
+	KAFKA         string `json:"KAFKA"`
+	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
+	DATA_PIPELINE string `json:"DATA_PIPELINE"`
+}
+
+/*
 -------
 same worker for Python like the following
 parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
@@ -299,21 +309,42 @@ args = parser.parse_args()
 go run ./tools/bulk_index_script.go --es_host=http://localhost:9209 --index_name=test_ominisearch_v1_go
 -------
 */
+var (
+	es_url     string
+	kibana_url string
+	kafka_url  string
+	db_url     string
+	sql        string
+)
+
 func initialize_args() map[string]interface{} {
-	es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
-	kafka_args := flag.String("kafka_url", "localhost:9092", "string")
-	db_url_args := flag.String("db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
+	/*
+		es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
+		kafka_args := flag.String("kafka_url", "localhost:9092", "string")
+		db_url_args := flag.String("db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
+	*/
+
+	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202", "string")
+	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
+	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092", "string")
+	flag.StringVar(&db_url, "db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "db_url")
+	flag.StringVar(&sql, "sql", "SELECT * FROM TB", "sql")
 
 	flag.Parse()
 
-	fmt.Println("es_args:", *es_args)
-	fmt.Println("kafka_args:", *kafka_args)
-	fmt.Println("db_url_args:", *db_url_args)
+	/*
+		fmt.Println("es_url:", es_url)
+		fmt.Println("kafka_url:", kafka_url)
+		fmt.Println("db_url:", db_url)
+		// fmt.Println("db_url_args:", *db_url_args)
+	*/
 
 	m := make(map[string]interface{})
-	m["es_url"] = *es_args
-	m["kafka_url"] = *kafka_args
-	m["db_url"] = *db_url_args
+	m["es_url"] = es_url
+	m["kibana_url"] = kibana_url
+	m["kafka_url"] = kafka_url
+	m["db_url"] = db_url
+	m["sql"] = sql
 
 	// m := make(map[string]interface{})
 	// m["key1"] = make(map[string]interface{})
@@ -334,6 +365,18 @@ func map_to_json(m map[string]interface{}) *SERVER_STATUS {
 
 }
 
+func set_service_port(service_name string, url string, m map[string]interface{}) {
+	fmt.Printf("** %s PORT OPEN ** ", service_name)
+	// is_port_open := get_port_open(args_map.ES_URL)
+	is_port_open, server_status := get_port_list_open(url)
+	fmt.Println("** is_port_open: ** ", is_port_open)
+	fmt.Println("** server_status ** : ", server_status)
+	m[service_name] = server_status
+	// update server_active to global variable
+	active_update_func(server_status)
+	fmt.Print("\n\n")
+}
+
 var SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
 var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
 var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
@@ -342,6 +385,8 @@ var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 func main() {
 
 	// go run ./go_db.go -es_url localhost:9201 -kafka_url localhost:9102
+	figure.NewFigure("Service Metrics Exporter", "thick", true).Print()
+	// os.Exit(0)
 
 	// String
 	m := initialize_args()
@@ -359,35 +404,9 @@ func main() {
 
 	m_server_status := make(map[string]interface{})
 
-	fmt.Println("** ES PORT OPEN ** ")
-	// is_port_open := get_port_open(args_map.ES_URL)
-	is_port_open, server_status := get_port_list_open(args_map.ES_URL)
-	fmt.Println("** is_port_open: ** ", is_port_open)
-	fmt.Println("** server_status ** : ", server_status)
-	m_server_status["ES"] = server_status
-	// update server_active to global variable
-	active_update_func(server_status)
-
-	fmt.Print("\n\n")
-
-	fmt.Println("** KAFKA PORT OPEN ** ")
-	// is_port_open := get_port_open(args_map.ES_URL)
-	is_port_open, server_status = get_port_list_open(args_map.KAFKA_URL)
-	fmt.Println("** is_port_open: ** ", is_port_open)
-	fmt.Println("** server_status ** : ", server_status)
-	m_server_status["KAFKA"] = server_status
-	// update server_active to global variable
-	active_update_func(server_status)
-
-	// json_server_data, _ := json.Marshal(m_server_status)
-	// server_status_map := SERVER_STATUS{}
-	// if err := json.Unmarshal(json_server_data, &server_status_map); err != nil {
-	// 	// do error check
-	// 	fmt.Println(err)
-	// }
-	// server_status_map := map_to_json(m_server_status)
-
-	fmt.Print("\n\n")
+	set_service_port("ES", args_map.ES_URL, m_server_status)
+	set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
+	set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
 
 	// Load the .env file in the current directory
 	// godotenv.Load()
@@ -413,7 +432,7 @@ func main() {
 		} else {
 			db_type = "OMx"
 		}
-		db_api(rows, db_type)
+		db_api(rows, args_map.SQL, db_type)
 	}
 
 	// verify the Server Active
@@ -433,13 +452,13 @@ func main() {
 	m_server_status["SERVER_ACTIVE"] = SERVER_ACITVE_TXT
 	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
 
-	// update all status to server_status_map
+	// update all status to server_status_mm_server_statusap
 	server_status_map := map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
 	fmt.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
-	fmt.Println("json_server_status Json:", PrettyString(string(json_server_status)))
+	fmt.Println("SERVER_STATUS Json:", PrettyString(string(json_server_status)))
 	fmt.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
 	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
 	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
