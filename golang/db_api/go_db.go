@@ -4,16 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
-	"time"
 
+	"db.com/m/configuration"
+	"db.com/m/repository"
+	"db.com/m/utils"
 	"github.com/common-nighthawk/go-figure"
 	"github.com/joho/godotenv"
 )
@@ -32,27 +32,6 @@ var (
 // ascill art
 // go get github.com/common-nighthawk/go-figure
 
-type Payload struct {
-	db_url string
-	sql    string
-}
-
-func PrettyString(str string) string {
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, []byte(str), "", "    "); err != nil {
-		return ""
-	}
-	return prettyJSON.String()
-}
-
-func Json_Parsing(body string) map[string]interface{} {
-	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
-	resBytes := []byte(body)
-	_ = json.Unmarshal(resBytes, &jsonRes) // Unmarshalling
-
-	return jsonRes
-}
-
 func get_configuration() {
 	// requestURL := fmt.Sprintf("http://localhost:%d", serverPort)
 	requestURL := os.Getenv("CONFIGURATION")
@@ -66,56 +45,13 @@ func get_configuration() {
 
 	fmt.Printf("client: got response!\n")
 	body, _ := ioutil.ReadAll(res.Body)
-	fmt.Println("response Body:", PrettyString(string(body)))
+	fmt.Println("response Body:", utils.PrettyString(string(body)))
 	fmt.Printf("client: status code: %d\n", res.StatusCode)
 
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
-	jsonRes = Json_Parsing(string(body))
+	jsonRes = utils.Json_Parsing(string(body))
 
 	fmt.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
-}
-
-// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
-type API_Results struct {
-	Running_time float32 `json:"running_time"`
-	Request_dbid string  `json:"request_dbid"`
-	Results      []struct {
-		PROCESSNAME string `json:"processname"`
-		STATUS      string `json:"status"`
-		ADDTS       string `json:"addts"`
-		COUNT       int    `json:"count"`
-		DBID        string `json:"dbid"`
-	} `json:"results"`
-}
-
-func time_difference_is_ative(inputTime string) string {
-	time_gap := 0.51
-	// Specific time zone
-	nyLocation, _ := time.LoadLocation("America/New_York")
-	currentTime := time.Now().In(nyLocation)
-	// currentTime.Format("2006-01-02 15:04:05")
-	fmt.Println("time_difference func - currentTime : ", currentTime)
-
-	// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
-	// s := "2022-03-23T07:00:00+01:00"
-	loc, _ := time.LoadLocation("America/New_York")
-	date, error := time.ParseInLocation(time.DateTime, inputTime, loc)
-	if error != nil {
-		fmt.Println(error)
-		return "Red"
-	}
-
-	fmt.Println("time_difference func - inputTime", date)
-
-	diff := currentTime.Sub(date)
-	fmt.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
-	fmt.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
-
-	if time_gap > diff.Hours() {
-		return "Green"
-	} else {
-		return "Red"
-	}
 }
 
 func db_api(db_url string, sql string, db_type string) {
@@ -157,17 +93,17 @@ func db_api(db_url string, sql string, db_type string) {
 	fmt.Println("response Status:", response.Status)
 	fmt.Println("response Headers:", response.Header)
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println("response Body:", PrettyString(string(body)))
+	fmt.Println("response Body:", utils.PrettyString(string(body)))
 
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
-	jsonRes = Json_Parsing(string(body))
+	jsonRes = utils.Json_Parsing(string(body))
 
 	// fmt.Printf("Body type : %s", reflect.TypeOf(body))
 	fmt.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
 
 	// using struct to parse the Json Format
 	// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
-	response_map := API_Results{}
+	response_map := repository.API_Results{}
 	if err := json.Unmarshal(body, &response_map); err != nil {
 		// do error check
 		fmt.Println(err)
@@ -188,7 +124,7 @@ func db_api(db_url string, sql string, db_type string) {
 			fmt.Println("Body Json records : ", rows.PROCESSNAME)
 
 			if db_type == "WMx" {
-				DATA_PIPELINE_ACITVE_WMX = time_difference_is_ative(rows.ADDTS)
+				DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
 				if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
 					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 				} else {
@@ -196,7 +132,7 @@ func db_api(db_url string, sql string, db_type string) {
 				}
 
 			} else {
-				DATA_PIPELINE_ACITVE_OMX = time_difference_is_ative(rows.ADDTS)
+				DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
 				if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
 					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 				} else {
@@ -224,151 +160,10 @@ func active_update_func(status string) {
 	// fmt.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
 }
 
-func get_port_open(host string) bool {
-	// Connect to the server
-	conn, err := net.Dial("tcp", host)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return false
-	}
-	defer conn.Close()
-
-	return true
-}
-
-func get_port_list_open(host string) (bool, string) {
-	result := strings.Split(strings.Trim(host, " "), ",")
-	fmt.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
-
-	flag := true
-	flag_value := 0
-	server_status := "red"
-
-	for i, rows := range result {
-		rows = strings.Trim(rows, " ")
-		fmt.Println("get_port_list_opensequence : ", i+1)
-		// rows = strings.Replace(rows, " ", ",", -1)
-		fmt.Println("get_port_list_open records : ", rows)
-
-		// Connect to the server
-		conn, err := net.Dial("tcp", rows)
-		if err != nil {
-			fmt.Println("Error:", err)
-			flag = flag && false
-			flag_value = flag_value + 0
-			// fmt.Println("flag : ", flag)
-			continue
-		}
-		defer conn.Close()
-		flag = flag && true
-		flag_value = flag_value + 1
-		// fmt.Println("flag : ", flag)
-	}
-
-	if len(result) == flag_value {
-		server_status = "Green"
-	} else if flag_value < 1 {
-		server_status = "Red"
-	} else {
-		server_status = "Yellow"
-	}
-
-	fmt.Println("** flag ** : ", flag)
-	fmt.Println("** len(result) ** : ", len(result))
-	fmt.Println("** flag_value ** : ", flag_value)
-	// fmt.Println("** server_status ** : ", server_status)
-
-	return flag, server_status
-}
-
-/*
-Result Struct
-*/
-type ARG struct {
-	ES_URL     string `json:"es_url"`
-	KIBANA_URL string `json:"kibana_url"`
-	KAFKA_URL  string `json:"kafka_url"`
-	DB_URL     string `json:"db_url"`
-	SQL        string `json:"sql"`
-}
-
-type SERVER_STATUS struct {
-	ES            string `json:"ES"`
-	KIBANA        string `json:"KIBANA"`
-	KAFKA         string `json:"KAFKA"`
-	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
-	DATA_PIPELINE string `json:"DATA_PIPELINE"`
-}
-
-/*
--------
-same worker for Python like the following
-parser = argparse.ArgumentParser(description="Index into Elasticsearch using this script")
-parser.add_argument('-e', '--es', dest='es', default="http://localhost:9250", help='host target')
-args = parser.parse_args()
-go run ./tools/bulk_index_script.go --es_host=http://localhost:9209 --index_name=test_ominisearch_v1_go
--------
-*/
-var (
-	es_url     string
-	kibana_url string
-	kafka_url  string
-	db_url     string
-	sql        string
-)
-
-func initialize_args() map[string]interface{} {
-	/*
-		es_args := flag.String("es_url", "localhost:9201, localhost:9202", "string")
-		kafka_args := flag.String("kafka_url", "localhost:9092", "string")
-		db_url_args := flag.String("db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
-	*/
-
-	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202", "string")
-	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
-	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092", "string")
-	flag.StringVar(&db_url, "db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "db_url")
-	flag.StringVar(&sql, "sql", "SELECT * FROM TB", "sql")
-
-	flag.Parse()
-
-	/*
-		fmt.Println("es_url:", es_url)
-		fmt.Println("kafka_url:", kafka_url)
-		fmt.Println("db_url:", db_url)
-		// fmt.Println("db_url_args:", *db_url_args)
-	*/
-
-	m := make(map[string]interface{})
-	m["es_url"] = es_url
-	m["kibana_url"] = kibana_url
-	m["kafka_url"] = kafka_url
-	m["db_url"] = db_url
-	m["sql"] = sql
-
-	// m := make(map[string]interface{})
-	// m["key1"] = make(map[string]interface{})
-	// m["key1"].(map[string]interface{})["key2"] = "value"
-
-	return m
-}
-
-func map_to_json(m map[string]interface{}) *SERVER_STATUS {
-	json_server_data, _ := json.Marshal(m)
-	server_status_map := SERVER_STATUS{}
-	if err := json.Unmarshal(json_server_data, &server_status_map); err != nil {
-		// do error check
-		fmt.Println(err)
-	}
-
-	return &server_status_map
-
-}
-
 func set_service_port(service_name string, url string, m map[string]interface{}) {
 	fmt.Printf("** %s PORT OPEN ** ", service_name)
-	// is_port_open := get_port_open(args_map.ES_URL)
-	is_port_open, server_status := get_port_list_open(url)
+	// is_port_open := utils.Get_port_open(args_map.ES_URL)
+	is_port_open, server_status := utils.Get_port_list_open(url)
 	fmt.Println("** is_port_open: ** ", is_port_open)
 	fmt.Println("** server_status ** : ", server_status)
 	m[service_name] = server_status
@@ -389,9 +184,9 @@ func main() {
 	// os.Exit(0)
 
 	// String
-	m := initialize_args()
+	m := configuration.Get_initialize_args()
 	jsonData, _ := json.Marshal(m)
-	args_map := ARG{}
+	args_map := repository.ARG{}
 	if err := json.Unmarshal(jsonData, &args_map); err != nil {
 		// do error check
 		fmt.Println(err)
@@ -399,7 +194,7 @@ func main() {
 
 	fmt.Println("globla(map) *es_args: ", m["es_url"])
 	fmt.Println("args_map.ES_URL: ", args_map.ES_URL)
-	fmt.Println("Arguments Json:", PrettyString(string(jsonData)))
+	fmt.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
 	fmt.Print("\n\n")
 
 	m_server_status := make(map[string]interface{})
@@ -453,12 +248,12 @@ func main() {
 	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
 
 	// update all status to server_status_mm_server_statusap
-	server_status_map := map_to_json(m_server_status)
+	server_status_map := utils.Map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
 	fmt.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
-	fmt.Println("SERVER_STATUS Json:", PrettyString(string(json_server_status)))
+	fmt.Println("SERVER_STATUS Json:", utils.PrettyString(string(json_server_status)))
 	fmt.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
 	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
 	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
