@@ -54,10 +54,11 @@ go-search_engine git:(master) ✗ ./go_convey.sh
 2023/12/27 14:07:14 goconvey.go:123:   port: 8080
 ```
 
-Elasticsearch with golang: An online playground to convert JSON to Go Struct.
+Elasticsearch with golang
 - https://opensearch.org/docs/latest/clients/rust/
 
-Transform tools
+Transform tools: An online playground to convert JSON to Go Struct.
+- In Go, a struct is a user-defined type that groups together fields of different types into a single unit. Structs are similar to classes in other languages, but they do not support inheritance
 - https://transform.tools/json-to-go
 
 
