@@ -16,3 +16,4 @@ golang/.env
 golang/db_api/output/
 golang/db_api/go_run_dev.sh
 golang/db_api/go_run_qa.sh
+golang/db_api/logger/

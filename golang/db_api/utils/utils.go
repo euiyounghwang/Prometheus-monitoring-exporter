@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"reflect"
 	"strings"
 	"time"
 
+	"db.com/m/logging"
 	"db.com/m/repository"
 )
 
@@ -33,7 +35,7 @@ func Map_to_json(m map[string]interface{}) repository.SERVER_STATUS {
 	server_status_map := repository.SERVER_STATUS{}
 	if err := json.Unmarshal(json_server_data, &server_status_map); err != nil {
 		// do error check
-		fmt.Println(err)
+		log.Println(err)
 	}
 
 	return server_status_map
@@ -46,22 +48,22 @@ func Get_time_difference_is_ative(inputTime string) string {
 	nyLocation, _ := time.LoadLocation("America/New_York")
 	currentTime := time.Now().In(nyLocation)
 	// currentTime.Format("2006-01-02 15:04:05")
-	fmt.Println("time_difference func - currentTime : ", currentTime)
+	log.Println("time_difference func - currentTime : ", currentTime)
 
 	// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
 	// s := "2022-03-23T07:00:00+01:00"
 	loc, _ := time.LoadLocation("America/New_York")
 	date, error := time.ParseInLocation(time.DateTime, inputTime, loc)
 	if error != nil {
-		fmt.Println(error)
+		log.Println(error)
 		return "Red"
 	}
 
-	fmt.Println("time_difference func - inputTime", date)
+	log.Println("time_difference func - inputTime", date)
 
 	diff := currentTime.Sub(date)
-	fmt.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
-	fmt.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
+	log.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
+	log.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
 
 	if time_gap > diff.Hours() {
 		return "Green"
@@ -74,7 +76,7 @@ func Get_port_open(host string) bool {
 	// Connect to the server
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
-		fmt.Println("Error:", err)
+		log.Println("Error:", err)
 		return false
 	}
 	defer conn.Close()
@@ -84,7 +86,7 @@ func Get_port_open(host string) bool {
 
 func Get_port_list_open(host string) (bool, string) {
 	result := strings.Split(strings.Trim(host, " "), ",")
-	fmt.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
+	log.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
 
 	flag := true
 	flag_value := 0
@@ -92,23 +94,23 @@ func Get_port_list_open(host string) (bool, string) {
 
 	for i, rows := range result {
 		rows = strings.Trim(rows, " ")
-		fmt.Println("get_port_list_opensequence : ", i+1)
+		log.Println("get_port_list_opensequence : ", i+1)
 		// rows = strings.Replace(rows, " ", ",", -1)
-		fmt.Println("get_port_list_open records : ", rows)
+		log.Println("get_port_list_open records : ", rows)
 
 		// Connect to the server
 		conn, err := net.Dial("tcp", rows)
 		if err != nil {
-			fmt.Println("Error:", err)
+			logging.Info(fmt.Sprintf("Error: %s", err))
 			flag = flag && false
 			flag_value = flag_value + 0
-			// fmt.Println("flag : ", flag)
+			// log.Println("flag : ", flag)
 			continue
 		}
 		defer conn.Close()
 		flag = flag && true
 		flag_value = flag_value + 1
-		// fmt.Println("flag : ", flag)
+		// log.Println("flag : ", flag)
 	}
 
 	if len(result) == flag_value {
@@ -119,10 +121,10 @@ func Get_port_list_open(host string) (bool, string) {
 		server_status = "Yellow"
 	}
 
-	fmt.Println("** flag ** : ", flag)
-	fmt.Println("** len(result) ** : ", len(result))
-	fmt.Println("** flag_value ** : ", flag_value)
-	// fmt.Println("** server_status ** : ", server_status)
+	log.Println("** flag ** : ", flag)
+	log.Println("** len(result) ** : ", len(result))
+	log.Println("** flag_value ** : ", flag_value)
+	// log.Println("** server_status ** : ", server_status)
 
 	return flag, server_status
 }

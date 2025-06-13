@@ -6,12 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"db.com/m/configuration"
+	"db.com/m/logging"
 	"db.com/m/repository"
 	"db.com/m/utils"
 	"github.com/common-nighthawk/go-figure"
@@ -33,31 +36,31 @@ var (
 // go get github.com/common-nighthawk/go-figure
 
 func get_configuration() {
-	// requestURL := fmt.Sprintf("http://localhost:%d", serverPort)
+	// requestURL := log.Sprintf("http://localhost:%d", serverPort)
 	requestURL := os.Getenv("CONFIGURATION")
 	res, err := http.Get(requestURL)
 	if err != nil {
-		fmt.Printf("error making http request: %s\n", err)
+		log.Printf("error making http request: %s\n", err)
 		os.Exit(1)
 	}
 
 	defer res.Body.Close()
 
-	fmt.Printf("client: got response!\n")
+	log.Printf("client: got response!\n")
 	body, _ := ioutil.ReadAll(res.Body)
-	fmt.Println("response Body:", utils.PrettyString(string(body)))
-	fmt.Printf("client: status code: %d\n", res.StatusCode)
+	log.Println("response Body:", utils.PrettyString(string(body)))
+	log.Printf("client: status code: %d\n", res.StatusCode)
 
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
 	jsonRes = utils.Json_Parsing(string(body))
 
-	fmt.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
+	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
 }
 
 func db_api(db_url string, sql string, db_type string) {
 	// """ POST """
 	httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
-	fmt.Println("HTTP JSON POST URL:", httpposturl)
+	log.Println("HTTP JSON POST URL:", httpposturl)
 
 	// u := Payload{
 	// 	db_url: os.Getenv("DB_URL"),
@@ -76,7 +79,7 @@ func db_api(db_url string, sql string, db_type string) {
 		"sql":    sql,
 	}
 	jsonData, _ := json.Marshal(u)
-	fmt.Println("Payload: ", string(jsonData))
+	log.Println("Payload: ", string(jsonData))
 	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
 	if error != nil {
 		panic(error)
@@ -90,27 +93,27 @@ func db_api(db_url string, sql string, db_type string) {
 	}
 	defer response.Body.Close()
 
-	fmt.Println("response Status:", response.Status)
-	fmt.Println("response Headers:", response.Header)
+	log.Println("response Status:", response.Status)
+	log.Println("response Headers:", response.Header)
 	body, _ := ioutil.ReadAll(response.Body)
-	fmt.Println("response Body:", utils.PrettyString(string(body)))
+	log.Println("response Body:", utils.PrettyString(string(body)))
 
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
 	jsonRes = utils.Json_Parsing(string(body))
 
-	// fmt.Printf("Body type : %s", reflect.TypeOf(body))
-	fmt.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
+	// log.Printf("Body type : %s", reflect.TypeOf(body))
+	log.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
 
 	// using struct to parse the Json Format
 	// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
 	response_map := repository.API_Results{}
 	if err := json.Unmarshal(body, &response_map); err != nil {
 		// do error check
-		fmt.Println(err)
+		log.Println(err)
 	}
-	fmt.Printf("Body Json : %s\n", response_map.Request_dbid)
-	fmt.Printf("len(response_map.Results) : %d", len(response_map.Results))
-	fmt.Print("\n")
+	log.Printf("Body Json : %s\n", response_map.Request_dbid)
+	log.Printf("len(response_map.Results) : %d", len(response_map.Results))
+	log.Print("\n")
 
 	// return when the number of records is zero
 	if len(response_map.Results) < 1 {
@@ -120,8 +123,8 @@ func db_api(db_url string, sql string, db_type string) {
 
 	for i, rows := range response_map.Results {
 		if i == 0 {
-			fmt.Println("Body Json sequence : ", i+1)
-			fmt.Println("Body Json records : ", rows.PROCESSNAME)
+			log.Println("Body Json sequence : ", i+1)
+			log.Println("Body Json records : ", rows.PROCESSNAME)
 
 			if db_type == "WMx" {
 				DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
@@ -140,7 +143,7 @@ func db_api(db_url string, sql string, db_type string) {
 				}
 
 			}
-			// fmt.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
+			// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 		}
 	}
 }
@@ -157,15 +160,15 @@ func active_update_func(status string) {
 		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 		SERVER_ACTIVE_CNT += 0
 	}
-	// fmt.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
+	// log.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
 }
 
 func set_service_port(service_name string, url string, m map[string]interface{}) {
-	fmt.Printf("** %s PORT OPEN ** ", service_name)
+	log.Printf("** %s PORT OPEN ** ", service_name)
 	// is_port_open := utils.Get_port_open(args_map.ES_URL)
 	is_port_open, server_status := utils.Get_port_list_open(url)
-	fmt.Println("** is_port_open: ** ", is_port_open)
-	fmt.Println("** server_status ** : ", server_status)
+	log.Println("** is_port_open: ** ", is_port_open)
+	log.Println("** server_status ** : ", server_status)
 	m[service_name] = server_status
 	// update server_active to global variable
 	active_update_func(server_status)
@@ -177,20 +180,20 @@ var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
 var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
 var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 
-func Get_service_health(args_map repository.ARG, m_server_status map[string]interface{}) {
-	// fmt.Println("** HTTP GET **")
+func get_service_health(args_map repository.ARG, m_server_status map[string]interface{}) {
+	// log.Println("** HTTP GET **")
 	// get_configuration()
-	// fmt.Print("\n\n")
+	// log.Print("\n\n")
 
-	fmt.Println("** HTTP POST ** ")
-	fmt.Println("args_map.DB_URL : ", args_map.DB_URL)
+	log.Println("** HTTP POST ** ")
+	log.Println("args_map.DB_URL : ", args_map.DB_URL)
 	result := strings.Split(strings.Trim(args_map.DB_URL, " "), ",")
-	fmt.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
+	log.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
 	db_type := ""
 	// data_pipeline_flag := true
 	for i, rows := range result {
-		fmt.Println("db_api call : ", i+1)
-		fmt.Println("db_api call rows: ", rows)
+		log.Println("db_api call : ", i+1)
+		log.Println("db_api call rows: ", rows)
 
 		if i == 0 {
 			db_type = "WMx"
@@ -221,19 +224,41 @@ func Get_service_health(args_map repository.ARG, m_server_status map[string]inte
 	server_status_map := utils.Map_to_json(m_server_status)
 
 	fmt.Print("\n\n")
-	fmt.Print("** STATUS **\n")
+	log.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
-	fmt.Println("SERVER_STATUS Json:", utils.PrettyString(string(json_server_status)))
-	fmt.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
-	fmt.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
-	fmt.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
-	fmt.Println("* SERVER Active: ", server_status_map.SERVER_ACTIVE, ", * DATA PIPELINE Active: ", server_status_map.DATA_PIPELINE)
+	log.Println("SERVER_STATUS Json:", utils.PrettyString(string(json_server_status)))
+	log.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
+	log.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
+	log.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
+	logging.Info(fmt.Sprintf("* SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	fmt.Print("\n\n")
 }
 
-func work(args_map repository.ARG, m_server_status map[string]interface{}) {
+func set_args() {
+	// String
+	m := configuration.Get_initialize_args()
+	jsonData, _ := json.Marshal(m)
+	// args_map := repository.ARG{}
+	if err := json.Unmarshal(jsonData, &args_map); err != nil {
+		// do error check
+		log.Println(err)
+	}
+
+	log.Println("globla(map) *es_args: ", m["es_url"])
+	log.Println("args_map.ES_URL: ", args_map.ES_URL)
+	log.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
+	fmt.Print("\n\n")
+}
+
+var (
+	args_map        = repository.ARG{}
+	m_server_status = make(map[string]interface{})
+)
+
+func work() {
 	/*
 		for {
-			fmt.Printf("\n\nwork runnning..\n")
+			log.Printf("\n\nwork runnning..\n")
 			go Get_service_health(args_map, m_server_status)
 			time.Sleep(5 * time.Second)
 		}
@@ -241,8 +266,26 @@ func work(args_map repository.ARG, m_server_status map[string]interface{}) {
 
 	/*
 		difference go Get_service_health(args_map, m_server_status) and Get_service_health(args_map, m_server_status)
+		go fn() runs fn in the background.
+		go starts a goroutine, which is managed by golang run-time. It can either run on the current OS thread, or it can run on a
+		When you use the Go keyword before a func ure making that func run into a goRoutine, is like a Java Thread, and is the go way for concurrency,
 	*/
-	Get_service_health(args_map, m_server_status)
+
+	/*
+		for {
+			go Get_service_health(args_map, m_server_status)
+			time.Sleep(5 * time.Second)
+		}
+	*/
+	go set_args()
+
+	go set_service_port("ES", args_map.ES_URL, m_server_status)
+	go set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
+	go set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
+
+	go get_service_health(args_map, m_server_status)
+
+	time.Sleep(5 * time.Second)
 
 }
 
@@ -257,27 +300,7 @@ func main() {
 	// or
 	godotenv.Load("../.env")
 
-	// String
-	m := configuration.Get_initialize_args()
-	jsonData, _ := json.Marshal(m)
-	args_map := repository.ARG{}
-	if err := json.Unmarshal(jsonData, &args_map); err != nil {
-		// do error check
-		fmt.Println(err)
-	}
-
-	fmt.Println("globla(map) *es_args: ", m["es_url"])
-	fmt.Println("args_map.ES_URL: ", args_map.ES_URL)
-	fmt.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
-	fmt.Print("\n\n")
-
-	m_server_status := make(map[string]interface{})
-
-	set_service_port("ES", args_map.ES_URL, m_server_status)
-	set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
-	set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
-
 	// main_func
-	work(args_map, m_server_status)
+	work()
 
 }
