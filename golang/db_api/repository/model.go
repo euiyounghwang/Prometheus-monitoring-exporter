@@ -17,6 +17,7 @@ type API_Results struct {
 Result Struct
 */
 type ARG struct {
+	API_HOST   string `json:"api_host"`
 	ES_URL     string `json:"es_url"`
 	KIBANA_URL string `json:"kibana_url"`
 	KAFKA_URL  string `json:"kafka_url"`
@@ -25,6 +26,14 @@ type ARG struct {
 }
 
 type SERVER_STATUS struct {
+	ES            string `json:"ES"`
+	KIBANA        string `json:"KIBANA"`
+	KAFKA         string `json:"KAFKA"`
+	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
+	DATA_PIPELINE string `json:"DATA_PIPELINE"`
+}
+
+type SERVER_ALERT struct {
 	ES            string `json:"ES"`
 	KIBANA        string `json:"KIBANA"`
 	KAFKA         string `json:"KAFKA"`

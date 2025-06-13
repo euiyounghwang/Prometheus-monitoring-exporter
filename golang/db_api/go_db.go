@@ -18,7 +18,6 @@ import (
 	"db.com/m/repository"
 	"db.com/m/utils"
 	"github.com/common-nighthawk/go-figure"
-	"github.com/joho/godotenv"
 )
 
 // https://transform.tools/json-to-go
@@ -59,7 +58,8 @@ func get_configuration() {
 
 func db_api(db_url string, sql string, db_type string) {
 	// """ POST """
-	httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
+	// httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
+	httpposturl := "http://" + args_map.API_HOST + ":8002/db/get_db_query"
 	log.Println("HTTP JSON POST URL:", httpposturl)
 
 	// u := Payload{
@@ -89,7 +89,9 @@ func db_api(db_url string, sql string, db_type string) {
 	client := &http.Client{}
 	response, error := client.Do(request)
 	if error != nil {
-		panic(error)
+		// panic(error)
+		logging.Info(fmt.Sprintf("Error : %s", error))
+		return
 	}
 	defer response.Body.Close()
 
@@ -175,12 +177,12 @@ func set_service_port(service_name string, url string, m map[string]interface{})
 	fmt.Print("\n\n")
 }
 
-var SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
-var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
-var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
-var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
+// var SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
+// var SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
+// var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
+// var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 
-func get_service_health(args_map repository.ARG, m_server_status map[string]interface{}) {
+func get_service_data_pipeline_health(args_map repository.ARG, m_server_status map[string]interface{}) {
 	// log.Println("** HTTP GET **")
 	// get_configuration()
 	// log.Print("\n\n")
@@ -226,15 +228,15 @@ func get_service_health(args_map repository.ARG, m_server_status map[string]inte
 	fmt.Print("\n\n")
 	log.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
-	log.Println("SERVER_STATUS Json:", utils.PrettyString(string(json_server_status)))
-	log.Printf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX)
-	log.Println("SERVER STATUS.ES_URL: ", server_status_map.ES)
-	log.Println("SERVER STATUS.KAFKA_URL: ", server_status_map.KAFKA)
+	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
+	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
+	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
+	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
 	logging.Info(fmt.Sprintf("* SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
 	fmt.Print("\n\n")
 }
 
-func set_args() {
+func set_init() {
 	// String
 	m := configuration.Get_initialize_args()
 	jsonData, _ := json.Marshal(m)
@@ -250,10 +252,27 @@ func set_args() {
 	fmt.Print("\n\n")
 }
 
+/* global variable */
 var (
 	args_map        = repository.ARG{}
 	m_server_status = make(map[string]interface{})
+
+	SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT         = 0, 0
+	SERVER_ACITVE, DATA_PIPELINE_ACITVE                = true, true
+	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT        = "Red", "Red"
+	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
+
+	TIME_INTERVAL = 30
 )
+
+func alert_work() {
+	log.Print("\n\n")
+
+	server_status_map := utils.Map_to_json(m_server_status)
+	log.Println("alert work thread..")
+	logging.Info(fmt.Sprintf("* [Alert_Work] SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	log.Print("\n\n")
+}
 
 func work() {
 	/*
@@ -277,15 +296,25 @@ func work() {
 			time.Sleep(5 * time.Second)
 		}
 	*/
-	go set_args()
 
-	go set_service_port("ES", args_map.ES_URL, m_server_status)
-	go set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
-	go set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
+	/* set arguments */
+	set_init()
 
-	go get_service_health(args_map, m_server_status)
+	for {
 
-	time.Sleep(5 * time.Second)
+		// Verify if the service port is open
+		go set_service_port("ES", args_map.ES_URL, m_server_status)
+		go set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
+		go set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
+
+		// Verify if the data pipeline is online
+		go get_service_data_pipeline_health(args_map, m_server_status)
+
+		// alert_work
+		go alert_work()
+
+		time.Sleep(time.Duration(TIME_INTERVAL) * time.Second)
+	}
 
 }
 
@@ -298,7 +327,7 @@ func main() {
 	// Load the .env file in the current directory
 	// godotenv.Load()
 	// or
-	godotenv.Load("../.env")
+	// godotenv.Load("../.env")
 
 	// main_func
 	work()
