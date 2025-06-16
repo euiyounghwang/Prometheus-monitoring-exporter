@@ -185,7 +185,7 @@ class oracle_database:
         ''' DB Connect '''
         print('connect-str : ', self.db_url)
         
-        StartTime = datetime.datetime.now()
+        StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
         # -- Init JVM
         self.set_init_JVM()
@@ -194,7 +194,7 @@ class oracle_database:
         # - DB Connection
         self.db_conn = jaydebeapi.connect("oracle.jdbc.driver.OracleDriver", self.db_url)
         # --
-        EndTime = datetime.datetime.now()
+        EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
         Delay_Time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
         print("# DB Connection Running Time - {}".format(str(Delay_Time)))
 
@@ -2473,7 +2473,8 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
 
     while True:
         try:
-            StartTime = datetime.datetime.now()
+            
+            StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             ''' initialize'''
             saved_failure_db_kafka_dict.clear()
@@ -2515,7 +2516,7 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
                 result_json_value = database_object.excute_oracle_query(sql)
 
             ''' DB processing time '''
-            EndTime = datetime.datetime.now()
+            EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             Delay_Time_OMx = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
             logging.info("# [db_jobs_kafka_offset_tb] HTTP Rest DB Query Running Time - {}".format(str(Delay_Time_OMx)))
@@ -2576,7 +2577,7 @@ def get_time_difference(audit_process_name_time):
         ''' get time difference'''
         # lock.acquire()
         # now_time = datetime.datetime.now()
-        now_time = datetime.datetime.now(tz=pytz.timezone('US/Eastern')).strftime('%Y-%m-%d %H:%M:%S')
+        now_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
                 
         print(f"audit_process_name_time - {audit_process_name_time}, : {type(audit_process_name_time)}, now_time - {now_time} : {type(now_time)}")
         """
@@ -2585,7 +2586,7 @@ def get_time_difference(audit_process_name_time):
         time_hours = date_diff.seconds / 3600
         """
         # current_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
-        current_time = datetime.datetime.now(tz=pytz.timezone('US/Eastern')).strftime('%Y-%m-%d %H:%M:%S')
+        current_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
         print(f"current_time : {current_time}")
         dt_a = datetime.datetime.strptime(str(current_time), '%Y-%m-%d %H:%M:%S')
         dt_b = audit_process_name_time
@@ -2649,7 +2650,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
             # lock.acquire()
 
-            StartTime = datetime.datetime.now()
+            StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
             
             ''' clear saved_failure_db_dict '''
             Initialize_active_multiple_db_clear(multipe_db)
@@ -2707,7 +2708,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                 result_json_value = database_object.excute_oracle_query(sql)
 
             ''' DB processing time '''
-            EndTime = datetime.datetime.now()
+            EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             # logging.info(f"saved_failure_db_dict in 200 response - {saved_failure_db_dict}, saved_status_dict - {saved_status_dict}")
             logging.info(f"WMx_threads_db_active - {WMx_threads_db_active}, OMx_threads_db_active - {OMx_threads_db_active}")
@@ -2890,7 +2891,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
     while True:
         try:
 
-            StartTime = datetime.datetime.now()
+            StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
             db_transactin_time_Backlog_WMx, db_transactin_time_Backlog_OMx = 0.0, 0.0
 
             if db_http_host:
@@ -2928,7 +2929,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                 result_json_value = database_object.excute_oracle_query(sql)
 
             ''' DB processing time '''
-            EndTime = datetime.datetime.now()
+            EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             logging.info(f"# db_transactin_time_WMx_backlog : {db_transactin_time_Backlog_WMx}, db_transactin_time_OMx_backlog : {db_transactin_time_Backlog_OMx}")
 
@@ -3148,45 +3149,45 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
         logging.info(f"es_http_host : {es_http_host}")
         logging.info(f"db_http_host : {db_http_host}")
 
-        StartedTime = datetime.datetime.now()
+        StartedTime = datetime.datetime.now(tz=gloabal_default_timezone)
         while True:
-            StartTime = datetime.datetime.now()
+            StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             ''' **** Validate the time it take to run each function'''
 
             ''' get global configuration'''
-            start_time_fun = datetime.datetime.now()
+            start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
             
             ''' call fun'''
             get_global_configuration(es_http_host)
             
-            end_time_func = datetime.datetime.now()
+            end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' get db configuration'''
-            start_time_fun = datetime.datetime.now()
+            start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
             
             ''' call fun'''
             get_mail_configuration(es_http_host)
             
-            end_time_func = datetime.datetime.now()
+            end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
-            start_time_fun = datetime.datetime.now()
+            start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
 
             ''' call fun'''
             get_metrics_all_envs(monitoring_metrics)
 
-            end_time_func = datetime.datetime.now()
+            end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
             ''' **** '''
             
             ''' export application processing time '''
-            EndTime = datetime.datetime.now()
+            EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
             Delay_Time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
 
             logging.info("# StartedTime Application - {}".format(str(StartedTime)))
@@ -3232,7 +3233,7 @@ def get_alert_resend(updated=True):
     if alert_time_difference >= ALERT_RESENT_TIME:
         ALERT_RESENT = True
         if updated:
-            tracking_failure_dict.update({"alert_sent_time" : str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))})
+            tracking_failure_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
         return True
     else:
         ALERT_RESENT = False
@@ -3264,7 +3265,9 @@ def alert_work(db_http_host):
         ''' We don't want to send the alert between these time range'''
         ''' Alert to be sent if True'''
         global global_out_of_alert_time_range, global_TIME_STAMP, global_OUT_OF_ALERT_TIME, ALERT_RESENT
-        now = datetime.datetime.now(tz=pytz.timezone('US/Eastern'))
+        
+        now = datetime.datetime.now(tz=gloabal_default_timezone)
+
         current_time = now.strftime("%H:%M:%S")
         global_TIME_STAMP = current_time
         # start = '00:00:00'
@@ -3290,7 +3293,7 @@ def alert_work(db_http_host):
     try:
         global saved_failure_dict, tracking_failure_dict, ALERT_STARTED_TIME
 
-        ALERT_STARTED_TIME = datetime.datetime.now()
+        ALERT_STARTED_TIME = datetime.datetime.now(tz=gloabal_default_timezone)
 
         while True:
             ''' read config file to enable/disable to send an email'''
@@ -3541,7 +3544,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         }
         """
         
-        alert_date = datetime.datetime.now()
+        alert_date = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
 
         ''' set the default value if env name doesn't exist from the shell script'''
         running_host_name = socket.gethostname().split(".")[0]
@@ -3709,6 +3712,9 @@ if __name__ == '__main__':
     global logstash_validation_type
     global global_spark_master_node
     global global_spark_cluster_https
+    global gloabal_default_timezone
+
+    gloabal_default_timezone = pytz.timezone('US/Eastern')
 
     if args.env_name:
         env_name = args.env_name
