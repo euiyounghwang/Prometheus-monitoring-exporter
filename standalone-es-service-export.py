@@ -2776,8 +2776,8 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                             ''' --------------'''
                             ''' update process name with time difference'''
                             # Calculate the time gap
-                            # audit_process_name_time = datetime.datetime.strptime(element_each_json.get("ADDTS",""), "%Y-%m-%d %H:%M:%S")
-                            audit_process_name_time = datetime.datetime.strptime("2024-09-27 10:35:00", "%Y-%m-%d %H:%M:%S")
+                            audit_process_name_time = datetime.datetime.strptime(element_each_json.get("ADDTS",""), "%Y-%m-%d %H:%M:%S")
+                            # audit_process_name_time = datetime.datetime.strptime("2024-09-27 10:35:00", "%Y-%m-%d %H:%M:%S")
                             time_difference_to_hours = get_time_difference(audit_process_name_time)
                             ''' --------------'''
 
