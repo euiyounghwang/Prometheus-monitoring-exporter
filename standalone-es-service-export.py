@@ -2324,6 +2324,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"global_OUT_OF_ALERT_TIME : {global_OUT_OF_ALERT_TIME}, global_TIME_STAMP : {global_TIME_STAMP}, global_out_of_alert_time_range - {global_out_of_alert_time_range}")
         logging.info(f"global_es_configuration_host : {global_es_configuration_host}, global_loki_host : {os.getenv('LOKI_HOST')}, global_env_name - {global_env_name}, domain_name_as_nick_name : {domain_name_as_nick_name}")
         logging.info(f"current_alert_message : {saved_thread_alert_message}")
+        logging.info(f"saved_failure_db_dict : {saved_failure_db_dict}")
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
@@ -2574,21 +2575,26 @@ def db_jobs_kafka_offset_tb(interval, database_object, sql, db_http_host, db_url
 def get_time_difference(audit_process_name_time):
         ''' get time difference'''
         # lock.acquire()
-        now_time = datetime.datetime.now()
-        
+        # now_time = datetime.datetime.now()
+        now_time = datetime.datetime.now(tz=pytz.timezone('US/Eastern')).strftime('%Y-%m-%d %H:%M:%S')
+                
         print(f"audit_process_name_time - {audit_process_name_time}, : {type(audit_process_name_time)}, now_time - {now_time} : {type(now_time)}")
         """
         date_diff = now_time-audit_process_name_time
         print(f"Time Difference - {date_diff}")
         time_hours = date_diff.seconds / 3600
         """
-        current_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        # current_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        current_time = datetime.datetime.now(tz=pytz.timezone('US/Eastern')).strftime('%Y-%m-%d %H:%M:%S')
         print(f"current_time : {current_time}")
         dt_a = datetime.datetime.strptime(str(current_time), '%Y-%m-%d %H:%M:%S')
         dt_b = audit_process_name_time
         time_hours = float((dt_a-dt_b).total_seconds() / 3600)
         print(f"Time Difference to hours - {time_hours}")
+
+        return round(time_hours,2)
         
+        """
         if now_time < audit_process_name_time:
             logging.info(f"now_time < audit_process_name_time - {round(-time_hours, 2)}")
             if time_hours == 0:
@@ -2597,6 +2603,7 @@ def get_time_difference(audit_process_name_time):
         else:
             logging.info(f"now_time > audit_process_name_time - {round(time_hours, 2)}")
             return round(time_hours, 2)
+        """
 
 
 def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, multipe_db):
@@ -2768,8 +2775,8 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                             ''' --------------'''
                             ''' update process name with time difference'''
                             # Calculate the time gap
-                            audit_process_name_time = datetime.datetime.strptime(element_each_json.get("ADDTS",""), "%Y-%m-%d %H:%M:%S")
-                            # audit_process_name_time = datetime.datetime.strptime("2024-09-27 10:35:00", "%Y-%m-%d %H:%M:%S")
+                            # audit_process_name_time = datetime.datetime.strptime(element_each_json.get("ADDTS",""), "%Y-%m-%d %H:%M:%S")
+                            audit_process_name_time = datetime.datetime.strptime("2024-09-27 10:35:00", "%Y-%m-%d %H:%M:%S")
                             time_difference_to_hours = get_time_difference(audit_process_name_time)
                             ''' --------------'''
 
@@ -3257,7 +3264,7 @@ def alert_work(db_http_host):
         ''' We don't want to send the alert between these time range'''
         ''' Alert to be sent if True'''
         global global_out_of_alert_time_range, global_TIME_STAMP, global_OUT_OF_ALERT_TIME, ALERT_RESENT
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(tz=pytz.timezone('US/Eastern'))
         current_time = now.strftime("%H:%M:%S")
         global_TIME_STAMP = current_time
         # start = '00:00:00'
