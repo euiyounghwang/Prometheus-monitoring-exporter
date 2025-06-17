@@ -1,6 +1,22 @@
 package repository
 
 // Struct fields must start with upper case letter (exported) for the JSON package to see their value.
+type Configuration struct {
+	AlertExcludeTime string `json:"alert_exclude_time"`
+	Hostname         struct {
+		MailList       string `json:"mail_list"`
+		CcList         string `json:"cc_list"`
+		SmsList        string `json:"sms_list"`
+		DevMailList    string `json:"dev_mail_list"`
+		DevSmsList     string `json:"dev_sms_list"`
+		Env            string `json:"env"`
+		ThreadInterval int    `json:"thread_interval"`
+		IsMailing      bool   `json:"is_mailing"`
+		IsSms          bool   `json:"is_sms"`
+	} `json:"hostname"`
+}
+
+// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
 type API_Results struct {
 	Running_time float32 `json:"running_time"`
 	Request_dbid string  `json:"request_dbid"`

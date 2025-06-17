@@ -1,18 +1,16 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"reflect"
 	"strings"
 	"time"
 
+	"db.com/m/api"
 	"db.com/m/configuration"
 	"db.com/m/logging"
 	"db.com/m/repository"
@@ -33,122 +31,6 @@ var (
 // go get github.com/joho/godotenv
 // ascill art
 // go get github.com/common-nighthawk/go-figure
-
-func get_configuration() {
-	// requestURL := log.Sprintf("http://localhost:%d", serverPort)
-	requestURL := os.Getenv("CONFIGURATION")
-	res, err := http.Get(requestURL)
-	if err != nil {
-		log.Printf("error making http request: %s\n", err)
-		os.Exit(1)
-	}
-
-	defer res.Body.Close()
-
-	log.Printf("client: got response!\n")
-	body, _ := ioutil.ReadAll(res.Body)
-	log.Println("response Body:", utils.PrettyString(string(body)))
-	log.Printf("client: status code: %d\n", res.StatusCode)
-
-	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
-	jsonRes = utils.Json_Parsing(string(body))
-
-	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
-}
-
-func db_api(db_url string, sql string, db_type string) {
-	// """ POST """
-	// httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
-	httpposturl := "http://" + args_map.API_HOST + ":8002/db/get_db_query"
-	log.Println("HTTP JSON POST URL:", httpposturl)
-
-	// u := Payload{
-	// 	db_url: os.Getenv("DB_URL"),
-	// 	sql:    os.Getenv("SQL"),
-	// }
-
-	// var jsonData = []byte(`{
-	//       "db_url": "jdbc:oracle:thin:test/test@localhost:1234/DEVTEST",
-	//       "sql": "SELECT * FROM TB"
-	// }`)
-
-	u := map[string]interface{}{
-		// "db_url": os.Getenv("DB_URL"),
-		// "sql":    os.Getenv("SQL"),
-		"db_url": db_url,
-		"sql":    sql,
-	}
-	jsonData, _ := json.Marshal(u)
-	log.Println("Payload: ", string(jsonData))
-	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
-	if error != nil {
-		panic(error)
-	}
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client := &http.Client{}
-	response, error := client.Do(request)
-	if error != nil {
-		// panic(error)
-		logging.Info(fmt.Sprintf("Error : %s", error))
-		return
-	}
-	defer response.Body.Close()
-
-	log.Println("response Status:", response.Status)
-	log.Println("response Headers:", response.Header)
-	body, _ := ioutil.ReadAll(response.Body)
-	log.Println("response Body:", utils.PrettyString(string(body)))
-
-	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
-	jsonRes = utils.Json_Parsing(string(body))
-
-	// log.Printf("Body type : %s", reflect.TypeOf(body))
-	log.Printf("Body Json : %s", fmt.Sprintf("%f", jsonRes["running_time"]))
-
-	// using struct to parse the Json Format
-	// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
-	response_map := repository.API_Results{}
-	if err := json.Unmarshal(body, &response_map); err != nil {
-		// do error check
-		log.Println(err)
-	}
-	log.Printf("Body Json : %s\n", response_map.Request_dbid)
-	log.Printf("len(response_map.Results) : %d", len(response_map.Results))
-	log.Print("\n")
-
-	// return when the number of records is zero
-	if len(response_map.Results) < 1 {
-		DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-		return
-	}
-
-	for i, rows := range response_map.Results {
-		if i == 0 {
-			log.Println("Body Json sequence : ", i+1)
-			log.Println("Body Json records : ", rows.PROCESSNAME)
-
-			if db_type == "WMx" {
-				DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
-				if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
-					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-				} else {
-					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-				}
-
-			} else {
-				DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
-				if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
-					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-				} else {
-					DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-				}
-
-			}
-			// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
-		}
-	}
-}
 
 func active_update_func(status string) {
 	SERVER_ACTIVE_TOTAL_CNT += 1
@@ -193,16 +75,69 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 	log.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
 	db_type := ""
 	// data_pipeline_flag := true
-	for i, rows := range result {
+	for i, db_url := range result {
 		log.Println("db_api call : ", i+1)
-		log.Println("db_api call rows: ", rows)
+		log.Println("db_api call rows: ", db_url)
 
 		if i == 0 {
 			db_type = "WMx"
 		} else {
 			db_type = "OMx"
 		}
-		db_api(rows, args_map.SQL, db_type)
+
+		// db_api(rows, args_map.SQL, db_type)
+
+		api_endpoint_host := "http://" + args_map.API_HOST + ":8002/db/get_db_query"
+		json_post := map[string]interface{}{
+			// "db_url": os.Getenv("DB_URL"),
+			// "sql":    os.Getenv("SQL"),
+			"db_url": db_url,
+			"sql":    args_map.SQL,
+		}
+		body := api.API_Post(api_endpoint_host, json_post, db_type)
+
+		// using struct to parse the Json Format
+		// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
+		response_map := repository.API_Results{}
+		if err := json.Unmarshal(body, &response_map); err != nil {
+			// do error check
+			log.Println(err)
+		}
+		log.Printf("Body Json : %s\n", response_map.Request_dbid)
+		log.Printf("len(response_map.Results) : %d", len(response_map.Results))
+		log.Print("\n")
+
+		// return when the number of records is zero
+		if len(response_map.Results) < 1 {
+			DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+			return
+		}
+
+		for i, rows := range response_map.Results {
+			if i == 0 {
+				log.Println("Body Json sequence : ", i+1)
+				log.Println("Body Json records : ", rows.PROCESSNAME)
+
+				if db_type == "WMx" {
+					DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+					if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
+						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+					} else {
+						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+					}
+
+				} else {
+					DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+					if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
+						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+					} else {
+						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+					}
+
+				}
+				// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
+			}
+		}
 	}
 
 	// verify the Server Active
@@ -309,6 +244,9 @@ func work() {
 
 		// Verify if the data pipeline is online
 		go get_service_data_pipeline_health(args_map, m_server_status)
+
+		// Get the configuration from the REST API
+		go api.API_Get(os.Getenv("CONFIGURATION"))
 
 		// alert_work
 		go alert_work()
