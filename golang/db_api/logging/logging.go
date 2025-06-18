@@ -1,7 +1,6 @@
 package logging
 
 import (
-	"fmt"
 	"log"
 	"os"
 )
@@ -32,17 +31,21 @@ func init() {
 
 func Info(message string) {
 	InfoLogger.Println(message)
-	log.Println(message)
+	// log.Println(message)
 }
 
 func Error(message string) {
 	ErrorLogger.Println(message)
-	s := fmt.Sprintf("Error : %s", message)
-	log.Println(s)
+	/*
+		s := fmt.Sprintf("Error : %s", message)
+		log.Println(s)
+	*/
 }
 
 func Warn(message string) {
 	WarningLogger.Println(message)
-	s := fmt.Sprintf("Error : %s", message)
-	log.Println(s)
+	/*
+		s := fmt.Sprintf("Error : %s", message)
+		log.Println(s)
+	*/
 }

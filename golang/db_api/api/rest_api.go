@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	"db.com/m/logging"
 	"db.com/m/utils"
@@ -18,8 +17,9 @@ func API_Get(httpgeturl string) {
 	// requestURL := os.Getenv("CONFIGURATION")
 	res, err := http.Get(httpgeturl)
 	if err != nil {
-		log.Printf("error making http request: %s\n", err)
-		os.Exit(1)
+		logging.Info(fmt.Sprintf("Error : %s", err))
+		// return nil
+		return
 	}
 
 	defer res.Body.Close()
@@ -63,7 +63,9 @@ func API_Post(httpposturl string, post_json map[string]interface{}, db_type stri
 	log.Println("Payload: ", string(jsonData))
 	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
 	if error != nil {
-		panic(error)
+		// panic(error)
+		logging.Info(fmt.Sprintf("Error : %s", error))
+		return nil
 	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 

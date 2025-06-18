@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -96,47 +95,52 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 		}
 		body := api.API_Post(api_endpoint_host, json_post, db_type)
 
-		// using struct to parse the Json Format
-		// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
-		response_map := repository.API_Results{}
-		if err := json.Unmarshal(body, &response_map); err != nil {
-			// do error check
-			log.Println(err)
-		}
-		log.Printf("Body Json : %s\n", response_map.Request_dbid)
-		log.Printf("len(response_map.Results) : %d", len(response_map.Results))
-		log.Print("\n")
+		if body != nil {
 
-		// return when the number of records is zero
-		if len(response_map.Results) < 1 {
-			DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-			return
-		}
-
-		for i, rows := range response_map.Results {
-			if i == 0 {
-				log.Println("Body Json sequence : ", i+1)
-				log.Println("Body Json records : ", rows.PROCESSNAME)
-
-				if db_type == "WMx" {
-					DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
-					if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
-						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-					} else {
-						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-					}
-
-				} else {
-					DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
-					if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
-						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-					} else {
-						DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-					}
-
-				}
-				// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
+			// using struct to parse the Json Format
+			// Struct fields must start with upper case letter (exported) for the JSON package to see their value.
+			response_map := repository.API_Results{}
+			if err := json.Unmarshal(body, &response_map); err != nil {
+				// do error check
+				log.Println(err)
 			}
+			log.Printf("Body Json : %s\n", response_map.Request_dbid)
+			log.Printf("len(response_map.Results) : %d", len(response_map.Results))
+			log.Print("\n")
+
+			// return when the number of records is zero
+			if len(response_map.Results) < 1 {
+				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				return
+			}
+
+			for i, rows := range response_map.Results {
+				if i == 0 {
+					log.Println("Body Json sequence : ", i+1)
+					log.Println("Body Json records : ", rows.PROCESSNAME)
+
+					if db_type == "WMx" {
+						DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+						if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
+							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+						} else {
+							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+						}
+
+					} else {
+						DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+						if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
+							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+						} else {
+							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+						}
+
+					}
+					// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
+				}
+			}
+		} else {
+			DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 		}
 	}
 
@@ -167,13 +171,14 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
-	logging.Info(fmt.Sprintf("* SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	logging.Info(fmt.Sprintf("* SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
 	fmt.Print("\n\n")
 }
 
 func set_init() {
 	// String
 	m := configuration.Get_initialize_args()
+
 	jsonData, _ := json.Marshal(m)
 	// args_map := repository.ARG{}
 	if err := json.Unmarshal(jsonData, &args_map); err != nil {
@@ -246,7 +251,7 @@ func work() {
 		go get_service_data_pipeline_health(args_map, m_server_status)
 
 		// Get the configuration from the REST API
-		go api.API_Get(os.Getenv("CONFIGURATION"))
+		// go api.API_Get(os.Getenv("CONFIGURATION"))
 
 		// alert_work
 		go alert_work()
