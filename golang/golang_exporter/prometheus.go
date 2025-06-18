@@ -587,6 +587,7 @@ func main() {
 	log.Printf("Starting Prometheus HTTP Handler [Port: %d]", port)
 
 	// ''' initialize '''
+	/* Get arguments from confiuration */
 	Init()
 	// ''' update metrics '''
 	get_metrics_all()
