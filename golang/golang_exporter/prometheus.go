@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -13,7 +14,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"prometheus.com/configuration"
 	"prometheus.com/metrics"
+	"prometheus.com/repository"
 	"prometheus.com/utility"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -24,6 +27,8 @@ import (
 )
 
 var (
+	args_map = repository.ARG{}
+
 	// MyGauge        prometheus.Gauge
 	// diskUsageGauge prometheus.GaugeVec
 	// opsProcessed   prometheus.Counter
@@ -223,6 +228,22 @@ var (
 func Init() {
 	// https://github.com/prometheus/client_golang/blob/main/prometheus/examples_test.go
 	// must be registered
+
+	// String
+	m := configuration.Get_initialize_args()
+
+	jsonData, _ := json.Marshal(m)
+	// args_map := repository.ARG{}
+	if err := json.Unmarshal(jsonData, &args_map); err != nil {
+		// do error check
+		log.Println(err)
+	}
+
+	fmt.Print("\n")
+	log.Println("globla(map) *es_args: ", m["es_url"])
+	log.Println("args_map.ES_URL: ", args_map.ES_URL)
+	log.Println("Arguments Json:", utility.PrettyString(string(jsonData)))
+	fmt.Print("\n")
 
 	prometheus.MustRegister(bootStartTime)
 	prometheus.MustRegister(osInfo)
