@@ -12,14 +12,15 @@ import (
 	"db.com/m/utils"
 )
 
-func API_Get(httpgeturl string) {
+func API_Get(httpgeturl string) map[string]interface{} {
+	log.Println("HTTP JSON GET URL:", httpgeturl)
 	// requestURL := log.Sprintf("http://localhost:%d", serverPort)
 	// requestURL := os.Getenv("CONFIGURATION")
 	res, err := http.Get(httpgeturl)
 	if err != nil {
 		logging.Info(fmt.Sprintf("Error : %s", err))
 		// return nil
-		return
+		return nil
 	}
 
 	defer res.Body.Close()
@@ -32,7 +33,8 @@ func API_Get(httpgeturl string) {
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface
 	jsonRes = utils.Json_Parsing(string(body))
 
-	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
+	return jsonRes
+
 }
 
 func API_Post(httpposturl string, post_json map[string]interface{}, db_type string) []byte {

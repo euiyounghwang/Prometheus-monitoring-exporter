@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"db.com/m/repository"
 	"db.com/m/utils"
 	"github.com/common-nighthawk/go-figure"
+	"github.com/joho/godotenv"
 )
 
 // https://transform.tools/json-to-go
@@ -205,6 +207,16 @@ var (
 	TIME_INTERVAL = 30
 )
 
+func get_configuration(jsonRes map[string]interface{}) {
+	if jsonRes == nil {
+		return
+	}
+
+	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
+	log.Printf("Body Json : %s", jsonRes["test"])
+	log.Printf("Body Json : %s", jsonRes["test"].(map[string]interface{})["cc_list"])
+}
+
 func alert_work() {
 	log.Print("\n\n")
 
@@ -251,7 +263,7 @@ func work() {
 		go get_service_data_pipeline_health(args_map, m_server_status)
 
 		// Get the configuration from the REST API
-		// go api.API_Get(os.Getenv("CONFIGURATION"))
+		go get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
 
 		// alert_work
 		go alert_work()
@@ -270,7 +282,7 @@ func main() {
 	// Load the .env file in the current directory
 	// godotenv.Load()
 	// or
-	// godotenv.Load("../.env")
+	godotenv.Load("../.env")
 
 	// main_func
 	work()
