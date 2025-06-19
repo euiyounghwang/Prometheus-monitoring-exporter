@@ -217,6 +217,7 @@ func get_configuration(jsonRes map[string]interface{}) {
 	log.Printf("Body Json : %s", jsonRes["test"].(map[string]interface{})["cc_list"])
 }
 
+/* alert check and push alerts via email/text alert via REST API*/
 func alert_work() {
 	log.Print("\n\n")
 
