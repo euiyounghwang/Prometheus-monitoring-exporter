@@ -215,6 +215,25 @@ func get_configuration(jsonRes map[string]interface{}) {
 	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
 	log.Printf("Body Json : %s", jsonRes["test"])
 	log.Printf("Body Json : %s", jsonRes["test"].(map[string]interface{})["cc_list"])
+
+	/* Used Struct */
+	configuration_strcut := repository.Configuration{}
+	jsonData, _ := json.Marshal(jsonRes)
+	// json.Unmarshal(jsonData, &configuration_strcut)
+	if err := json.Unmarshal(jsonData, &configuration_strcut); err != nil {
+		// do error check
+		log.Println(err)
+	}
+
+	log.Printf("\n")
+	/*
+		Tried to convert my Go map to a json string with encoding/json Marshal, then convert to json to Strcut with decoding/json UnMarshal
+
+	*/
+	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.AlertExcludeTime)
+	log.Printf("Body Strcut configuration_strcut : %t", configuration_strcut.Test.IsMailing)
+	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.Env)
+	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
 }
 
 /* alert check and push alerts via email/text alert via REST API*/

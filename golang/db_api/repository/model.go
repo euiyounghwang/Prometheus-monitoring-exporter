@@ -3,7 +3,7 @@ package repository
 // Struct fields must start with upper case letter (exported) for the JSON package to see their value.
 type Configuration struct {
 	AlertExcludeTime string `json:"alert_exclude_time"`
-	Hostname         struct {
+	Test             struct {
 		MailList       string `json:"mail_list"`
 		CcList         string `json:"cc_list"`
 		SmsList        string `json:"sms_list"`
@@ -13,7 +13,7 @@ type Configuration struct {
 		ThreadInterval int    `json:"thread_interval"`
 		IsMailing      bool   `json:"is_mailing"`
 		IsSms          bool   `json:"is_sms"`
-	} `json:"hostname"`
+	} `json:"test"`
 }
 
 // Struct fields must start with upper case letter (exported) for the JSON package to see their value.
