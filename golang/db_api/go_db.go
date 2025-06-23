@@ -283,6 +283,7 @@ func work() {
 		go get_service_data_pipeline_health(args_map, m_server_status)
 
 		// Get the configuration from the REST API
+		/* argument as map[string]interface{} into get_configuration func */
 		go get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
 
 		// alert_work
