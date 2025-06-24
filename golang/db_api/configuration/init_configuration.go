@@ -33,8 +33,8 @@ func Get_initialize_args() map[string]interface{} {
 	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
 	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092", "string")
 	flag.StringVar(&spark_url, "spark_url", "localhost:8080", "string")
-	flag.StringVar(&db_url, "db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "db_url")
-	flag.StringVar(&sql, "sql", "SELECT * FROM TB", "sql")
+	flag.StringVar(&db_url, "db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
+	flag.StringVar(&sql, "sql", "SELECT * FROM TB", "string")
 
 	flag.Parse()
 
