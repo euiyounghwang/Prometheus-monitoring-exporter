@@ -31,6 +31,34 @@ type API_Results struct {
 	} `json:"results"`
 }
 
+type SPARK_APP_Results struct {
+	URL     string `json:"url"`
+	Workers []struct {
+		ID            string `json:"id"`
+		Host          string `json:"host"`
+		Port          int    `json:"port"`
+		Webuiaddress  string `json:"webuiaddress"`
+		Cores         int    `json:"cores"`
+		Coresused     int    `json:"coresused"`
+		Coresfree     int    `json:"coresfree"`
+		Memory        int    `json:"memory"`
+		Memoryused    int    `json:"memoryused"`
+		Memoryfree    int    `json:"memoryfree"`
+		State         string `json:"state"`
+		Lastheartbeat int64  `json:"lastheartbeat"`
+	} `json:"workers"`
+	Activeapps []struct {
+		Starttime      int64  `json:"starttime"`
+		ID             string `json:"id"`
+		Name           string `json:"name"`
+		User           string `json:"user"`
+		Memoryperslave int    `json:"memoryperslave"`
+		Submitdate     string `json:"submitdate"`
+		State          string `json:"state"`
+		Duration       int    `json:"duration"`
+	} `json:"activeapps"`
+}
+
 /*
 Result Struct
 */

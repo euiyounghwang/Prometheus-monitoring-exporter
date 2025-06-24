@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -16,7 +17,16 @@ func API_Get(httpgeturl string) map[string]interface{} {
 	log.Println("HTTP JSON GET URL:", httpgeturl)
 	// requestURL := log.Sprintf("http://localhost:%d", serverPort)
 	// requestURL := os.Getenv("CONFIGURATION")
-	res, err := http.Get(httpgeturl)
+
+	// Create a custom http.Transport
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // This line disables certificate verification
+	}
+
+	// Create an http.Client with the custom Transport
+	client := &http.Client{Transport: tr}
+
+	res, err := client.Get(httpgeturl)
 	if err != nil {
 		logging.Info(fmt.Sprintf("Error : %s", err))
 		// return nil

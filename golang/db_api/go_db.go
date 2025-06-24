@@ -206,6 +206,40 @@ func get_configuration(jsonRes map[string]interface{}) {
 	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
 }
 
+func get_service_spark_app(args_map repository.ARG, m_server_status map[string]interface{}) {
+	spark_master_host_port := strings.Split(strings.Trim(args_map.KAFKA_URL, " "), ",")[0]
+	spark_master_host := strings.Split(strings.Trim(spark_master_host_port, " "), ":")[0]
+	log.Printf("spark_master_host : %s", spark_master_host)
+
+	api_endpoint_host := "http://" + spark_master_host + ":8080/json"
+
+	body := api.API_Get(api_endpoint_host)
+
+	if body != nil {
+		response_map := repository.SPARK_APP_Results{}
+		jsonbyte, _ := json.Marshal(body)
+		// json.Unmarshal(jsonData, &configuration_strcut)
+		if err := json.Unmarshal(jsonbyte, &response_map); err != nil {
+			// do error check
+			log.Println(err)
+		}
+		log.Printf("get_service_spark_app Json : %s\n", response_map.URL)
+		log.Printf("get_service_spark_app, len(response_map.Results) : %d", len(response_map.Workers))
+		log.Print("\n")
+
+		// return when the number of records is zero
+		if len(response_map.Workers) < 1 {
+			return
+		}
+
+		for i, rows := range response_map.Activeapps {
+			log.Println("Body Json sequence : ", i+1)
+			log.Println("Body Json records : ", rows.Name)
+		}
+	}
+
+}
+
 func update_service_status() {
 	// verify the Server Active
 	if SERVER_ACTIVE_CNT == SERVER_ACTIVE_TOTAL_CNT {
@@ -286,8 +320,11 @@ func work() {
 		set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
 		set_service_port("SPARK", args_map.SPARK_URL, m_server_status)
 
-		// Verify if the data pipeline is online
+		/* Verify if the data pipeline is online */
 		get_service_data_pipeline_health(args_map, m_server_status)
+
+		/* check if spark app is running */
+		get_service_spark_app(args_map, m_server_status)
 
 		/* Update services status */
 		update_service_status()
