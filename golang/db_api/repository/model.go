@@ -39,6 +39,7 @@ type ARG struct {
 	ES_URL     string `json:"es_url"`
 	KIBANA_URL string `json:"kibana_url"`
 	KAFKA_URL  string `json:"kafka_url"`
+	SPARK_URL  string `json:"spark_url"`
 	DB_URL     string `json:"db_url"`
 	SQL        string `json:"sql"`
 }
@@ -47,6 +48,7 @@ type SERVER_STATUS struct {
 	ES            string `json:"ES"`
 	KIBANA        string `json:"KIBANA"`
 	KAFKA         string `json:"KAFKA"`
+	SPARK         string `json:"SPARK"`
 	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
 	DATA_PIPELINE string `json:"DATA_PIPELINE"`
 }
@@ -55,6 +57,7 @@ type SERVER_ALERT struct {
 	ES            string `json:"ES"`
 	KIBANA        string `json:"KIBANA"`
 	KAFKA         string `json:"KAFKA"`
+	SPARK         string `json:"SPARK"`
 	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
 	DATA_PIPELINE string `json:"DATA_PIPELINE"`
 }

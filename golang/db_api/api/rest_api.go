@@ -27,7 +27,7 @@ func API_Get(httpgeturl string) map[string]interface{} {
 
 	log.Printf("client: got response!\n")
 	body, _ := ioutil.ReadAll(res.Body)
-	log.Println("response Body:", utils.PrettyString(string(body)))
+	// log.Println("response Body:", utils.PrettyString(string(body)))
 	log.Printf("client: status code: %d\n", res.StatusCode)
 
 	var jsonRes map[string]interface{} // declaring a map for key names as string and values as interface

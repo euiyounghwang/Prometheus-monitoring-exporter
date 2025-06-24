@@ -145,36 +145,6 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 			DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 		}
 	}
-
-	// verify the Server Active
-	if SERVER_ACTIVE_CNT == SERVER_ACTIVE_TOTAL_CNT {
-		SERVER_ACITVE_TXT = "Green"
-	} else if SERVER_ACTIVE_CNT == 0 {
-		SERVER_ACITVE_TXT = "Red"
-	} else {
-		SERVER_ACITVE_TXT = "Yellow"
-	}
-
-	if DATA_PIPELINE_ACITVE {
-		DATA_PIPELINE_ACITVE_TXT = "Green"
-	} else {
-		DATA_PIPELINE_ACITVE_TXT = "Red"
-	}
-	m_server_status["SERVER_ACTIVE"] = SERVER_ACITVE_TXT
-	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
-
-	// update all status to server_status_mm_server_statusap
-	server_status_map := utils.Map_to_json(m_server_status)
-
-	fmt.Print("\n\n")
-	log.Print("** STATUS **\n")
-	json_server_status, _ := json.Marshal(m_server_status)
-	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
-	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
-	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
-	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
-	logging.Info(fmt.Sprintf("* SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
-	fmt.Print("\n\n")
 }
 
 func set_init() {
@@ -236,6 +206,38 @@ func get_configuration(jsonRes map[string]interface{}) {
 	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
 }
 
+func update_service_status() {
+	// verify the Server Active
+	if SERVER_ACTIVE_CNT == SERVER_ACTIVE_TOTAL_CNT {
+		SERVER_ACITVE_TXT = "Green"
+	} else if SERVER_ACTIVE_CNT == 0 {
+		SERVER_ACITVE_TXT = "Red"
+	} else {
+		SERVER_ACITVE_TXT = "Yellow"
+	}
+
+	if DATA_PIPELINE_ACITVE {
+		DATA_PIPELINE_ACITVE_TXT = "Green"
+	} else {
+		DATA_PIPELINE_ACITVE_TXT = "Red"
+	}
+	m_server_status["SERVER_ACTIVE"] = SERVER_ACITVE_TXT
+	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
+
+	// update all status to server_status_mm_server_statusap
+	server_status_map := utils.Map_to_json(m_server_status)
+
+	fmt.Print("\n\n")
+	log.Print("** STATUS **\n")
+	json_server_status, _ := json.Marshal(m_server_status)
+	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
+	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
+	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
+	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
+	logging.Info(fmt.Sprintf("* SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	fmt.Print("\n\n")
+}
+
 /* alert check and push alerts via email/text alert via REST API*/
 func alert_work() {
 	log.Print("\n\n")
@@ -274,17 +276,21 @@ func work() {
 
 	for {
 
-		// Verify if the service port is open
-		go set_service_port("ES", args_map.ES_URL, m_server_status)
-		go set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
-		go set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
-
-		// Verify if the data pipeline is online
-		go get_service_data_pipeline_health(args_map, m_server_status)
-
 		// Get the configuration from the REST API
 		/* argument as map[string]interface{} into get_configuration func */
-		go get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
+		get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
+
+		// Verify if the service port is open
+		set_service_port("ES", args_map.ES_URL, m_server_status)
+		set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
+		set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
+		set_service_port("SPARK", args_map.SPARK_URL, m_server_status)
+
+		// Verify if the data pipeline is online
+		get_service_data_pipeline_health(args_map, m_server_status)
+
+		/* Update services status */
+		update_service_status()
 
 		// alert_work
 		go alert_work()
