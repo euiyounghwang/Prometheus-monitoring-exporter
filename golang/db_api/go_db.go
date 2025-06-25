@@ -251,6 +251,11 @@ func get_service_spark_app(args_map repository.ARG) {
 		log.Println("custom_apps : ", custom_apps)
 
 		var EXIST_APPS = true
+
+		/* initialize */
+		SPARK_CUSTOM_APP_LIST = ""
+		LEN_SPARK_CUSTOM_APP = 0
+		/* --------------- */
 		spark_app_check_list := strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",")
 		for _, app := range spark_app_check_list {
 			LEN_SPARK_CUSTOM_APP += 1
@@ -330,7 +335,7 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
-	logging.Info(fmt.Sprintf("* SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	logging.Info(fmt.Sprintf("*SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
 	fmt.Print("\n\n")
 }
 

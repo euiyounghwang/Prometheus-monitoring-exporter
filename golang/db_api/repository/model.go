@@ -75,15 +75,15 @@ type ARG struct {
 
 type SERVER_STATUS struct {
 	ES                     string `json:"ES"`
-	ES_NODES               string `json:"ES_NODES"`
+	ES_NODES               int    `json:"ES_NODES"`
 	KIBANA                 string `json:"KIBANA"`
 	KAFKA                  string `json:"KAFKA"`
-	KAFKA_NODES            string `json:"KAFKA_NODES"`
+	KAFKA_NODES            int    `json:"KAFKA_NODES"`
 	ZOOKEEPER              string `json:"ZOOKEEPER"`
-	ZOOKEEPER_NODES        string `json:"ZOOKEEPER_NODES"`
+	ZOOKEEPER_NODES        int    `json:"ZOOKEEPER_NODES"`
 	SPARK                  string `json:"SPARK"`
 	SPARK_APP              string `json:"SPARK_APP"`
-	SPARK_CUSTOM_APPS      string `json:"spark_custom_apps"`
+	SPARK_CUSTOM_APPS      int    `json:"spark_custom_apps"`
 	SPARK_CUSTOM_APPS_LIST string `json:"spark_custom_apps_list"`
 	SERVER_ACTIVE          string `json:"SERVER_ACTIVE"`
 	DATA_PIPELINE          string `json:"DATA_PIPELINE"`
