@@ -84,7 +84,7 @@ func Get_port_open(host string) bool {
 	return true
 }
 
-func Get_port_list_open(host string) (bool, string) {
+func Get_port_list_open(host string) (bool, int, string) {
 	result := strings.Split(strings.Trim(host, " "), ",")
 	log.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
 
@@ -126,5 +126,5 @@ func Get_port_list_open(host string) (bool, string) {
 	log.Println("** flag_value ** : ", flag_value)
 	// log.Println("** server_status ** : ", server_status)
 
-	return flag, server_status
+	return flag, flag_value, server_status
 }

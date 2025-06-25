@@ -49,13 +49,18 @@ func active_update_func(status string) {
 	// log.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
 }
 
-func set_service_port(service_name string, url string, m map[string]interface{}) {
+func set_service_port(service_name string, service_nodes string, url string, m map[string]interface{}) {
 	log.Printf("** %s PORT OPEN ** ", service_name)
 	// is_port_open := utils.Get_port_open(args_map.ES_URL)
-	is_port_open, server_status := utils.Get_port_list_open(url)
+	is_port_open, port_open_cnt, server_status := utils.Get_port_list_open(url)
 	log.Println("** is_port_open: ** ", is_port_open)
 	log.Println("** server_status ** : ", server_status)
+
 	m[service_name] = server_status
+	if service_nodes != "" {
+		m[service_nodes] = port_open_cnt
+	}
+
 	// update server_active to global variable
 	active_update_func(server_status)
 	fmt.Print("\n\n")
@@ -175,6 +180,8 @@ var (
 	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT        = "Red", "Red"
 	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 	SPARK_APP_STATUS                                   = "Red"
+	LEN_SPARK_CUSTOM_APP                               = 0
+	SPARK_CUSTOM_APP_LIST                              = ""
 
 	TIME_INTERVAL = 30
 )
@@ -246,6 +253,7 @@ func get_service_spark_app(args_map repository.ARG) {
 		var EXIST_APPS = true
 		spark_app_check_list := strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",")
 		for _, app := range spark_app_check_list {
+			LEN_SPARK_CUSTOM_APP += 1
 			if slices.Contains(custom_apps, app) {
 				log.Println("app : ", app)
 				EXIST_APPS = EXIST_APPS && true
@@ -253,6 +261,7 @@ func get_service_spark_app(args_map repository.ARG) {
 				EXIST_APPS = EXIST_APPS && false
 				/* Create logs */
 			}
+			SPARK_CUSTOM_APP_LIST += "," + app
 		}
 
 		if EXIST_APPS {
@@ -303,6 +312,13 @@ func update_service_status() {
 
 	/* Update SPARK APP */
 	m_server_status["SPARK_APP"] = SPARK_APP_STATUS
+	m_server_status["SPARK_CUSTOM_APPS"] = LEN_SPARK_CUSTOM_APP
+	// Slicing first character
+	if len(SPARK_CUSTOM_APP_LIST) > 1 {
+		m_server_status["SPARK_CUSTOM_APPS_LIST"] = SPARK_CUSTOM_APP_LIST[1:]
+	} else {
+		m_server_status["SPARK_CUSTOM_APPS_LIST"] = ""
+	}
 
 	// update all status to server_status_mm_server_statusap
 	server_status_map := utils.Map_to_json(m_server_status)
@@ -361,10 +377,11 @@ func work() {
 		get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
 
 		// Verify if the service port is open
-		set_service_port("ES", args_map.ES_URL, m_server_status)
-		set_service_port("KIBANA", args_map.KIBANA_URL, m_server_status)
-		set_service_port("KAFKA", args_map.KAFKA_URL, m_server_status)
-		set_service_port("SPARK", args_map.SPARK_URL, m_server_status)
+		set_service_port("ES", "ES_NODES", args_map.ES_URL, m_server_status)
+		set_service_port("KIBANA", "", args_map.KIBANA_URL, m_server_status)
+		set_service_port("KAFKA", "KAFKA_NODES", args_map.KAFKA_URL, m_server_status)
+		set_service_port("ZOOKEEPER", "ZOOKEEPER_NODES", args_map.ZOOKEEPER_URL, m_server_status)
+		set_service_port("SPARK", "", args_map.SPARK_URL, m_server_status)
 
 		/* Verify if the data pipeline is online */
 		get_service_data_pipeline_health(args_map, m_server_status)

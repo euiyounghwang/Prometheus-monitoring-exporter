@@ -63,23 +63,30 @@ type SPARK_APP_Results struct {
 Result Struct
 */
 type ARG struct {
-	API_HOST   string `json:"api_host"`
-	ES_URL     string `json:"es_url"`
-	KIBANA_URL string `json:"kibana_url"`
-	KAFKA_URL  string `json:"kafka_url"`
-	SPARK_URL  string `json:"spark_url"`
-	DB_URL     string `json:"db_url"`
-	SQL        string `json:"sql"`
+	API_HOST      string `json:"api_host"`
+	ES_URL        string `json:"es_url"`
+	KIBANA_URL    string `json:"kibana_url"`
+	KAFKA_URL     string `json:"kafka_url"`
+	ZOOKEEPER_URL string `json:"zookeeper_url"`
+	SPARK_URL     string `json:"spark_url"`
+	DB_URL        string `json:"db_url"`
+	SQL           string `json:"sql"`
 }
 
 type SERVER_STATUS struct {
-	ES            string `json:"ES"`
-	KIBANA        string `json:"KIBANA"`
-	KAFKA         string `json:"KAFKA"`
-	SPARK         string `json:"SPARK"`
-	SPARK_APP     string `json:"SPARK_APP"`
-	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
-	DATA_PIPELINE string `json:"DATA_PIPELINE"`
+	ES                     string `json:"ES"`
+	ES_NODES               string `json:"ES_NODES"`
+	KIBANA                 string `json:"KIBANA"`
+	KAFKA                  string `json:"KAFKA"`
+	KAFKA_NODES            string `json:"KAFKA_NODES"`
+	ZOOKEEPER              string `json:"ZOOKEEPER"`
+	ZOOKEEPER_NODES        string `json:"ZOOKEEPER_NODES"`
+	SPARK                  string `json:"SPARK"`
+	SPARK_APP              string `json:"SPARK_APP"`
+	SPARK_CUSTOM_APPS      string `json:"spark_custom_apps"`
+	SPARK_CUSTOM_APPS_LIST string `json:"spark_custom_apps_list"`
+	SERVER_ACTIVE          string `json:"SERVER_ACTIVE"`
+	DATA_PIPELINE          string `json:"DATA_PIPELINE"`
 }
 
 type SERVER_ALERT struct {
