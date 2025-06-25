@@ -173,6 +173,7 @@ var (
 	SERVER_ACITVE, DATA_PIPELINE_ACITVE                = true, true
 	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT        = "Red", "Red"
 	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
+	SPARK_APP_STATUS                                   = "Red"
 
 	TIME_INTERVAL = 30
 )
@@ -206,7 +207,7 @@ func get_configuration(jsonRes map[string]interface{}) {
 	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
 }
 
-func get_service_spark_app(args_map repository.ARG, m_server_status map[string]interface{}) {
+func get_service_spark_app(args_map repository.ARG) {
 	spark_master_host_port := strings.Split(strings.Trim(args_map.KAFKA_URL, " "), ",")[0]
 	spark_master_host := strings.Split(strings.Trim(spark_master_host_port, " "), ":")[0]
 	log.Printf("spark_master_host : %s", spark_master_host)
@@ -224,17 +225,23 @@ func get_service_spark_app(args_map repository.ARG, m_server_status map[string]i
 			log.Println(err)
 		}
 		log.Printf("get_service_spark_app Json : %s\n", response_map.URL)
-		log.Printf("get_service_spark_app, len(response_map.Results) : %d", len(response_map.Workers))
+		log.Printf("get_service_spark_app, len(response_map.Activeapps) : %d", len(response_map.Activeapps))
 		log.Print("\n")
 
 		// return when the number of records is zero
-		if len(response_map.Workers) < 1 {
+		if len(response_map.Activeapps) < 1 {
+			/* Update STATUS */
+			SPARK_APP_STATUS = "Red"
+			SERVER_ACITVE = SERVER_ACITVE && false
 			return
 		}
 
 		for i, rows := range response_map.Activeapps {
 			log.Println("Body Json sequence : ", i+1)
 			log.Println("Body Json records : ", rows.Name)
+			/* Update STATUS : need to decide the status with yellow or green if all spark custom app is running*/
+			SPARK_APP_STATUS = "Green"
+			SERVER_ACITVE = SERVER_ACITVE && true
 		}
 	}
 
@@ -257,6 +264,9 @@ func update_service_status() {
 	}
 	m_server_status["SERVER_ACTIVE"] = SERVER_ACITVE_TXT
 	m_server_status["DATA_PIPELINE"] = DATA_PIPELINE_ACITVE_TXT
+
+	/* Update SPARK APP */
+	m_server_status["SPARK_APP"] = SPARK_APP_STATUS
 
 	// update all status to server_status_mm_server_statusap
 	server_status_map := utils.Map_to_json(m_server_status)
@@ -324,7 +334,7 @@ func work() {
 		get_service_data_pipeline_health(args_map, m_server_status)
 
 		/* check if spark app is running */
-		get_service_spark_app(args_map, m_server_status)
+		get_service_spark_app(args_map)
 
 		/* Update services status */
 		update_service_status()

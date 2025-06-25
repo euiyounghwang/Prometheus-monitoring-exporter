@@ -77,6 +77,7 @@ type SERVER_STATUS struct {
 	KIBANA        string `json:"KIBANA"`
 	KAFKA         string `json:"KAFKA"`
 	SPARK         string `json:"SPARK"`
+	SPARK_APP     string `json:"SPARK_APP"`
 	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
 	DATA_PIPELINE string `json:"DATA_PIPELINE"`
 }
