@@ -243,16 +243,24 @@ func get_service_spark_app(args_map repository.ARG) {
 		}
 		log.Println("custom_apps : ", custom_apps)
 
+		var EXIST_APPS = true
 		spark_app_check_list := strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",")
 		for _, app := range spark_app_check_list {
 			if slices.Contains(custom_apps, app) {
 				log.Println("app : ", app)
-				SERVER_ACITVE = SERVER_ACITVE && true
-				SPARK_APP_STATUS = "Green"
+				EXIST_APPS = EXIST_APPS && true
 			} else {
-				SERVER_ACITVE = SERVER_ACITVE && false
-				SPARK_APP_STATUS = "Red"
+				EXIST_APPS = EXIST_APPS && false
+				/* Create logs */
 			}
+		}
+
+		if EXIST_APPS {
+			SPARK_APP_STATUS = "Green"
+			SERVER_ACITVE = SERVER_ACITVE && true
+		} else {
+			SPARK_APP_STATUS = "Red"
+			SERVER_ACITVE = SERVER_ACITVE && false
 		}
 
 		/*
