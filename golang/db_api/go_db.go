@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -236,13 +237,40 @@ func get_service_spark_app(args_map repository.ARG) {
 			return
 		}
 
-		for i, rows := range response_map.Activeapps {
-			log.Println("Body Json sequence : ", i+1)
-			log.Println("Body Json records : ", rows.Name)
-			/* Update STATUS : need to decide the status with yellow or green if all spark custom app is running*/
-			SPARK_APP_STATUS = "Green"
-			SERVER_ACITVE = SERVER_ACITVE && true
+		custom_apps := []string{}
+		for _, rows := range response_map.Activeapps {
+			custom_apps = append(custom_apps, rows.Name)
 		}
+		log.Println("custom_apps : ", custom_apps)
+
+		spark_app_check_list := strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",")
+		for _, app := range spark_app_check_list {
+			if slices.Contains(custom_apps, app) {
+				log.Println("app : ", app)
+				SERVER_ACITVE = SERVER_ACITVE && true
+				SPARK_APP_STATUS = "Green"
+			} else {
+				SERVER_ACITVE = SERVER_ACITVE && false
+				SPARK_APP_STATUS = "Red"
+			}
+		}
+
+		/*
+			for i, rows := range response_map.Activeapps {
+				log.Println("Body Json sequence : ", i+1)
+				log.Println("Body Json records : ", rows.Name)
+				for _, app := range strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",") {
+					if app == rows.Name {
+						RUNNING_APP = RUNNING_APP && true
+					}
+				}
+				if strings.Contains(rows.Name, "StreamProcess") {
+					// Update STATUS : need to decide the status with yellow or green if all spark custom app is running //
+					SPARK_APP_STATUS = "Green"
+					SERVER_ACITVE = SERVER_ACITVE && true
+				}
+			}
+		*/
 	}
 
 }
