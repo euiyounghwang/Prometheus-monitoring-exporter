@@ -12,14 +12,15 @@ go run ./tools/bulk_index_script.go --es_host=http://localhost:9209 --index_name
 -------
 */
 var (
-	api_host      string
-	es_url        string
-	kibana_url    string
-	kafka_url     string
-	zookeeper_url string
-	spark_url     string
-	db_url        string
-	sql           string
+	api_host          string
+	es_url            string
+	kibana_url        string
+	kafka_url         string
+	zookeeper_url     string
+	kafka_connect_url string
+	spark_url         string
+	db_url            string
+	sql               string
 )
 
 func Get_initialize_args() map[string]interface{} {
@@ -34,6 +35,7 @@ func Get_initialize_args() map[string]interface{} {
 	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
 	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092", "string")
 	flag.StringVar(&zookeeper_url, "zookeeper_url", "localhost:2181", "string")
+	flag.StringVar(&kafka_connect_url, "kafka_connect_url", "localhost:8083", "string")
 	flag.StringVar(&spark_url, "spark_url", "localhost:8080", "string")
 	flag.StringVar(&db_url, "db_url", "jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2", "string")
 	flag.StringVar(&sql, "sql", "SELECT * FROM TB", "string")
@@ -53,6 +55,7 @@ func Get_initialize_args() map[string]interface{} {
 	m["kibana_url"] = kibana_url
 	m["kafka_url"] = kafka_url
 	m["zookeeper_url"] = zookeeper_url
+	m["kafka_connect_url"] = kafka_connect_url
 	m["spark_url"] = spark_url
 	m["db_url"] = db_url
 	m["sql"] = sql

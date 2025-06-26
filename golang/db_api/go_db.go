@@ -386,6 +386,7 @@ func work() {
 		set_service_port("KIBANA", "", args_map.KIBANA_URL, m_server_status)
 		set_service_port("KAFKA", "KAFKA_NODES", args_map.KAFKA_URL, m_server_status)
 		set_service_port("ZOOKEEPER", "ZOOKEEPER_NODES", args_map.ZOOKEEPER_URL, m_server_status)
+		set_service_port("KAFAK_CONNECT", "KAFAK_CONNECT_NODES", args_map.KAFKA_CONNECT_URL, m_server_status)
 		set_service_port("SPARK", "", args_map.SPARK_URL, m_server_status)
 
 		/* Verify if the data pipeline is online */
