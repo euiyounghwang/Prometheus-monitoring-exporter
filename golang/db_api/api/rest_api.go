@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 
 	"db.com/m/logging"
 	"db.com/m/utils"
@@ -81,12 +82,24 @@ func API_Post(httpposturl string, post_json map[string]interface{}, db_type stri
 	}
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	client := &http.Client{}
+	// Create a custom http.Transport
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // This line disables certificate verification
+	}
+
+	// client := &http.Client{}
+
+	// Create an http.Client with the custom Transport
+	client := &http.Client{Transport: tr}
+
 	response, error := client.Do(request)
 	if error != nil {
 		// panic(error)
 		logging.Info(fmt.Sprintf("Error : %s", error))
-		return nil
+		// return nil
+		error_json := fmt.Sprintf("{\"message\" : \"DB Connection Error - %s\"}", strings.Replace(fmt.Sprintf("%s", error), "\"", "'", -1))
+		logging.Info(error_json)
+		return []byte(error_json)
 	}
 	defer response.Body.Close()
 

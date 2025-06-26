@@ -29,6 +29,7 @@ type API_Results struct {
 		COUNT       int    `json:"count"`
 		DBID        string `json:"dbid"`
 	} `json:"results"`
+	Message string `json:"message"`
 }
 
 type SPARK_APP_Results struct {

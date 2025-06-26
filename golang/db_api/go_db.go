@@ -52,7 +52,8 @@ func active_update_func(status string) {
 func set_service_port(service_name string, service_nodes string, url string, m map[string]interface{}) {
 	log.Printf("** %s PORT OPEN ** ", service_name)
 	// is_port_open := utils.Get_port_open(args_map.ES_URL)
-	is_port_open, port_open_cnt, server_status := utils.Get_port_list_open(url)
+	track_error_func := []string{}
+	is_port_open, port_open_cnt, server_status, track_error_func := utils.Get_port_list_open(service_name, url)
 	log.Println("** is_port_open: ** ", is_port_open)
 	log.Println("** server_status ** : ", server_status)
 
@@ -64,6 +65,12 @@ func set_service_port(service_name string, service_nodes string, url string, m m
 	// update server_active to global variable
 	active_update_func(server_status)
 	fmt.Print("\n\n")
+
+	/* Update gloal variable */
+	for _, alert_message := range track_error_func {
+		TRACK_ERROR = append(TRACK_ERROR, alert_message)
+	}
+
 }
 
 // var SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
@@ -117,32 +124,44 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 			log.Print("\n")
 
 			// return when the number of records is zero
-			if len(response_map.Results) < 1 {
-				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+			if response_map.Results == nil {
+				/* Update Track Error */
+				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] %s", strings.ToUpper(db_type), response_map.Message))
 				return
 			}
 
+			if len(response_map.Results) < 1 {
+				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+				/* Update Track Error */
+				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] No 'Data Pipeline' Process records", strings.ToUpper(db_type)))
+				return
+			}
+
+			TIME_GAP := 0.0
 			for i, rows := range response_map.Results {
 				if i == 0 {
 					log.Println("Body Json sequence : ", i+1)
 					log.Println("Body Json records : ", rows.PROCESSNAME)
 
 					if db_type == "WMx" {
-						DATA_PIPELINE_ACITVE_WMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+						DATA_PIPELINE_ACITVE_WMX, TIME_GAP = utils.Get_time_difference_is_ative(rows.ADDTS)
 						if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 						} else {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+							/* Update Track Error */
+							TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] Data has not been processed in the last 30 minutes. [%f hours]", strings.ToUpper(db_type), TIME_GAP))
 						}
 
 					} else {
-						DATA_PIPELINE_ACITVE_OMX = utils.Get_time_difference_is_ative(rows.ADDTS)
+						DATA_PIPELINE_ACITVE_OMX, TIME_GAP = utils.Get_time_difference_is_ative(rows.ADDTS)
 						if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 						} else {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+							/* Update Track Error */
+							TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] Data has not been processed in the last 30 minutes. [%f hours]", strings.ToUpper(db_type), TIME_GAP))
 						}
-
 					}
 					// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 				}
@@ -170,6 +189,11 @@ func set_init() {
 	fmt.Print("\n\n")
 }
 
+func set_initialize() {
+	/* Initialize */
+	TRACK_ERROR = []string{}
+}
+
 /* global variable */
 var (
 	args_map        = repository.ARG{}
@@ -182,6 +206,9 @@ var (
 	SPARK_APP_STATUS                                   = "Red"
 	LEN_SPARK_CUSTOM_APP                               = 0
 	SPARK_CUSTOM_APP_LIST                              = ""
+
+	/* Error Track */
+	TRACK_ERROR = []string{}
 
 	TIME_INTERVAL = 30
 )
@@ -332,6 +359,7 @@ func update_service_status() {
 	log.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
 	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
+	logging.Info(fmt.Sprintf("Alert Error Tract: %s", TRACK_ERROR))
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
@@ -376,6 +404,9 @@ func work() {
 	set_init()
 
 	for {
+
+		/* Initialize */
+		set_initialize()
 
 		// Get the configuration from the REST API
 		/* argument as map[string]interface{} into get_configuration func */

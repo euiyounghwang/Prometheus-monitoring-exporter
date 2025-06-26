@@ -42,7 +42,7 @@ func Map_to_json(m map[string]interface{}) repository.SERVER_STATUS {
 
 }
 
-func Get_time_difference_is_ative(inputTime string) string {
+func Get_time_difference_is_ative(inputTime string) (string, float64) {
 	time_gap := 0.51
 	// Specific time zone
 	nyLocation, _ := time.LoadLocation("America/New_York")
@@ -54,43 +54,47 @@ func Get_time_difference_is_ative(inputTime string) string {
 	// s := "2022-03-23T07:00:00+01:00"
 	loc, _ := time.LoadLocation("America/New_York")
 	date, error := time.ParseInLocation(time.DateTime, inputTime, loc)
+
+	diff := currentTime.Sub(date)
+
 	if error != nil {
 		log.Println(error)
-		return "Red"
+		return "Red", diff.Hours()
 	}
 
 	log.Println("time_difference func - inputTime", date)
 
-	diff := currentTime.Sub(date)
 	log.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
 	log.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
 
 	if time_gap > diff.Hours() {
-		return "Green"
+		return "Green", diff.Hours()
 	} else {
-		return "Red"
+		return "Red", diff.Hours()
 	}
 }
 
-func Get_port_open(host string) bool {
+func Get_port_open(idx int, key string, host string) (bool, string) {
 	// Connect to the server
 	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		log.Println("Error:", err)
-		return false
+		return false, fmt.Sprintf("[Node #%d - %s_URL] %s is not runnning..", idx, key, key)
 	}
 	defer conn.Close()
 
-	return true
+	return true, ""
 }
 
-func Get_port_list_open(host string) (bool, int, string) {
+func Get_port_list_open(service_name string, host string) (bool, int, string, []string) {
 	result := strings.Split(strings.Trim(host, " "), ",")
 	log.Printf("Result: %s, Type : %s\n", result, reflect.TypeOf(result))
 
 	flag := true
 	flag_value := 0
 	server_status := "red"
+
+	track_error := []string{}
 
 	for i, rows := range result {
 		rows = strings.Trim(rows, " ")
@@ -102,6 +106,7 @@ func Get_port_list_open(host string) (bool, int, string) {
 		conn, err := net.Dial("tcp", rows)
 		if err != nil {
 			logging.Info(fmt.Sprintf("Error: %s", err))
+			track_error = append(track_error, fmt.Sprintf("[Node #%d - %s_URL] %s is not runnning..", i+1, service_name, rows))
 			flag = flag && false
 			flag_value = flag_value + 0
 			// log.Println("flag : ", flag)
@@ -126,5 +131,5 @@ func Get_port_list_open(host string) (bool, int, string) {
 	log.Println("** flag_value ** : ", flag_value)
 	// log.Println("** server_status ** : ", server_status)
 
-	return flag, flag_value, server_status
+	return flag, flag_value, server_status, track_error
 }
