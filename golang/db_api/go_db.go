@@ -359,7 +359,7 @@ func update_service_status() {
 	log.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
 	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
-	logging.Info(fmt.Sprintf("Alert Error Tract: %s", TRACK_ERROR))
+	logging.Info(fmt.Sprintf("Alert Error Tract: %s\n", TRACK_ERROR))
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
