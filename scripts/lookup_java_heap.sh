@@ -39,6 +39,7 @@ lookup_heap_dump()
     do
         if [ -f "${file}" ]; then
             echo  "HEAP_DUMP_FILE EXISTS : $file"
+                # Send an email if HEAP DUMP FILE exists
                 mailx -s '[Dev] Monitoring Script for elasticsearch [Disk Space Alert]' $email_address << EOF
 Your $host_name has $file. Used: $CURRENT%
 EOF
