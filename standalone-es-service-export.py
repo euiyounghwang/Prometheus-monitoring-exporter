@@ -2326,6 +2326,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"current_alert_message : {saved_thread_alert_message}")
         logging.info(f"saved_failure_db_dict : {saved_failure_db_dict}")
         logging.info(f"alert_job's started time : {ALERT_STARTED_TIME}")
+        logging.info(f"DB Jobs time difference for WMx : {global_time_difference_WMx}h, DB Jobs time difference for OMx : {global_time_difference_OMx}h")
         logging.info(f"tracking_failure_dict : {tracking_failure_dict}, saved_thread_alert : {saved_thread_alert}, alert_duration_time : {ALERT_DURATION}, alert_resent_flag on Main Process : {ALERT_RESENT}")
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"ssl_certificates_expired_date_es : {ssl_certificates_expired_date_es}, ssl_certificates_expired_date_spark : {ssl_certificates_expired_date_spark}")
@@ -2593,7 +2594,7 @@ def get_time_difference(audit_process_name_time):
         time_hours = float((dt_a-dt_b).total_seconds() / 3600)
         print(f"Time Difference to hours - {time_hours}")
 
-        return round(time_hours,2)
+        return round(time_hours,3)
         
         """
         if now_time < audit_process_name_time:
@@ -2635,6 +2636,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
     global saved_status_dict, saved_failure_db_dict, WMx_threads_db_active, OMx_threads_db_active, WMx_threads_db_Kafka_offset_active
     global db_transactin_time_WMx, db_transactin_time_OMx
     global global_env_name
+    global global_time_difference_WMx, global_time_difference_OMx
     time_difference_to_hours = 0.0
 
     db_transactin_time_WMx, db_transactin_time_OMx = 0.0, 0.0
@@ -2781,6 +2783,13 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                             time_difference_to_hours = get_time_difference(audit_process_name_time)
                             ''' --------------'''
 
+                            ''' global variable set'''
+                            if db_info == "WMx":
+                                global_time_difference_WMx = time_difference_to_hours
+                            elif db_info == "OMx":
+                                global_time_difference_OMx = time_difference_to_hours
+
+
                             ''' Check DATA PIPELINE PROCESS If the processing time is greator than 30 minutes, we believe there may be a problem with the process.'''
                             ''' 1.0 : 1 hour'''
                             if time_difference_to_hours > DATA_PIPELINE_THRESHOLD:
@@ -2791,7 +2800,11 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                                 saved_status_dict.update({'es_pipeline' : 'Red'})
                                 ''' expose failure node with a reason'''
                                 # saved_failure_db_dict.update({element_each_json.get('DBID', 'db_jobs') : "{} process has not saved test records within the last 30 minutes.".format(element_each_json.get('PROCESSNAME',''))})
+                                ''' debug for the process name with datetime/ADDTS'''
+                                debug_now_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
                                 saved_failure_db_dict.update({element_each_json.get('DBID', "db_jobs_{}".format(db_info)) + "_{}".format(db_info) : "{} db -> Data has not been processed in the last 30 minutes. [{} hours]".format(db_info, time_difference_to_hours)})
+                                ''' debug '''
+                                saved_failure_db_dict.update({"db_jobs_{}".format(db_info) + "_{}_DEBUG".format(db_info) : "{} db -> DEBUG : The most recent process name : {}, Current Time : {}, ADDTS : {}".format(db_info, element_each_json['PROCESSNAME'], debug_now_time, audit_process_name_time)})
 
                                 """
                                 if db_info == "WMx":
@@ -3219,6 +3232,8 @@ ALERT_RESENT_TIME = 1.0
 ALERT_DURATION = 0.0
 ALERT_RESENT = False
 ALERT_STARTED_TIME = "1900-01-01 00:00:00"
+
+global_time_difference_WMx, global_time_difference_OMx = 0.0, 0.0
 
 
 def get_alert_resend(updated=True):

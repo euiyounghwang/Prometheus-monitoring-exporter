@@ -41,7 +41,8 @@ def create_log():
     if not os.path.exists("./logs"):
         os.makedirs("./logs")
 
-    tz = timezone('America/Chicago')  # UTC, Asia/Shanghai, Europe/Berlin
+    # tz = timezone('America/Chicago')  # UTC, Asia/Shanghai, Europe/Berlin
+    tz = timezone('US/Eastern')
     logging.Formatter.converter = timetz
     
     log_format = logging.StreamHandler()
