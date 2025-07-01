@@ -1,5 +1,18 @@
 package main
 
+/* Instrumenting a Go application for Prometheus
+************************************************
+https://prometheus.io/docs/guides/go-application
+************************************************
+You can install the prometheus, promauto, and promhttp libraries necessary for the guide using go get:
+go get github.com/prometheus/client_golang/prometheus
+go get github.com/prometheus/client_golang/prometheus/promauto
+go get github.com/prometheus/client_golang/prometheus/promhttp
+
+To expose Prometheus metrics in a Go application, you need to provide a /metrics HTTP endpoint.
+You can use the prometheus/promhttp library's HTTP Handler as the handler function.
+*/
+
 import (
 	"encoding/json"
 	"fmt"
