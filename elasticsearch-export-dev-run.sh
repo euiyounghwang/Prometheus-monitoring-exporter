@@ -11,6 +11,7 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
+        # nohup $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=https://a:a@localhost:9200 --es.all --es.indices --es.timeout 20s --es.snapshots --es.ssl-skip-verify --web.listen-address :$PORT &> /dev/null &
         #nohup $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=http://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --web.listen-address :$PORT &> /dev/null &
         $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=http://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --web.listen-address :$PORT
         ;;
