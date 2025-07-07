@@ -172,23 +172,6 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 	}
 }
 
-func set_init() {
-	// String
-	m := configuration.Get_initialize_args()
-
-	jsonData, _ := json.Marshal(m)
-	// args_map := repository.ARG{}
-	if err := json.Unmarshal(jsonData, &args_map); err != nil {
-		// do error check
-		log.Println(err)
-	}
-
-	log.Println("globla(map) *es_args: ", m["es_url"])
-	log.Println("args_map.ES_URL: ", args_map.ES_URL)
-	log.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
-	fmt.Print("\n\n")
-}
-
 func set_initialize() {
 	/* Initialize */
 	TRACK_ERROR = []string{}
@@ -401,7 +384,10 @@ func work() {
 	*/
 
 	/* set arguments */
-	set_init()
+	// set_init()
+	/* You can define init(), but you can't call it yourself: */
+	/* init() is always called, regardless if there's main or not, so if you import a package that has an init function, it will be executed. */
+	// init()
 
 	for {
 
@@ -435,6 +421,23 @@ func work() {
 		time.Sleep(time.Duration(TIME_INTERVAL) * time.Second)
 	}
 
+}
+
+func init() {
+	// String
+	m := configuration.Get_initialize_args()
+
+	jsonData, _ := json.Marshal(m)
+	// args_map := repository.ARG{}
+	if err := json.Unmarshal(jsonData, &args_map); err != nil {
+		// do error check
+		log.Println(err)
+	}
+
+	log.Println("globla(map) *es_args: ", m["es_url"])
+	log.Println("args_map.ES_URL: ", args_map.ES_URL)
+	log.Println("Arguments Json:", utils.PrettyString(string(jsonData)))
+	fmt.Print("\n\n")
 }
 
 func main() {
