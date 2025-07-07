@@ -16,6 +16,24 @@ import (
 	"db.com/m/repository"
 )
 
+/*
+INPUT : "111, 222"
+OUTPUT : "111", "222"
+*/
+func Build_split_string_array(s string) string {
+	var sb strings.Builder
+	s_array := strings.Split(strings.Replace(s, " ", "", -1), ",")
+
+	for index, element := range s_array {
+		sb.WriteString(`"` + element + `"`)
+		if index != len(s_array)-1 {
+			sb.WriteString(`,`)
+		}
+	}
+
+	return sb.String()
+}
+
 func String_to_float_giga(float_value uint64) float64 {
 	ram_total := fmt.Sprintf("%.2f", float64(float_value)/1024/1024/1024)
 	ram_total_type_float, err := strconv.ParseFloat(ram_total, 64)
@@ -72,14 +90,14 @@ func Map_to_json(m map[string]interface{}) repository.SERVER_STATUS {
 func Get_time_difference_is_ative(inputTime string) (string, float64) {
 	time_gap := 0.51
 	// Specific time zone
-	nyLocation, _ := time.LoadLocation("America/New_York")
+	nyLocation, _ := time.LoadLocation(repository.Global_local_time)
 	currentTime := time.Now().In(nyLocation)
 	// currentTime.Format("2006-01-02 15:04:05")
 	log.Println("time_difference func - currentTime : ", currentTime)
 
 	// date, error := time.Parse("2006-01-02 00:00:00", rows.ADDTS)
 	// s := "2022-03-23T07:00:00+01:00"
-	loc, _ := time.LoadLocation("America/New_York")
+	loc, _ := time.LoadLocation(repository.Global_local_time)
 	date, error := time.ParseInLocation(time.DateTime, inputTime, loc)
 
 	diff := currentTime.Sub(date)

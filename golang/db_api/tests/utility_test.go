@@ -43,3 +43,13 @@ func Test_Round_Float(t *testing.T) {
 	expected_round_float = -12.3456789
 	assert.Equal(t, utility.RoundFloat(-12.3456789, 10), expected_round_float)
 }
+
+func Test_Build_split_string_array(t *testing.T) {
+	input_value := "111,222"
+	expected_value := `"111","222"`
+	assert.Equal(t, utility.Build_split_string_array(input_value), expected_value)
+
+	input_value = "111, 222"
+	expected_value = `"111","222"`
+	assert.Equal(t, utility.Build_split_string_array(input_value), expected_value)
+}

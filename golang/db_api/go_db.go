@@ -184,6 +184,7 @@ var (
 
 	SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT         = 0, 0
 	SERVER_ACITVE, DATA_PIPELINE_ACITVE                = true, true
+	SAVED_THREAD_ALERT                                 = false
 	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT        = "Red", "Red"
 	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 	SPARK_APP_STATUS                                   = "Red"
@@ -338,6 +339,13 @@ func update_service_status() {
 	// update all status to server_status_mm_server_statusap
 	server_status_map := utils.Map_to_json(m_server_status)
 
+	/* ALERT UPDATE : track the error messages in TRACK_ERROR string array*/
+	if len(TRACK_ERROR) > 0 {
+		SAVED_THREAD_ALERT = true
+	} else {
+		SAVED_THREAD_ALERT = false
+	}
+
 	fmt.Print("\n\n")
 	log.Print("** STATUS **\n")
 	json_server_status, _ := json.Marshal(m_server_status)
@@ -347,17 +355,26 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
 	logging.Info(fmt.Sprintf("*SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
+	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", SAVED_THREAD_ALERT))
 	fmt.Print("\n\n")
 }
 
 /* alert check and push alerts via email/text alert via REST API*/
 func alert_work() {
-	log.Print("\n\n")
+	fmt.Print("\n\n")
 
 	server_status_map := utils.Map_to_json(m_server_status)
-	log.Println("alert work thread..")
+	logging.Info("alert work thread..")
 	logging.Info(fmt.Sprintf("* [Alert_Work] SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
-	log.Print("\n\n")
+	logging.Info(fmt.Sprintf("* [Alert_Work] SAVED_THREAD_ALERT: %t", SAVED_THREAD_ALERT))
+
+	/* Push alert to email */
+	if SAVED_THREAD_ALERT {
+		/* Push alert loginc here */
+		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", TRACK_ERROR))
+	}
+
+	fmt.Print("\n\n")
 }
 
 func work() {
@@ -424,6 +441,7 @@ func work() {
 }
 
 func init() {
+
 	// String
 	m := configuration.Get_initialize_args()
 

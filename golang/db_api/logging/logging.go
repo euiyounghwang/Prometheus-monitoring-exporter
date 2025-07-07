@@ -3,6 +3,9 @@ package logging
 import (
 	"log"
 	"os"
+	"time"
+
+	"db.com/m/repository"
 )
 
 var (
@@ -23,6 +26,10 @@ func init() {
 		WarningLogger = log.New(file, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
 		ErrorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	*/
+
+	loc, _ := time.LoadLocation(repository.Global_local_time)
+	// handle err
+	time.Local = loc // -> this is setting the global timezone
 
 	InfoLogger = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
 	WarningLogger = log.New(os.Stdout, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)

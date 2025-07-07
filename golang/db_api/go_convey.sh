@@ -9,3 +9,7 @@ SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 # go get github.com/stretchr/testify/assert
 goconvey --workDir=$SCRIPTDIR/tests --port=7090
 # goconvey --port=7090
+
+# go test -cover
+# go test -coverprofile=coverage.out
+# go tool cover -html=coverage.out
