@@ -43,16 +43,19 @@ func Get_two_date_time_difference(startTime string, endTime string) float64 {
 
 	loc, _ := time.LoadLocation(repository.Global_local_time)
 
-	startdate, error := time.ParseInLocation(time.DateTime, startTime, loc)
-	enddate, error := time.ParseInLocation(time.DateTime, endTime, loc)
+	// startdate, error := time.ParseInLocation(time.DateTime, startTime, loc)
+	startdate, _ := time.ParseInLocation(time.DateTime, startTime, loc)
+	enddate, _ := time.ParseInLocation(time.DateTime, endTime, loc)
 
 	log.Printf("startdate : %s, enddate : %s", startdate, enddate)
 
 	diff := startdate.Sub(enddate)
 
-	if error != nil {
-		log.Println(error)
-	}
+	/*
+		if error != nil {
+			log.Println(error)
+		}
+	*/
 
 	log.Printf("Body Json gap_time: %.3fh\n", diff.Hours())
 	log.Printf("Body Json gap_time: %.1fmin\n", diff.Minutes())
