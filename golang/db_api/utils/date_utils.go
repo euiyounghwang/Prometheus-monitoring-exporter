@@ -62,3 +62,11 @@ func Get_two_date_time_difference(startTime string, endTime string) float64 {
 
 	return diff.Hours()
 }
+
+func Get_current_time() string {
+	loc, _ := time.LoadLocation(repository.Global_local_time)
+	currentTime := time.Now().In(loc)
+
+	YYYYMMDDhhmmss := "2006-01-02 15:04:05"
+	return currentTime.Format(YYYYMMDDhhmmss)
+}

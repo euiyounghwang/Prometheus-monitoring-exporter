@@ -371,6 +371,7 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
 	logging.Info(fmt.Sprintf("*SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
 	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
+	logging.Info(fmt.Sprintf("*PUSH_ALERT_TIME: %s", repository.PUSH_ALERT_TIME))
 	logging.Info(fmt.Sprintf("*SERVER_ACTIVE_TOTAL_CNT: %d, SERVER_ACTIVE_CNT: %d", SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT))
 	fmt.Print("\n\n")
 }
@@ -387,6 +388,14 @@ func alert_work() {
 	/* Push alert to email */
 	if repository.SAVED_THREAD_ALERT {
 		/* Push alert loginc here */
+		/* Push alert every 1 hour as a push inverval */
+		if utils.Get_two_date_time_difference(utils.Get_current_time(), repository.PUSH_ALERT_TIME) > repository.PUSH_ALERT_INTERVAL_HOUR {
+			/* Push alert to an email */
+
+			/* Update this date if alert is sent corretly */
+			repository.PUSH_ALERT_TIME = utils.Get_current_time()
+		}
+		logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
 		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", TRACK_ERROR))
 	}
 
