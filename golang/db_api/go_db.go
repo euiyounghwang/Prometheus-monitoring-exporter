@@ -310,7 +310,7 @@ func get_service_spark_app(args_map repository.ARG) {
 
 func update_service_status() {
 	// verify the Server Active
-	if SERVER_ACTIVE_CNT == SERVER_ACTIVE_TOTAL_CNT {
+	if SERVER_ACTIVE_CNT >= SERVER_ACTIVE_TOTAL_CNT {
 		SERVER_ACITVE_TXT = "Green"
 	} else if SERVER_ACTIVE_CNT == 0 {
 		SERVER_ACITVE_TXT = "Red"
