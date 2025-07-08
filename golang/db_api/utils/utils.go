@@ -86,6 +86,14 @@ func Map_to_json(m map[string]interface{}) repository.SERVER_STATUS {
 
 }
 
+func Transform_map_to_json_string(m map[string]interface{}) string {
+	json_server_status, err := json.Marshal(m)
+	if err != nil {
+		log.Println(err)
+	}
+	return PrettyString(string(json_server_status))
+}
+
 func Get_port_open(idx int, key string, host string) (bool, string) {
 	// Connect to the server
 	conn, err := net.Dial("tcp", host)

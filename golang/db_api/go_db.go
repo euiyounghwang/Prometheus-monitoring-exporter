@@ -34,19 +34,22 @@ var (
 // ascill art
 // go get github.com/common-nighthawk/go-figure
 
-func active_update_func(status string) {
-	SERVER_ACTIVE_TOTAL_CNT += 1
-	if strings.ToLower(status) == "green" {
-		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-		SERVER_ACTIVE_CNT += 1
-	} else if strings.ToLower(status) == "yellow" {
-		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
-		SERVER_ACTIVE_CNT -= 1
-	} else {
-		// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-		SERVER_ACTIVE_CNT += 0
-	}
-	// log.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
+func active_update_func(host_total_cnt int, port_open_cnt int) {
+	SERVER_ACTIVE_TOTAL_CNT += host_total_cnt
+	SERVER_ACTIVE_CNT += port_open_cnt
+	/*
+		if strings.ToLower(status) == "green" {
+			// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+			SERVER_ACTIVE_CNT += 1
+		} else if strings.ToLower(status) == "yellow" {
+			// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
+			SERVER_ACTIVE_CNT -= 1
+		} else {
+			// DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
+			SERVER_ACTIVE_CNT += 0
+		}
+		// log.Println(status, server_active_chk, DATA_PIPELINE_ACITVE)
+	*/
 }
 
 func set_service_port(service_name string, service_nodes string, url string, m map[string]interface{}) {
@@ -63,7 +66,7 @@ func set_service_port(service_name string, service_nodes string, url string, m m
 	}
 
 	// update server_active to global variable
-	active_update_func(server_status)
+	active_update_func(len(strings.Split(strings.Trim(url, " "), ",")), port_open_cnt)
 	fmt.Print("\n\n")
 
 	/* Update gloal variable */
@@ -78,7 +81,7 @@ func set_service_port(service_name string, service_nodes string, url string, m m
 // var SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
 // var DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 
-func get_service_data_pipeline_health(args_map repository.ARG, m_server_status map[string]interface{}) {
+func get_service_data_pipeline_health(args_map repository.ARG) {
 	// log.Println("** HTTP GET **")
 	// get_configuration()
 	// log.Print("\n\n")
@@ -127,6 +130,7 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 			if response_map.Results == nil {
 				/* Update Track Error */
 				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] %s", strings.ToUpper(db_type), response_map.Message))
+				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 				return
 			}
 
@@ -163,17 +167,26 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 							TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] Data has not been processed in the last 30 minutes. [%f hours]", strings.ToUpper(db_type), TIME_GAP))
 						}
 					}
-					// log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 				}
 			}
 		} else {
 			DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 		}
+		log.Println("DATA PIPELINE : ", DATA_PIPELINE_ACITVE)
 	}
 }
 
 func set_initialize() {
 	/* Initialize */
+	SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT = 0, 0
+	SERVER_ACITVE, DATA_PIPELINE_ACITVE = true, true
+	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT = "Red", "Red"
+	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
+	SPARK_APP_STATUS = "Red"
+	LEN_SPARK_CUSTOM_APP = 0
+	SPARK_CUSTOM_APP_LIST = ""
+
+	/* Error Track */
 	TRACK_ERROR = []string{}
 }
 
@@ -184,7 +197,6 @@ var (
 
 	SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT         = 0, 0
 	SERVER_ACITVE, DATA_PIPELINE_ACITVE                = true, true
-	SAVED_THREAD_ALERT                                 = false
 	SERVER_ACITVE_TXT, DATA_PIPELINE_ACITVE_TXT        = "Red", "Red"
 	DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX = "Red", "Red"
 	SPARK_APP_STATUS                                   = "Red"
@@ -341,21 +353,25 @@ func update_service_status() {
 
 	/* ALERT UPDATE : track the error messages in TRACK_ERROR string array*/
 	if len(TRACK_ERROR) > 0 {
-		SAVED_THREAD_ALERT = true
+		repository.SAVED_THREAD_ALERT = true
 	} else {
-		SAVED_THREAD_ALERT = false
+		repository.SAVED_THREAD_ALERT = false
 	}
 
 	fmt.Print("\n\n")
 	log.Print("** STATUS **\n")
-	json_server_status, _ := json.Marshal(m_server_status)
-	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
+	/*
+		json_server_status, _ := json.Marshal(m_server_status)
+		logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.PrettyString(string(json_server_status))))
+	*/
+	logging.Info(fmt.Sprintf("SERVER_STATUS Json: %s", utils.Transform_map_to_json_string(m_server_status)))
 	logging.Info(fmt.Sprintf("Alert Error Tract: %s\n", TRACK_ERROR))
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s", server_status_map.ES))
 	logging.Info(fmt.Sprintf("SERVER STATUS.KAFKA_URL: %s", server_status_map.KAFKA))
 	logging.Info(fmt.Sprintf("*SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
-	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", SAVED_THREAD_ALERT))
+	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
+	logging.Info(fmt.Sprintf("*SERVER_ACTIVE_TOTAL_CNT: %d, SERVER_ACTIVE_CNT: %d", SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT))
 	fmt.Print("\n\n")
 }
 
@@ -366,10 +382,10 @@ func alert_work() {
 	server_status_map := utils.Map_to_json(m_server_status)
 	logging.Info("alert work thread..")
 	logging.Info(fmt.Sprintf("* [Alert_Work] SERVER Active: %s * DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
-	logging.Info(fmt.Sprintf("* [Alert_Work] SAVED_THREAD_ALERT: %t", SAVED_THREAD_ALERT))
+	logging.Info(fmt.Sprintf("* [Alert_Work] SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
 
 	/* Push alert to email */
-	if SAVED_THREAD_ALERT {
+	if repository.SAVED_THREAD_ALERT {
 		/* Push alert loginc here */
 		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", TRACK_ERROR))
 	}
@@ -424,7 +440,7 @@ func work() {
 		set_service_port("SPARK", "", args_map.SPARK_URL, m_server_status)
 
 		/* Verify if the data pipeline is online */
-		get_service_data_pipeline_health(args_map, m_server_status)
+		get_service_data_pipeline_health(args_map)
 
 		/* check if spark app is running */
 		get_service_spark_app(args_map)

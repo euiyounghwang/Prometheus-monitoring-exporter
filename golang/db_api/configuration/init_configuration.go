@@ -31,7 +31,7 @@ func Get_initialize_args() map[string]interface{} {
 	*/
 
 	flag.StringVar(&api_host, "api_host", "localhost", "string")
-	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202", "string")
+	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202, localhost:9203", "string")
 	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
 	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092,localhost:9092,localhost:9092", "string")
 	flag.StringVar(&zookeeper_url, "zookeeper_url", "localhost:2181", "string")
