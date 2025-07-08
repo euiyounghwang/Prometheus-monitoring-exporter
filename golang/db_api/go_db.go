@@ -144,7 +144,7 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 					log.Println("Body Json records : ", rows.PROCESSNAME)
 
 					if db_type == "WMx" {
-						DATA_PIPELINE_ACITVE_WMX, TIME_GAP = utils.Get_time_difference_is_ative(rows.ADDTS)
+						DATA_PIPELINE_ACITVE_WMX, TIME_GAP = utils.Get_time_difference(rows.ADDTS)
 						if strings.ToLower(DATA_PIPELINE_ACITVE_WMX) == "green" {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 						} else {
@@ -154,7 +154,7 @@ func get_service_data_pipeline_health(args_map repository.ARG, m_server_status m
 						}
 
 					} else {
-						DATA_PIPELINE_ACITVE_OMX, TIME_GAP = utils.Get_time_difference_is_ative(rows.ADDTS)
+						DATA_PIPELINE_ACITVE_OMX, TIME_GAP = utils.Get_time_difference(rows.ADDTS)
 						if strings.ToLower(DATA_PIPELINE_ACITVE_OMX) == "green" {
 							DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && true
 						} else {
