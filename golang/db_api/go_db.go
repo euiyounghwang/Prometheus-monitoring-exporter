@@ -391,7 +391,7 @@ func alert_work() {
 		/* Push alert every 1 hour as a push inverval */
 		if utils.Get_two_date_time_difference(utils.Get_current_time(), repository.PUSH_ALERT_TIME) > repository.PUSH_ALERT_INTERVAL_HOUR {
 			/* Push alert to an email */
-
+			logging.Warn("* [Alert_Work] Pushing email....")
 			/* Update this date if alert is sent corretly */
 			repository.PUSH_ALERT_TIME = utils.Get_current_time()
 		}
