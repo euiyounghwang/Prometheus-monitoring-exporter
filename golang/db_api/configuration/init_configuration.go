@@ -14,6 +14,7 @@ go run ./tools/bulk_index_script.go --es_host=http://localhost:9209 --index_name
 var (
 	env_name          string
 	api_host          string
+	alert_conf_api    string
 	es_url            string
 	kibana_url        string
 	kafka_url         string
@@ -33,6 +34,7 @@ func Get_initialize_args() map[string]interface{} {
 
 	flag.StringVar(&env_name, "env_name", "localhost", "string")
 	flag.StringVar(&api_host, "api_host", "localhost", "string")
+	flag.StringVar(&alert_conf_api, "alert_conf_api", "localhost", "string")
 	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202, localhost:9203", "string")
 	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
 	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092,localhost:9092,localhost:9092", "string")
@@ -54,6 +56,7 @@ func Get_initialize_args() map[string]interface{} {
 	m := make(map[string]interface{})
 	m["env_name"] = env_name
 	m["api_host"] = api_host
+	m["alert_conf_api"] = alert_conf_api
 	m["es_url"] = es_url
 	m["kibana_url"] = kibana_url
 	m["kafka_url"] = kafka_url

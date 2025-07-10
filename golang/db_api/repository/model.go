@@ -79,6 +79,7 @@ Result Struct
 type ARG struct {
 	ENV_NAME          string `json:"env_name"`
 	API_HOST          string `json:"api_host"`
+	ALERT_CONF_API    string `json:"alert_conf_api"`
 	ES_URL            string `json:"es_url"`
 	KIBANA_URL        string `json:"kibana_url"`
 	KAFKA_URL         string `json:"kafka_url"`

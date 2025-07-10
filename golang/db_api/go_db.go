@@ -458,7 +458,8 @@ func work() {
 
 		// Get the configuration from the REST API
 		/* argument as map[string]interface{} into get_configuration func */
-		get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
+		// get_configuration(api.API_Get(os.Getenv("CONFIGURATION")))
+		get_configuration(api.API_Get(args_map.ALERT_CONF_API))
 
 		// Verify if the service port is open
 		set_service_port("ES", "ES_NODES", args_map.ES_URL, m_server_status)
