@@ -568,7 +568,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         loop +=1
                     except Exception as e:
                         ''' save failure node with a reason into saved_failure_dict'''
-                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/[listeners]/status json API do not reachable".format(node, listener)})
+                        saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/[{}]/status json API do not reachable [error message : {}]".format(node, listener, str(e))})
                         # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status json API do not reachable".format(node, listener)})
                         # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status API{}".format(node, listener, str(e))})
                         ''' master kafka connect is runnning correctly, it doesn't matter'''
