@@ -214,12 +214,32 @@ func get_configuration(jsonRes map[string]interface{}) {
 		return
 	}
 
-	log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
-	log.Printf("Body Json : %s", jsonRes["test"])
-	log.Printf("Body Json : %s", jsonRes["test"].(map[string]interface{})["cc_list"])
+	/* configuration all */
+	// log.Printf("Body Json : %s", jsonRes["alert_exclude_time"])
+	// log.Printf("Body Json : %s", jsonRes["test"])
+	// log.Printf("Body Json : %s", jsonRes["test"].(map[string]interface{})["cc_list"])
+
+	// /* Used Struct */
+	// configuration_strcut := repository.Configuration{}
+	// jsonData, _ := json.Marshal(jsonRes)
+	// // json.Unmarshal(jsonData, &configuration_strcut)
+	// if err := json.Unmarshal(jsonData, &configuration_strcut); err != nil {
+	// 	// do error check
+	// 	log.Println(err)
+	// }
+
+	// log.Printf("\n")
+	// /*
+	// 	Tried to convert my Go map to a json string with encoding/json Marshal, then convert to json to Strcut with decoding/json UnMarshal
+
+	// */
+	// log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.AlertExcludeTime)
+	// log.Printf("Body Strcut configuration_strcut : %t", configuration_strcut.Test.IsMailing)
+	// log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.Env)
+	// log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
 
 	/* Used Struct */
-	configuration_strcut := repository.Configuration{}
+	configuration_strcut := repository.ALERT_Configuration{}
 	jsonData, _ := json.Marshal(jsonRes)
 	// json.Unmarshal(jsonData, &configuration_strcut)
 	if err := json.Unmarshal(jsonData, &configuration_strcut); err != nil {
@@ -228,14 +248,13 @@ func get_configuration(jsonRes map[string]interface{}) {
 	}
 
 	log.Printf("\n")
-	/*
-		Tried to convert my Go map to a json string with encoding/json Marshal, then convert to json to Strcut with decoding/json UnMarshal
 
-	*/
-	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.AlertExcludeTime)
-	log.Printf("Body Strcut configuration_strcut : %t", configuration_strcut.Test.IsMailing)
-	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.Env)
-	log.Printf("Body Strcut configuration_strcut : %s", configuration_strcut.Test.CcList)
+	log.Printf("Body Strcut configuration_strcut : %t", configuration_strcut.IsMailing)
+
+	/* Update is_Mailing */
+	repository.ALERT_MAIL_ENABLED = configuration_strcut.IsMailing
+	/* Update SMS */
+	repository.ALERT_SMS_ENABLED = configuration_strcut.IsSms
 }
 
 func get_service_spark_app(args_map repository.ARG) {
@@ -373,7 +392,7 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
 	logging.Info(fmt.Sprintf("*PUSH_ALERT_TIME: %s", repository.PUSH_ALERT_TIME))
 	logging.Info(fmt.Sprintf("*SERVER_ACTIVE_TOTAL_CNT: %d, SERVER_ACTIVE_CNT: %d", SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT))
-	logging.Info(fmt.Sprintf("*ENV : %s", args_map.ENV_NAME))
+	logging.Info(fmt.Sprintf("*ENV : %s, ALERT_MAIL_ENABLED : %t, ALERT_SMS_ENABLED : %t", args_map.ENV_NAME, repository.ALERT_MAIL_ENABLED, repository.ALERT_SMS_ENABLED))
 	fmt.Print("\n\n")
 }
 
