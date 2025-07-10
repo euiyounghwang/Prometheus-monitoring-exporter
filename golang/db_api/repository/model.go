@@ -18,6 +18,19 @@ type Configuration struct {
 	} `json:"test"`
 }
 
+// GET configuration from the particular env (GET http://localhost:8004/config/get_mail_config_from_env)
+type ALERT_Configuration struct {
+	MailList       string `json:"mail_list"`
+	CcList         string `json:"cc_list"`
+	SmsList        string `json:"sms_list"`
+	DevMailList    string `json:"dev_mail_list"`
+	DevSmsList     string `json:"dev_sms_list"`
+	Env            string `json:"env"`
+	ThreadInterval int    `json:"thread_interval"`
+	IsMailing      bool   `json:"is_mailing"`
+	IsSms          bool   `json:"is_sms"`
+}
+
 // Struct fields must start with upper case letter (exported) for the JSON package to see their value.
 type API_Results struct {
 	Running_time float32 `json:"running_time"`
@@ -64,6 +77,7 @@ type SPARK_APP_Results struct {
 Result Struct
 */
 type ARG struct {
+	ENV_NAME          string `json:"env_name"`
 	API_HOST          string `json:"api_host"`
 	ES_URL            string `json:"es_url"`
 	KIBANA_URL        string `json:"kibana_url"`

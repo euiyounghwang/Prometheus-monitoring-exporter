@@ -373,6 +373,7 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
 	logging.Info(fmt.Sprintf("*PUSH_ALERT_TIME: %s", repository.PUSH_ALERT_TIME))
 	logging.Info(fmt.Sprintf("*SERVER_ACTIVE_TOTAL_CNT: %d, SERVER_ACTIVE_CNT: %d", SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT))
+	logging.Info(fmt.Sprintf("*ENV : %s", args_map.ENV_NAME))
 	fmt.Print("\n\n")
 }
 
