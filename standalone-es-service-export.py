@@ -535,7 +535,7 @@ def get_metrics_all_envs(monitoring_metrics):
                             saved_failure_dict.update({"{}_{}".format(node, str(loop)) : "http://{}:8083/connectors/{} tasks are missing".format(node, listener)})
                         """
                         ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-                        resp_tasks = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=5, verify=False)
+                        resp_tasks = requests.get(url="http://{}:8083/connectors/{}".format(node, listener), timeout=10, verify=False)
                         
                         if not (resp_tasks.status_code == 200):
                             continue
@@ -562,7 +562,7 @@ def get_metrics_all_envs(monitoring_metrics):
                                 all_listeners_is_empty.append(False)
 
                         ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-                        resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=5, verify=False)
+                        resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=10, verify=False)
                         listeners_list.append(resp_listener.json())
                         
                         loop +=1
@@ -577,7 +577,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         # failure_check = True
                         logging.error(e)
 
-                        time.sleep(5)
+                        # time.sleep(5)
                         pass
 
                 listener_apis_dict.update({node : listeners_list})
