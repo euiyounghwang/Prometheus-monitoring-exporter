@@ -410,10 +410,15 @@ func alert_work() {
 		/* Push alert loginc here */
 		/* Push alert every 1 hour as a push inverval */
 		if utils.Get_two_date_time_difference(utils.Get_current_time(), repository.PUSH_ALERT_TIME) > repository.PUSH_ALERT_INTERVAL_HOUR {
-			/* Push alert to an email */
-			logging.Warn("* [Alert_Work] Pushing email....")
-			/* Update this date if alert is sent corretly */
-			repository.PUSH_ALERT_TIME = utils.Get_current_time()
+			if repository.ALERT_MAIL_ENABLED {
+				/* Push alert to an email */
+				logging.Warn("* [Alert_Work] Pushing email....")
+				/* Update this date if alert is sent corretly */
+				repository.PUSH_ALERT_TIME = utils.Get_current_time()
+			} else {
+				logging.Warn(fmt.Sprintf("* [Alert_Work] * %s alert configuration is False", args_map.ALERT_CONF_API))
+			}
+
 		}
 		logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
 		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", TRACK_ERROR))

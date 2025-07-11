@@ -576,7 +576,10 @@ def get_metrics_all_envs(monitoring_metrics):
                             failure_check = True
                         # failure_check = True
                         logging.error(e)
+
+                        time.sleep(5)
                         pass
+
                 listener_apis_dict.update({node : listeners_list})
                 node_lists_loop +=1
 
