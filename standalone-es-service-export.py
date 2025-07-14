@@ -134,6 +134,7 @@ db_jobs_wmx_sql_data_pipeline_gauge_g = Gauge("wmx_data_pipeline_sql_running_tim
 db_jobs_omx_sql_data_pipeline_gauge_g = Gauge("omx_data_pipeline_sql_running_time_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_WMx_gauge_g = Gauge("db_jobs_backlog_wmx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+# db_jobs_backlogs_gauge_g = Gauge("db_jobs_backlog_running_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 db_jobs_wmx_db_active_gauge_g = Gauge("db_wmx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
 
@@ -2973,6 +2974,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             if db_info == "WMx":
                 WMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_WMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(WMx_backlog))
+                # db_jobs_backlogs_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(float(WMx_backlog))
 
                 WMx_backlog_list.append(WMx_backlog)
                 
@@ -3004,6 +3006,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
             elif db_info == "OMx":
                 OMx_backlog = result_json_value[0].get("TOTAL_UNPROCESSED_RECS")
                 db_jobs_backlogs_OMx_gauge_g.labels(server_job=domain_name_as_nick_name).set(float(OMx_backlog))
+                # db_jobs_backlogs_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(float(WMx_backlog))
        
         except Exception as e:
             logging.error(e)
@@ -4024,13 +4027,13 @@ if __name__ == '__main__':
                 db_http_thread_Wmx_Backlog.start()
                 T.append(db_http_thread_Wmx_Backlog)
 
-                """
+                '''
                 db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
                 db_http_thread_Omx_Backlog.daemon = True
                 db_http_thread_Omx_Backlog.start()
                 T.append(db_http_thread_Omx_Backlog)
-                """
-
+                '''
+                
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
