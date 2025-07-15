@@ -129,16 +129,16 @@ func get_service_data_pipeline_health(args_map repository.ARG) {
 			// return when the number of records is zero
 			if response_map.Results == nil {
 				/* Update Track Error */
-				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] %s", strings.ToUpper(db_type), response_map.Message))
+				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s_DB] %s", strings.ToUpper(db_type), response_map.Message))
 				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
-				return
+				continue
 			}
 
 			if len(response_map.Results) < 1 {
 				DATA_PIPELINE_ACITVE = DATA_PIPELINE_ACITVE && false
 				/* Update Track Error */
 				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[%s] No 'Data Pipeline' Process records", strings.ToUpper(db_type)))
-				return
+				continue
 			}
 
 			TIME_GAP := 0.0
@@ -266,7 +266,10 @@ func get_service_spark_app(args_map repository.ARG) {
 
 	body := api.API_Get(api_endpoint_host)
 
-	if body != nil {
+	if body == nil {
+		/* Update Track Error */
+		TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[SPARK CLUSTER] %s API do not reachable", api_endpoint_host))
+	} else {
 		response_map := repository.SPARK_APP_Results{}
 		jsonbyte, _ := json.Marshal(body)
 		// json.Unmarshal(jsonData, &configuration_strcut)
@@ -283,6 +286,8 @@ func get_service_spark_app(args_map repository.ARG) {
 			/* Update STATUS */
 			SPARK_APP_STATUS = "Red"
 			SERVER_ACITVE = SERVER_ACITVE && false
+			/* Update Track Error */
+			TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[SPARK CLUSTER] %s custom apps are not running", api_endpoint_host))
 			return
 		}
 
@@ -299,6 +304,7 @@ func get_service_spark_app(args_map repository.ARG) {
 		LEN_SPARK_CUSTOM_APP = 0
 		/* --------------- */
 		spark_app_check_list := strings.Split(os.Getenv("SPARK_APP_CEHCK"), ",")
+		// fmt.Println("len(spark_app_check_list)", len(spark_app_check_list))
 		for _, app := range spark_app_check_list {
 			LEN_SPARK_CUSTOM_APP += 1
 			if slices.Contains(custom_apps, app) {
@@ -307,6 +313,8 @@ func get_service_spark_app(args_map repository.ARG) {
 			} else {
 				EXIST_APPS = EXIST_APPS && false
 				/* Create logs */
+				/* Update Track Error */
+				TRACK_ERROR = append(TRACK_ERROR, fmt.Sprintf("[SPARK CLUSTER APP] %s, no spark custom job (%s). Please confirm/run this.", api_endpoint_host, app))
 			}
 			SPARK_CUSTOM_APP_LIST += "," + app
 		}
@@ -336,7 +344,6 @@ func get_service_spark_app(args_map repository.ARG) {
 			}
 		*/
 	}
-
 }
 
 func update_service_status() {
@@ -371,7 +378,8 @@ func update_service_status() {
 	server_status_map := utils.Map_to_json(m_server_status)
 
 	/* ALERT UPDATE : track the error messages in TRACK_ERROR string array*/
-	if len(TRACK_ERROR) > 0 {
+	// if len(TRACK_ERROR) > 0 {
+	if !(SERVER_ACITVE && DATA_PIPELINE_ACITVE) {
 		repository.SAVED_THREAD_ALERT = true
 	} else {
 		repository.SAVED_THREAD_ALERT = false
@@ -420,7 +428,7 @@ func alert_work() {
 
 		}
 		logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
-		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", TRACK_ERROR))
+		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", utils.Transform_strings_array_to_html(TRACK_ERROR)))
 	}
 
 	fmt.Print("\n\n")
