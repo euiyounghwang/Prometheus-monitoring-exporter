@@ -377,12 +377,20 @@ func update_service_status() {
 	// update all status to server_status_mm_server_statusap
 	server_status_map := utils.Map_to_json(m_server_status)
 
+	/* ALERT History */
+	if len(repository.SAVED_ALERT_HISTORY) > 1 {
+		// Re-slice the slice to exclude the last element
+		repository.SAVED_ALERT_HISTORY = repository.SAVED_ALERT_HISTORY[1:len(repository.SAVED_ALERT_HISTORY)]
+	}
+
 	/* ALERT UPDATE : track the error messages in TRACK_ERROR string array*/
 	// if len(TRACK_ERROR) > 0 {
 	if !(SERVER_ACITVE && DATA_PIPELINE_ACITVE) {
 		repository.SAVED_THREAD_ALERT = true
+		repository.SAVED_ALERT_HISTORY = append(repository.SAVED_ALERT_HISTORY, true)
 	} else {
 		repository.SAVED_THREAD_ALERT = false
+		repository.SAVED_ALERT_HISTORY = append(repository.SAVED_ALERT_HISTORY, false)
 	}
 
 	fmt.Print("\n\n")
@@ -396,11 +404,19 @@ func update_service_status() {
 	logging.Info(fmt.Sprintf("DATA_PIPELINE_ACITVE_WMX : %s, DATA_PIPELINE_ACITVE_OMX : %s\n", DATA_PIPELINE_ACITVE_WMX, DATA_PIPELINE_ACITVE_OMX))
 	logging.Info(fmt.Sprintf("SERVER STATUS.ES_URL: %s, SERVER STATUS.KAFKA_URL: %s", server_status_map.ES, server_status_map.KAFKA))
 	logging.Info(fmt.Sprintf("*SERVER Active: %s, *DATA PIPELINE Active: %s", server_status_map.SERVER_ACTIVE, server_status_map.DATA_PIPELINE))
-	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t", repository.SAVED_THREAD_ALERT))
+	logging.Info(fmt.Sprintf("*SAVED_THREAD_ALERT: %t, SAVED_ALERT_HISTORY: %t", repository.SAVED_THREAD_ALERT, repository.SAVED_ALERT_HISTORY))
 	logging.Info(fmt.Sprintf("*PUSH_ALERT_TIME: %s", repository.PUSH_ALERT_TIME))
 	logging.Info(fmt.Sprintf("*SERVER_ACTIVE_TOTAL_CNT: %d, SERVER_ACTIVE_CNT: %d", SERVER_ACTIVE_TOTAL_CNT, SERVER_ACTIVE_CNT))
 	logging.Info(fmt.Sprintf("*ENV : %s, ALERT_MAIL_ENABLED : %t, ALERT_SMS_ENABLED : %t", args_map.ENV_NAME, repository.ALERT_MAIL_ENABLED, repository.ALERT_SMS_ENABLED))
 	fmt.Print("\n\n")
+
+	/* Push status into Grafana-Loki service if all services went back to green */
+	saved_history_green_alert := reflect.DeepEqual(repository.SAVED_ALERT_HISTORY, []bool{true, false})
+	logging.Info(fmt.Sprintf("'Services are back online to Grafana Loki: %t", saved_history_green_alert))
+	/* Push status into Grafana-loki */
+	if saved_history_green_alert {
+		logging.Info("* [Grafana Loki] Inserting the status..")
+	}
 }
 
 /* alert check and push alerts via email/text alert via REST API*/
@@ -429,6 +445,8 @@ func alert_work() {
 		}
 		logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
 		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", utils.Transform_strings_array_to_html(TRACK_ERROR)))
+
+		/* Push alert logs into Grafana-Loki service */
 	}
 
 	fmt.Print("\n\n")

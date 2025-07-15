@@ -6,6 +6,9 @@ var (
 	/* Alert occurs */
 	SAVED_THREAD_ALERT = false
 
+	/* add history for alerting */
+	SAVED_ALERT_HISTORY = []bool{}
+
 	/* Alert Settings */
 	ALERT_MAIL_ENABLED, ALERT_SMS_ENABLED = false, false
 
