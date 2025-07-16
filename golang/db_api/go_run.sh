@@ -8,6 +8,7 @@ ALERT_CONFIGURATION_API="http://localhost:8004/config/get_mail_config_from_env?h
 
 # Arguments for the script
 export API_HOST=localhost
+export GRAFANA_LOKI_HOST=localhost
 export ES_URL=localhost:9200,localhost:9200,localhost:9200,localhost:9200
 export KIBANA_URL=localhost:5601
 export KAFKA_URL=localhost:9092,localhost:9092,localhost:9092

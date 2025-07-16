@@ -405,6 +405,7 @@ func basic_resource(hostname string) {
 	// reset
 	cpuModelInfo.MetricVec.Reset()
 	// set
+	// lscpu
 	// grep -c processor /proc/cpuinfo
 	// free -g
 	// df -kH /apps

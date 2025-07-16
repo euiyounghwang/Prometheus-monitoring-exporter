@@ -13,6 +13,7 @@ import (
 
 	"db.com/m/api"
 	"db.com/m/configuration"
+	"db.com/m/grafana"
 	"db.com/m/logging"
 	"db.com/m/repository"
 	"db.com/m/utils"
@@ -111,7 +112,7 @@ func get_service_data_pipeline_health(args_map repository.ARG) {
 			"db_url": db_url,
 			"sql":    args_map.SQL,
 		}
-		body := api.API_Post(api_endpoint_host, json_post, db_type)
+		body := api.API_Post(api_endpoint_host, json_post)
 
 		if body != nil {
 
@@ -436,17 +437,32 @@ func alert_work() {
 			if repository.ALERT_MAIL_ENABLED {
 				/* Push alert to an email */
 				logging.Warn("* [Alert_Work] Pushing email....")
-				/* Update this date if alert is sent corretly */
-				repository.PUSH_ALERT_TIME = utils.Get_current_time()
 			} else {
 				logging.Warn(fmt.Sprintf("* [Alert_Work] * %s alert configuration is False", args_map.ALERT_CONF_API))
 			}
 
-		}
-		logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
-		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", utils.Transform_strings_array_to_html(TRACK_ERROR)))
+			/* Update this date if alert is sent corretly */
+			repository.PUSH_ALERT_TIME = utils.Get_current_time()
+			logging.Info(fmt.Sprintf("* [Alert_Work] Get_current_time: %s", utils.Get_current_time()))
 
-		/* Push alert logs into Grafana-Loki service */
+			/* Push alert logs into Grafana-Loki service */
+			logging.Warn("* [Alert_Work] Push alert message to Grafana Loki....")
+
+			/* Add Grafana Loki via REST API */
+			/* Push_alert_loki(api_host string, service string, logging_level string, env string, host string, host_name string, log_filename string, message string) */
+			grafana.Push_alert_loki(
+				os.Getenv("GRAFANA_LOKI_HOST"),
+				"prometheus-golang-monitoring-service",
+				"error",
+				args_map.ENV_NAME,
+				args_map.ENV_NAME,
+				args_map.ENV_NAME,
+				"",
+				utils.Transform_strings_array_to_html(TRACK_ERROR, false),
+			)
+		}
+
+		logging.Info(fmt.Sprintf("* [Alert_Work] Alert Messages: %s", utils.Transform_strings_array_to_html(TRACK_ERROR, true)))
 	}
 
 	fmt.Print("\n\n")

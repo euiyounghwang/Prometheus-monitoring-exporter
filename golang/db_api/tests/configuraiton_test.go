@@ -31,16 +31,18 @@ func Test_Initial_Configuration(t *testing.T) {
 		assert.Equal(t, m["api_host"], expected_value)
 	}
 
-	expected_query := `{"api_host":"localhost","db_url":"jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2","es_url":"localhost:9201, localhost:9202","kafka_connect_url":"localhost:8083","kafka_url":"localhost:9092,localhost:9092,localhost:9092","kibana_url":"localhost:5601","spark_url":"localhost:8080","sql":"SELECT * FROM TB","zookeeper_url":"localhost:2181"}`
+	expected_query := `{"alert_conf_api":"localhost","api_host":"localhost","db_url":"jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2","env_name":"localhost","es_url":"localhost:9201, localhost:9202, localhost:9203","kafka_connect_url":"localhost:8083","kafka_url":"localhost:9092,localhost:9092,localhost:9092","kibana_url":"localhost:5601","spark_url":"localhost:8080","sql":"SELECT * FROM TB","zookeeper_url":"localhost:2181"}`
 	jsonData, _ := json.Marshal(m)
 	// fmt.Printf("jsonData : %s", jsonData)
 	assert.Equal(t, string(jsonData), expected_query)
 
 	expected_query = `
 		{
+			"alert_conf_api":"localhost",
 			"api_host":"localhost",
 			"db_url":"jdbc:oracle:thin:test/test@localhost:1234/testdb1,jdbc:oracle:test/test@localhost:1234/testdb2",
-			"es_url":"localhost:9201, localhost:9202",
+			"env_name":"localhost",
+			"es_url":"localhost:9201, localhost:9202, localhost:9203",
 			"kafka_connect_url":"localhost:8083",
 			"kafka_url":"localhost:9092,localhost:9092,localhost:9092",
 			"kibana_url":"localhost:5601",

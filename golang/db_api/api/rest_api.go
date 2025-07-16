@@ -48,7 +48,7 @@ func API_Get(httpgeturl string) map[string]interface{} {
 
 }
 
-func API_Post(httpposturl string, post_json map[string]interface{}, db_type string) []byte {
+func API_Post(httpposturl string, post_json map[string]interface{}) []byte {
 	// """ POST """
 	// httpposturl := "http://" + os.Getenv("ES_CONFIGURATION_HOST") + ":8002/db/get_db_query"
 	// httpposturl := "http://" + host + ":8002/db/get_db_query"
@@ -97,7 +97,7 @@ func API_Post(httpposturl string, post_json map[string]interface{}, db_type stri
 		// panic(error)
 		logging.Info(fmt.Sprintf("Error : %s", error))
 		// return nil
-		error_json := fmt.Sprintf("{\"message\" : \"DB Connection Error - %s\"}", strings.Replace(fmt.Sprintf("%s", error), "\"", "'", -1))
+		error_json := fmt.Sprintf("{\"message\" : \"POST Connection Error - %s\"}", strings.Replace(fmt.Sprintf("%s", error), "\"", "'", -1))
 		logging.Info(error_json)
 		return []byte(error_json)
 	}

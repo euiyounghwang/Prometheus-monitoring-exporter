@@ -154,13 +154,18 @@ func Get_port_list_open(service_name string, host string) (bool, int, string, []
 	return flag, flag_value, server_status, track_error
 }
 
-func Transform_strings_array_to_html(msg []string) string {
+func Transform_strings_array_to_html(msg []string, is_html_format bool) string {
 	// var html_format = []string{}
 	var sb strings.Builder
 	for _, str_element := range msg {
 		// fmt.Println(str_element)
 		// html_format = append(html_format, fmt.Sprintf("%s<BR/>", str_element))
-		sb.WriteString(fmt.Sprintf("%s<BR/>", str_element))
+		if is_html_format {
+			sb.WriteString(fmt.Sprintf("%s<BR/>", str_element))
+		} else {
+			sb.WriteString(str_element)
+		}
+
 	}
 	// return html_format
 	return sb.String()
