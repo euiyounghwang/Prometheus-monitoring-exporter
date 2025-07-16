@@ -565,21 +565,19 @@ def get_metrics_all_envs(monitoring_metrics):
                         ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                         resp_listener = requests.get(url="http://{}:8083/connectors/{}/status".format(node, listener), timeout=10, verify=False)
                         listeners_list.append(resp_listener.json())
-                        
+
                         loop +=1
                     except Exception as e:
                         ''' save failure node with a reason into saved_failure_dict'''
                         saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/[{}]/status json API do not reachable [error message : {}]".format(node, listener, str(e))})
-                        # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status json API do not reachable".format(node, listener)})
-                        # saved_failure_dict.update({"{}_{}".format(node, str(loop))  : "http://{}:8083/connectors/{}/status API{}".format(node, listener, str(e))})
                         ''' master kafka connect is runnning correctly, it doesn't matter'''
                         if loop > 1:
                             failure_check = True
                         # failure_check = True
                         logging.error(e)
-
-                        # time.sleep(5)
                         pass
+
+                    time.sleep(1)
 
                 listener_apis_dict.update({node : listeners_list})
                 node_lists_loop +=1
@@ -2458,7 +2456,7 @@ WMx_threads_db_active, OMx_threads_db_active = True, True
 WMx_threads_db_Kafka_offset_active = True
 
 ''' Threshold'''
-DATA_PIPELINE_THRESHOLD = 0.505
+DATA_PIPELINE_THRESHOLD = 0.58
 KAFKA_OFFSET_EDITTS_UPDATED_THRESHOLD = 0.1
 
 ''' Backlog '''
