@@ -417,6 +417,18 @@ func update_service_status() {
 	/* Push status into Grafana-loki */
 	if saved_history_green_alert {
 		logging.Info("* [Grafana Loki] Inserting the status..")
+		/* Add Grafana Loki via REST API */
+		/* Push_alert_loki(api_host string, service string, logging_level string, env string, host string, host_name string, log_filename string, message string) */
+		grafana.Push_alert_loki(
+			os.Getenv("GRAFANA_LOKI_HOST"),
+			"prometheus-golang-monitoring-service",
+			"info",
+			args_map.ENV_NAME,
+			args_map.ENV_NAME,
+			args_map.ENV_NAME,
+			"",
+			"Services are back online",
+		)
 	}
 }
 
