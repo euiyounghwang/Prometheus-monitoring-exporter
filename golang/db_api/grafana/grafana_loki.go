@@ -2,6 +2,7 @@ package grafana
 
 import (
 	"fmt"
+	"strings"
 
 	"db.com/m/api"
 	"db.com/m/logging"
@@ -12,7 +13,7 @@ func Push_alert_loki(api_host string, service string, logging_level string, env 
 	json_post := map[string]interface{}{
 		"service":      service,
 		"log_status":   logging_level,
-		"env":          env,
+		"env":          strings.ToUpper(env),
 		"host":         host,
 		"host_name":    host_name,
 		"log_filename": log_filename,
