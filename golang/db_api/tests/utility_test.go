@@ -53,3 +53,13 @@ func Test_Build_split_string_array(t *testing.T) {
 	expected_value = `"111","222"`
 	assert.Equal(t, utility.Build_split_string_array(input_value), expected_value)
 }
+
+func Test_Build_transform_strings_array_to_html(t *testing.T) {
+	// var strs = []string{"test1", "test2"}
+	strs := []string{"test1", "test2"}
+	expected_value := "test1<BR/>test2<BR/>"
+	assert.Equal(t, utility.Transform_strings_array_to_html(strs, true), expected_value)
+
+	expected_value = "test1test2"
+	assert.Equal(t, utility.Transform_strings_array_to_html(strs, false), expected_value)
+}

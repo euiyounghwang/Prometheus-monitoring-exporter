@@ -458,7 +458,8 @@ func alert_work() {
 				args_map.ENV_NAME,
 				args_map.ENV_NAME,
 				"",
-				utils.Transform_strings_array_to_html(TRACK_ERROR, false),
+				// utils.Transform_strings_array_to_html(TRACK_ERROR, false),
+				"Dev Test..",
 			)
 		}
 
