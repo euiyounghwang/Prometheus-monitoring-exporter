@@ -577,7 +577,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         logging.error(e)
                         pass
 
-                    time.sleep(1)
+                    time.sleep(0.01)
 
                 listener_apis_dict.update({node : listeners_list})
                 node_lists_loop +=1
