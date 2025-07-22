@@ -21,7 +21,7 @@ Linux and macOS Installation Using Standard Go Tools
 ## Golang
 If you’re starting a new project, create a new module by running the following command: (https://opensearch.org/docs/latest/clients/go/)
 - go mod init <mymodulename>
-- go tidy
+- go mod tidy
 
 Prometheus has an official Go client library that you can use to instrument Go applications. In this guide, we'll create a simple Go application that exposes Prometheus metrics via HTTP.
 - Prometheus (https://prometheus.io/docs/guides/go-application/)
