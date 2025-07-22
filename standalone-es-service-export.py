@@ -3408,7 +3408,11 @@ def alert_work(db_http_host):
                     if is_sent_alert and is_resent_if_alert_need_to:
                         alert_to_text(data, get_es_config_interface_api_host_key, sms_list, saved_status_dict)
                 ''' ----------------------'''
-            
+
+                ''' MS Teams chat for the alert'''
+
+                ''' ----------------------'''
+                            
             """ Grafana-Loki Log """
             if saved_thread_alert:
                 ''' out of 00:00 time range for some issue from the db and sent alert again after 1 hour'''
