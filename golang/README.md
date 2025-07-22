@@ -39,6 +39,34 @@ go get github.com/prometheus/client_golang/prometheus/promhttp
 - gopsutil(https://leapcell.medium.com/gopsutil-powerful-system-stats-for-go-developers-2a1941c40822, https://dev.to/leapcell/gopsutil-powerful-system-stats-for-go-developers-53e0) is a Golang port of the Python library psutil, which helps us conveniently obtain various system and hardware information. It masks the differences between different systems and has extremely powerful portability. With gopsutil, we don’t need to use syscall to call the corresponding system methods for different systems. 
 - generate package(https://westlife0615.tistory.com/268)
 
+
+Gin-Framework: Gin is a web framework written in Golang. It features a Martini-like API, but with performance up to 40 times faster than Martini. If you need performance and productivity, you will love Gin.
+- go mod init gin-framework
+- go get github.com/gin-gonic/gin
+- go mod tidy
+
+```bash
+$ go run ./main.go 
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:   export GIN_MODE=release
+ - using code:  gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /ping                     --> main.main.func1 (3 handlers)
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Environment variable PORT is undefined. Using port :8080 by default
+[GIN-debug] Listening and serving HTTP on :8080
+[GIN] 2025/07/22 - 17:12:40 | 404 |            0s |             ::1 | GET      "/"
+[GIN] 2025/07/22 - 17:12:40 | 404 |            0s |             ::1 | GET      "/favicon.ico"
+[GIN] 2025/07/22 - 17:12:46 | 200 |            0s |             ::1 | GET      "/ping"
+
+$ curl http://localhost:8080/ping
+{"message":"pong"}
+```
+
+
 GoConvey(https://github.com/smartystreets/goconvey) supports Go's native testing package. Neither the web UI nor the DSL are required; you can use either one independently. Directly integrates with go test; Fully-automatic web UI (works with native Go tests, too)
 ```bash
 go get github.com/smartystreets/goconvey
