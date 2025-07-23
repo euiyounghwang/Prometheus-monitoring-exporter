@@ -1,0 +1,29 @@
+
+# MS Teams via Web Hook for the alert
+curl -X POST "WebHook URl" -H "Content-Type: application/json"  -d '{"text":"alert test"}'
+
+# Notification Reference
+https://docs.openmaru.io/docs/apm-event-guide/chap/06/
+
+# Trigger for the alert
+
+1) When a Team webhook request is received
+2) Parse JSON
+- Content : Body
+- Schema
+{
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "text": {
+            "type": "string"
+        }
+    }
+}
+
+3) MS Teams : Post message in a chat or channel
+- Post as Flow bot, Post in Group Chat, Group chat with your meeting name
+- Set Message with title,text
+
