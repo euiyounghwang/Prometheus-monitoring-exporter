@@ -1,11 +1,16 @@
 
 # MS Teams via Web Hook for the alert
-curl -X POST "WebHook URl" -H "Content-Type: application/json"  -d '{"text":"alert test"}'
+curl -X POST "WebHook URl" -H "Content-Type: application/json"  -d '{"text":"alert test<br/>new line"}'
 
 # Notification Reference
 https://docs.openmaru.io/docs/apm-event-guide/chap/06/
 
 # Trigger for the alert
+After creating a specific team group chat in the MS Teams tool, I want to receive alerts by creating workflow and webhook URL. In other words, our monitoring application sends alerts through the webhook URL. At this time, we can read messages in MS Teams almost in real time.
+- This is a new Ms Teams Webhook integration method. Please choose "Send webhook alerts to a chat" for the notification.
+- You can select the workflow name and the existing meeting chat to receive the message.
+- When you add a workflow, a webhook url is created to receive messages from the client to the existing meeting chat. We will send json payload via this webhook url for the alert in the future.
+- The next step is to add a step for parsing the json sent from the client. Then, finally, set the step to post the message to the existing meeting chat.
 
 1) When a Team webhook request is received
 2) Parse JSON
