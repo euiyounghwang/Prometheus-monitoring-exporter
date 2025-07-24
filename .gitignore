@@ -20,4 +20,5 @@ golang/db_api/logger/
 golang/db_api/db_api_agent.exe
 golang/golang_exporter/go_run_qa.sh
 golang/golang_exporter/go_run_dev.sh
+golang/gin_framework/output/
 
