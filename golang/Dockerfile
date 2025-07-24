@@ -6,6 +6,8 @@ ENV https_proxy="https://localhost:8080"
 
 WORKDIR /app
 
+RUN apk update && apk add --no-cache git 
+
 # Download Go modules
 COPY ./golang_exporter/go.mod ./golang_exporter/go.sum ./
 RUN go mod download
@@ -18,7 +20,8 @@ COPY . .
 RUN go build -o FN-Go-Exporter-Services ./golang_exporter/prometheus.go
 
 FROM golang:latest as runtime
-# RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /root/
 
 # COPY --from=builder /app/FN-Go-Basic-Services .

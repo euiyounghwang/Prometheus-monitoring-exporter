@@ -1,0 +1,29 @@
+version: '3'
+#docker-compose -f ./docker-compose.yml up or docker-compose up
+name: go-swagger-api
+services:
+ 
+  go-swagger-api:
+    image: go-swagger-api:es
+    container_name: go-swagger-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/app
+    restart: unless-stopped
+    #environment:
+      #- ES_HOST=http://host.docker.internal:9203
+    networks:
+      - bridge
+      
+volumes:
+  certs:
+    driver: local
+    
+networks:
+  bridge:
+    driver: bridge
