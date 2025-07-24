@@ -65,6 +65,9 @@ Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-
 $ curl http://localhost:8080/ping
 {"message":"pong"}
 ```
+- gin-framework swagger : go get github.com/swaggo/swag/cmd/swag, go get github.com/swaggo/gin-swagger, go get github.com/swaggo/files
+- Once you have added the annotations to your code, you can generate the Swagger documentation by running the following command: swag init (https://lemoncode21.medium.com/how-to-add-swagger-in-golang-gin-6932e8076ec0)
+- http://localhost:8080/docs/index.html
 
 
 GoConvey(https://github.com/smartystreets/goconvey) supports Go's native testing package. Neither the web UI nor the DSL are required; you can use either one independently. Directly integrates with go test; Fully-automatic web UI (works with native Go tests, too)
