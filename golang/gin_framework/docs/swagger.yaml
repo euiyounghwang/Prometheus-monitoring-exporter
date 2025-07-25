@@ -12,7 +12,7 @@ definitions:
         example: John
         type: string
     type: object
-host: 0.0.0.0:8080
+host: localhost:8080
 info:
   contact:
     email: support@swagger.io
