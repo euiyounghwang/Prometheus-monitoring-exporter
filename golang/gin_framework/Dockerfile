@@ -2,7 +2,7 @@
 # https://brendanr.net/blog/go-docker-https/
 
 
-FROM golang:1.23.1-alpine as builder
+FROM golang:1.23.1-alpine AS builder
 ARG CGO_ENABLED=0
 
 #ENV http_proxy="http://localhost:8080"
@@ -22,10 +22,10 @@ COPY . .
 # RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o FN-Go-Swagger-Services .
 RUN go build -o FN-Go-Swagger-Services ./main.go
 
-FROM golang:latest as runtime
+FROM golang:latest AS runtime
 #RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+#WORKDIR /app/
 
 COPY --from=builder /app/FN-Go-Swagger-Services .
 # COPY --from=builder /app/config.yaml .

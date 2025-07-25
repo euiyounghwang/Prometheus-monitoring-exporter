@@ -1,6 +1,6 @@
 version: '3'
 #docker-compose -f ./docker-compose.yml up or docker-compose up
-name: go-swagger-api
+name: go-swagger-api-services
 services:
  
   go-swagger-api:
