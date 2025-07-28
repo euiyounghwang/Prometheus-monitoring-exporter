@@ -3410,6 +3410,8 @@ def alert_work(db_http_host):
                 ''' ----------------------'''
 
                 ''' MS Teams chat for the alert'''
+                ''' Microsoft Teams webhooks provide a mechanism for external services to post messages and notifications into Teams channels using HTTP requests. '''
+                ''' webhook url : curl -X POST "https://webhook_url" -H "Content-Type: application/json"  -d '{"text":"alert test<br/>new line"}'''
 
                 ''' ----------------------'''
                             
