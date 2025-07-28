@@ -1,12 +1,12 @@
 FROM golang:latest as builder
 ARG CGO_ENABLED=0
 
-ENV http_proxy="http://localhost:8080"
-ENV https_proxy="https://localhost:8080"
+#ENV http_proxy="http://localhost:8080"
+#ENV https_proxy="https://localhost:8080"
 
 WORKDIR /app
 
-RUN apk update && apk add --no-cache git 
+#RUN apk update && apk add --no-cache git 
 
 # Download Go modules
 COPY ./golang_exporter/go.mod ./golang_exporter/go.sum ./
@@ -20,9 +20,9 @@ COPY . .
 RUN go build -o FN-Go-Exporter-Services ./golang_exporter/prometheus.go
 
 FROM golang:latest as runtime
-RUN apk --no-cache add ca-certificates
+#RUN apk --no-cache add ca-certificates
 
-WORKDIR /root/
+#WORKDIR /root/
 
 # COPY --from=builder /app/FN-Go-Basic-Services .
 COPY --from=builder /app/FN-Go-Exporter-Services .
