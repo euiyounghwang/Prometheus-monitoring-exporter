@@ -551,3 +551,8 @@ SELECT ROWNUM, CREATE_DATE, ENV_NAME, HOST_NAME, STATUS, IP, LOG FROM MONITORING
 WHERE CREATE_DATE >= CURRENT_TIMESTAMP- 7
 ORDER BY CREATE_DATE DESC;
 ```
+
+
+### Heroku with Kaffeine
+- Heroku is an AI platform as a service (AI PaaS) that enables developers to build, run, and scale applications entirely in the cloud.
+- Reference : https://jnarin-development-story.tistory.com/163
