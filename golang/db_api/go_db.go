@@ -56,7 +56,7 @@ func active_update_func(host_total_cnt int, port_open_cnt int) {
 func set_service_port(service_name string, service_nodes string, url string, m map[string]interface{}) {
 	log.Printf("** %s PORT OPEN ** ", service_name)
 	// is_port_open := utils.Get_port_open(args_map.ES_URL)
-	track_error_func := []string{}
+	// track_error_func := []string{}
 	is_port_open, port_open_cnt, server_status, track_error_func := utils.Get_port_list_open(service_name, url)
 	log.Println("** is_port_open: ** ", is_port_open)
 	log.Println("** server_status ** : ", server_status)
@@ -66,14 +66,12 @@ func set_service_port(service_name string, service_nodes string, url string, m m
 		m[service_nodes] = port_open_cnt
 	}
 
-	// update server_active to global variable
-	active_update_func(len(strings.Split(strings.Trim(url, " "), ",")), port_open_cnt)
-	fmt.Print("\n\n")
-
 	/* Update gloal variable */
 	for _, alert_message := range track_error_func {
 		TRACK_ERROR = append(TRACK_ERROR, alert_message)
 	}
+
+	fmt.Print("\n\n")
 
 }
 
@@ -523,6 +521,7 @@ func work() {
 		// Verify if the service port is open
 		set_service_port("ES", "ES_NODES", args_map.ES_URL, m_server_status)
 		set_service_port("KIBANA", "", args_map.KIBANA_URL, m_server_status)
+		set_service_port("LOGSTASH", "", args_map.LOGSTASH_URL, m_server_status)
 		set_service_port("KAFKA", "KAFKA_NODES", args_map.KAFKA_URL, m_server_status)
 		set_service_port("ZOOKEEPER", "ZOOKEEPER_NODES", args_map.ZOOKEEPER_URL, m_server_status)
 		set_service_port("KAFAK_CONNECT", "KAFAK_CONNECT_NODES", args_map.KAFKA_CONNECT_URL, m_server_status)

@@ -138,12 +138,25 @@ func Get_port_list_open(service_name string, host string) (bool, int, string, []
 		// log.Println("flag : ", flag)
 	}
 
-	if len(result) == flag_value {
-		server_status = "Green"
-	} else if flag_value < 1 {
-		server_status = "Red"
+	/* Exception for Logstash Service */
+	if service_name == "LOGSTASH" {
+		if flag_value > 0 {
+			track_error = []string{}
+			server_status = "Green"
+		} else {
+			server_status = "Red"
+			track_error = []string{}
+			track_error = append(track_error, fmt.Sprintf("[Node #1 - %s_URL] Logstash is not runnning..", service_name))
+		}
 	} else {
-		server_status = "Yellow"
+		if len(result) == flag_value {
+			server_status = "Green"
+		} else if flag_value < 1 {
+			server_status = "Red"
+		} else {
+			server_status = "Yellow"
+		}
+
 	}
 
 	log.Println("** flag ** : ", flag)

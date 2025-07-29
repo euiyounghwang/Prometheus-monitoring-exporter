@@ -17,6 +17,7 @@ var (
 	alert_conf_api    string
 	es_url            string
 	kibana_url        string
+	logstash_url      string
 	kafka_url         string
 	zookeeper_url     string
 	kafka_connect_url string
@@ -37,6 +38,7 @@ func Get_initialize_args() map[string]interface{} {
 	flag.StringVar(&alert_conf_api, "alert_conf_api", "localhost", "string")
 	flag.StringVar(&es_url, "es_url", "localhost:9201, localhost:9202, localhost:9203", "string")
 	flag.StringVar(&kibana_url, "kibana_url", "localhost:5601", "string")
+	flag.StringVar(&logstash_url, "logstash_url", "localhost:5043,localhost:5044,localhost:5045,localhost:5046,localhost:5047,localhost:5048", "string")
 	flag.StringVar(&kafka_url, "kafka_url", "localhost:9092,localhost:9092,localhost:9092", "string")
 	flag.StringVar(&zookeeper_url, "zookeeper_url", "localhost:2181", "string")
 	flag.StringVar(&kafka_connect_url, "kafka_connect_url", "localhost:8083", "string")
@@ -59,6 +61,7 @@ func Get_initialize_args() map[string]interface{} {
 	m["alert_conf_api"] = alert_conf_api
 	m["es_url"] = es_url
 	m["kibana_url"] = kibana_url
+	m["logstash_url"] = logstash_url
 	m["kafka_url"] = kafka_url
 	m["zookeeper_url"] = zookeeper_url
 	m["kafka_connect_url"] = kafka_connect_url

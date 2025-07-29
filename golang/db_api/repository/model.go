@@ -82,6 +82,7 @@ type ARG struct {
 	ALERT_CONF_API    string `json:"alert_conf_api"`
 	ES_URL            string `json:"es_url"`
 	KIBANA_URL        string `json:"kibana_url"`
+	LOGSTASH_URL      string `json:"logstash_url"`
 	KAFKA_URL         string `json:"kafka_url"`
 	ZOOKEEPER_URL     string `json:"zookeeper_url"`
 	KAFKA_CONNECT_URL string `json:"kafka_connect_url"`
@@ -94,6 +95,7 @@ type SERVER_STATUS struct {
 	ES                     string `json:"ES"`
 	ES_NODES               int    `json:"ES_NODES"`
 	KIBANA                 string `json:"KIBANA"`
+	LOGSTASH               string `json:"LOGSTASH"`
 	KAFKA                  string `json:"KAFKA"`
 	KAFKA_NODES            int    `json:"KAFKA_NODES"`
 	ZOOKEEPER              string `json:"ZOOKEEPER"`
@@ -111,6 +113,7 @@ type SERVER_STATUS struct {
 type SERVER_ALERT struct {
 	ES            string `json:"ES"`
 	KIBANA        string `json:"KIBANA"`
+	LOGSTASH      string `json:"LOGSTASH"`
 	KAFKA         string `json:"KAFKA"`
 	SPARK         string `json:"SPARK"`
 	SERVER_ACTIVE string `json:"SERVER_ACTIVE"`
