@@ -8,6 +8,6 @@ import (
 /* go get github.com/sijms/go-ora/v2 */
 func main() {
 
-	/* DB Test */
-	db.Get_DB(os.Getenv("DB_URL"))
+	/* DB Connection, SQL Run */
+	db.Get_DB(os.Getenv("DB_URL"), os.Getenv("SQL"))
 }
