@@ -21,6 +21,9 @@ func PrettyString(str string) string {
 }
 
 func Get_DB(connect_str string, sql_param string) {
+	/* DB SQL */
+	start := time.Now()
+
 	db, err := sql.Open("oracle", connect_str)
 	if err != nil {
 		panic(err)
@@ -78,8 +81,20 @@ func Get_DB(connect_str string, sql_param string) {
 		idx += 1
 	}
 
+	elapsed := time.Since(start) // Or: time.Now().Sub(start)
+
+	// Json_response := make(map[string][]map[string]string)
+	// Json_response := make(map[string]interface{})
+	Json_response := map[string]interface{}{
+		"results":      thisMap,
+		"running_time": elapsed.Seconds(),
+	}
+	// Json_response["results"] = thisMap
+	// Json_response["running_time"] = elapsed.Seconds()
+	fmt.Printf("Elapsed time: %s\n", elapsed)
+
 	/* Json */
-	json_server_data, _ := json.Marshal(thisMap)
+	json_server_data, _ := json.Marshal(Json_response)
 	// log.Println(reflect.TypeOf(json_server_data))
 	fmt.Println(PrettyString(string(json_server_data)))
 }
