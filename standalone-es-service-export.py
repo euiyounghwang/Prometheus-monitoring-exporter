@@ -2120,11 +2120,13 @@ def get_metrics_all_envs(monitoring_metrics):
         else:
             kafka_connect_status_primary_node = 'Red'
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+            ''' kafka connect status will be red '''
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
         
         service_status_dict.update({"kafka_connect_primary_node" : kafka_connect_status_primary_node})
 
         ''' save service_status_dict for alerting on all serivces'''
-        if int(response_dict["kafka_connect_url"]["GREEN_CNT"]) == MAX_NUMBERS:
+        if int(response_dict["kafka_connect_url"]["GREEN_CNT"]) == MAX_NUMBERS and is_flag_active_primary_node_for_kafka_connect:
             kafka_connect_status = 'Green' 
         elif 0 < int(response_dict["kafka_connect_url"]["GREEN_CNT"]) < MAX_NUMBERS and is_flag_active_primary_node_for_kafka_connect:
             kafka_connect_status = 'Yellow' 
