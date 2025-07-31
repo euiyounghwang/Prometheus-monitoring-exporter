@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	_ "github.com/sijms/go-ora/v2"
@@ -82,12 +83,14 @@ func Get_DB(connect_str string, sql_param string) {
 	}
 
 	elapsed := time.Since(start) // Or: time.Now().Sub(start)
+	db_ids := connect_str[strings.LastIndex(connect_str, "/")+1:]
 
 	// Json_response := make(map[string][]map[string]string)
 	// Json_response := make(map[string]interface{})
 	Json_response := map[string]interface{}{
 		"results":      thisMap,
 		"running_time": elapsed.Seconds(),
+		"request_dbid": db_ids,
 	}
 	// Json_response["results"] = thisMap
 	// Json_response["running_time"] = elapsed.Seconds()
