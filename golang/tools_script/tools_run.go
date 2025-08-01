@@ -9,6 +9,6 @@ import (
 func main() {
 
 	/* DB Connection, SQL Run */
-	// db.Get_DB(os.Getenv("DB_URL"), os.Getenv("SQL"))
-	db.Get_DB_Unknown_Columns(os.Getenv("DB_URL"), os.Getenv("SQL"))
+	// db.Get_Oracle_DB(os.Getenv("DB_URL"), os.Getenv("SQL"))
+	db.Get_Oracle_DB_Unknown_Columns(os.Getenv("DB_URL"), os.Getenv("SQL"))
 }

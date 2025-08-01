@@ -1,34 +1,19 @@
 package db
 
 import (
-	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"reflect"
 	"strings"
 	"time"
+	"tools_script/util"
 
 	_ "github.com/sijms/go-ora/v2"
 )
 
-func PrettyString(str string) string {
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, []byte(str), "", "    "); err != nil {
-		return ""
-	}
-	return prettyJSON.String()
-}
-
-/* Rounding to a specific number of decimal places */
-func roundToDecimalPlaces(n float64, decimals int) float64 {
-	factor := math.Pow(10, float64(decimals))
-	return math.Round(n*factor) / factor
-}
-
-func Get_DB(connect_str string, sql_param string) {
+func Get_Oracle_DB(connect_str string, sql_param string) {
 	/* DB SQL */
 	start := time.Now()
 
@@ -106,10 +91,10 @@ func Get_DB(connect_str string, sql_param string) {
 	/* Json */
 	json_server_data, _ := json.Marshal(Json_response)
 	// log.Println(reflect.TypeOf(json_server_data))
-	fmt.Println(PrettyString(string(json_server_data)))
+	fmt.Println(util.PrettyString(string(json_server_data)))
 }
 
-func Get_DB_Unknown_Columns(connect_str string, sql_param string) {
+func Get_Oracle_DB_Unknown_Columns(connect_str string, sql_param string) {
 	/* DB SQL */
 	start := time.Now()
 
@@ -191,7 +176,7 @@ func Get_DB_Unknown_Columns(connect_str string, sql_param string) {
 	// Json_response := make(map[string]interface{})
 	Json_response := map[string]interface{}{
 		"results":      thisMap,
-		"running_time": roundToDecimalPlaces(elapsed.Seconds(), 3),
+		"running_time": util.RoundToDecimalPlaces(elapsed.Seconds(), 3),
 		"request_dbid": db_ids,
 	}
 	// Json_response["results"] = thisMap
@@ -203,5 +188,5 @@ func Get_DB_Unknown_Columns(connect_str string, sql_param string) {
 	// log.Println(reflect.TypeOf(json_server_data))
 
 	/* indent because I want to read the output */
-	fmt.Println(PrettyString(string(json_server_data)))
+	fmt.Println(util.PrettyString(string(json_server_data)))
 }
