@@ -74,7 +74,10 @@ kafka_brokers_gauge = Gauge("kafka_brokers", "the number of kafka brokers")
 # es_global_api_jobs_performance_gauge_g = Gauge("es_global_api_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 # es_get_mail_configuration_jobs_performance_gauge_g = Gauge("es_get_mail_configuration_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
 # es_get_metrics_all_envs_jobs_performance_gauge_g = Gauge("es_get_metrics_all_envs_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job"])
+''' Initial Application Performance for tracking'''
 es_service_jobs_performance_gauge_g = Gauge("es_service_jobs_performance_running_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
+''' Performance Tracing for each api in the app'''
+es_service_jobs_each_api_performance_gauge_g = Gauge("es_service_jobs_each_api_performance_running_metrics", 'Metrics scraped from localhost', ["server_job", "category"])
 
 ''' es cluster search time using _cat api'''
 es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metrics scraped from localhost', ["server_job", "env", "category"])
@@ -1599,12 +1602,20 @@ def get_metrics_all_envs(monitoring_metrics):
 
         #-- es node cluster health
         ''' http://localhost:9200/_cluster/health '''
-        
+
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' The cluster health API returns a simple status on the health of the cluster. '''
         ''' get the health of the cluseter and set value based on status/get the number of nodes in the cluster'''
         ''' The operation receives cluster health results from only one active node among several nodes. '''
         resp_es_health, resp_es_basic_info = get_elasticsearch_health(monitoring_metrics)
         logging.info(f"resp_es_basic_info - {resp_es_basic_info}")
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="get_elasticsearch_health_func").set(float(running_time(end_time_func, start_time_fun)))
+
         
         if resp_es_health:
             ''' get es nodes from _cluster/health api'''
@@ -1653,8 +1664,17 @@ def get_metrics_all_envs(monitoring_metrics):
             ES_CLUSTER_RED = True
         #--
 
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' Check CPU/JVM for ES'''
         is_expected_to_cpu_down = get_cpu_jvm_metrics(monitoring_metrics)
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time for this get_global_configuration to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_cpu_jvm_metrics_func").set(float(running_time(end_time_func, start_time_fun)))
+
+
         global saved_critcal_sms_alert
 
         ''' alert for sms if saved_critcal_sms_alert is true'''
@@ -1668,13 +1688,30 @@ def get_metrics_all_envs(monitoring_metrics):
         nodes_diskspace_gauge_g._metrics.clear()
         nodes_free_diskspace_gauge_g._metrics.clear()
 
+
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' Check the disk space for ES through audit alert'''
         is_audit_alert_es = get_elasticsearch_disk_audit_alert(monitoring_metrics)
         if is_audit_alert_es:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1)
 
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time for this get_global_configuration to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_elasticsearch_disk_audit_alert_func").set(float(running_time(end_time_func, start_time_fun)))
+
+
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' Check the disk space for Kafka through audit alert'''
         is_audit_alert_kafka = get_kafka_disk_audit_alert(monitoring_metrics)
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time for this get_global_configuration to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_kafka_disk_audit_alert_func").set(float(running_time(end_time_func, start_time_fun)))
+
         if is_audit_alert_kafka:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1)
 
@@ -1700,8 +1737,16 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' The error indicator is 0 if the operation succeeded, otherwise the value of the errno variable. '''
         ''' Kafka/Kafka connect/Spark/Kibana'''
         
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         response_dict = get_service_port_alive(monitoring_metrics_cp)
         logging.info(f"response_dict - {response_dict}")
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="get_service_port_alive_func").set(float(running_time(end_time_func, start_time_fun)))
+
 
         ''' Kafka Health'''
         kafka_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_url"]["GREEN_CNT"]))
@@ -1862,11 +1907,19 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' ********* Server Active Graph ******************** '''
 
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         ''' To receive spark job lists, JSON results are returned from master node 8080 port. ''' 
         ''' From the results, we get the list of spark jobs in activeapps key and transform them to metrics for exposure. '''
         # -- Get spark jobs
         response_spark_jobs = get_spark_jobs(monitoring_metrics.get("kafka_url", ""))
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time for this get_global_configuration to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_spark_jobs_func").set(float(running_time(end_time_func, start_time_fun)))
+
 
         ''' save service_status_dict for alerting on all serivces'''
         spark_status = 'Green' if response_spark_jobs else 'Red'
@@ -1989,11 +2042,20 @@ def get_metrics_all_envs(monitoring_metrics):
             }
         '''
 
+
+        ''' start time for the api performance tracking'''
+        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
         ''' First, this operation receives results from one active node to find out the listenen list through 8083 port with connectos endpoint (http://localhost:8083/connectors/) '''
         ''' then, each kafka node receives json results from port 8083 to check the status of kafka listener. '''
         ''' As a result, it is checked whether each listener is running normally. '''
         ''' Prometheus periodically takes exposed metrics and exposes them on the graph. '''
         response_listeners, failure_check = get_kafka_connector_listeners(monitoring_metrics.get("kafka_url", ""))
+
+        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        ''' export the time for this get_global_configuration to api performance tracking'''
+        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_kafka_connector_listeners_func").set(float(running_time(end_time_func, start_time_fun)))
+
         kafka_connect_listeners_gauge_g._metrics.clear()
         is_running_one_of_kafka_listner = False
         any_failure_listener = True
@@ -3185,6 +3247,8 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            ''' export the time for this get_global_configuration to api performance tracking'''
+            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' get db configuration'''
             start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
@@ -3195,6 +3259,8 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            ''' export the time for this get_global_configuration to api performance tracking'''
+            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
             start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
