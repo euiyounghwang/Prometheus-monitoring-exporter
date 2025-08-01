@@ -608,7 +608,7 @@ def get_metrics_all_envs(monitoring_metrics):
             }]
 
             '''
-            failure_check = all(all_listeners_is_empty) or failure_check
+            failure_check = any(all_listeners_is_empty) or failure_check
             # failure_check = all(all_listeners_is_empty)
 
             return listener_apis_dict, failure_check
@@ -1536,7 +1536,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 if value == 3:
                     ''' green'''
                     all_env_status.append(1)
-                elif value > 0 and value <1:
+                elif value > 0 and value <3:
                     ''' yellow'''
                     all_env_status.append(0)
                 else:
@@ -2116,10 +2116,11 @@ def get_metrics_all_envs(monitoring_metrics):
         kafka_connect_status_primary_node = 'Green'
         if is_flag_active_primary_node_for_kafka_connect:
             ''' Update the status of Kafka connect to Server active for alert -> set the value as three nodes if master node is active'''
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_url").split(",")), types='kafka')
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_connect_url").split(",")), types='kafka')
         else:
             kafka_connect_status_primary_node = 'Red'
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+            # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
+            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, 0, types='kafka')
             ''' kafka connect status will be red '''
             kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
         

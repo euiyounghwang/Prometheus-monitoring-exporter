@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"reflect"
 	"strings"
 	"time"
@@ -19,6 +20,12 @@ func PrettyString(str string) string {
 		return ""
 	}
 	return prettyJSON.String()
+}
+
+/* Rounding to a specific number of decimal places */
+func roundToDecimalPlaces(n float64, decimals int) float64 {
+	factor := math.Pow(10, float64(decimals))
+	return math.Round(n*factor) / factor
 }
 
 func Get_DB(connect_str string, sql_param string) {
@@ -184,7 +191,7 @@ func Get_DB_Unknown_Columns(connect_str string, sql_param string) {
 	// Json_response := make(map[string]interface{})
 	Json_response := map[string]interface{}{
 		"results":      thisMap,
-		"running_time": elapsed.Seconds(),
+		"running_time": roundToDecimalPlaces(elapsed.Seconds(), 3),
 		"request_dbid": db_ids,
 	}
 	// Json_response["results"] = thisMap
