@@ -378,6 +378,7 @@ def get_metrics_all_envs(monitoring_metrics):
     global each_es_instance_cpu_history, each_es_instance_jvm_history
     global service_status_dict
     global is_dev_mode
+    global api_performance_total_delay
 
     ''' initialize global variables '''
     max_disk_used, max_es_disk_used, max_kafka_disk_used = 0, 0, 0
@@ -1615,7 +1616,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="get_elasticsearch_health_func").set(float(running_time(end_time_func, start_time_fun)))
-
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
         
         if resp_es_health:
             ''' get es nodes from _cluster/health api'''
@@ -1673,7 +1674,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_cpu_jvm_metrics_func").set(float(running_time(end_time_func, start_time_fun)))
-
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
         global saved_critcal_sms_alert
 
@@ -1700,6 +1701,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_elasticsearch_disk_audit_alert_func").set(float(running_time(end_time_func, start_time_fun)))
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
 
         ''' start time for the api performance tracking'''
@@ -1711,6 +1713,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_kafka_disk_audit_alert_func").set(float(running_time(end_time_func, start_time_fun)))
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
         if is_audit_alert_kafka:
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, -1)
@@ -1746,6 +1749,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="get_service_port_alive_func").set(float(running_time(end_time_func, start_time_fun)))
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
 
         ''' Kafka Health'''
@@ -1919,6 +1923,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_spark_jobs_func").set(float(running_time(end_time_func, start_time_fun)))
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
 
         ''' save service_status_dict for alerting on all serivces'''
@@ -2055,6 +2060,7 @@ def get_metrics_all_envs(monitoring_metrics):
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
         es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_kafka_connector_listeners_func").set(float(running_time(end_time_func, start_time_fun)))
+        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
         kafka_connect_listeners_gauge_g._metrics.clear()
         is_running_one_of_kafka_listner = False
@@ -2512,6 +2518,8 @@ saved_failure_db_kafka_dict = {}
 tracking_failure_dict = {
     "alert_sent_time" : "1900-01-01 00:00:00"
 }
+
+api_performance_total_delay = 0.0
 
 
 import threading
@@ -3225,6 +3233,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
         echo "logstash is not Running"
     fi
     '''
+    global api_performance_total_delay
 
     try:
         start_http_server(int(port))
@@ -3234,6 +3243,10 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
 
         StartedTime = datetime.datetime.now(tz=gloabal_default_timezone)
         while True:
+
+            ''' initialize the api delay time '''
+            api_performance_total_delay = 0.0
+
             StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
 
             ''' **** Validate the time it take to run each function'''
@@ -3249,6 +3262,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
             ''' export the time for this get_global_configuration to api performance tracking'''
             es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_global_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
             ''' get db configuration'''
             start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
@@ -3261,6 +3275,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
             ''' export the time for this get_global_configuration to api performance tracking'''
             es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_mail_configuration").set(float(running_time(end_time_func, start_time_fun)))
+            api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
             ''' Collection metrics from ES/Kafka/Spark/Kibana/Logstash'''
             start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
@@ -3272,6 +3287,9 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             ''' export the time for this get_global_configuration'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
             ''' **** '''
+            ''' export the time for this get_global_configuration to api performance tracking'''
+            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_func_delay_all").set(float(api_performance_total_delay))
+
             
             ''' export application processing time '''
             EndTime = datetime.datetime.now(tz=gloabal_default_timezone)
@@ -3555,9 +3573,9 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         if status == "" or status is None:
             _color = '#008000'
         if status.lower() == 'yellow':
-            _color = 'orange'
+            _color = '#FFA500'
         elif status.lower() == 'red':
-            _color = 'red'
+            _color = '#CD1C18'
         else:
             _color = '#008000'
         return "<font color='{}'>{}</font>".format(_color, status) 
