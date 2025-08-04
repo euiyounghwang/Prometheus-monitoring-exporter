@@ -1310,6 +1310,8 @@ def get_metrics_all_envs(monitoring_metrics):
     def get_cpu_jvm_metrics(monitoring_metrics):
         ''' get elasticsearch exporter integration''' 
 
+        global api_performance_total_delay
+        
         try:
             logging.info(f"is_dev_mode - {is_dev_mode}")
             # es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
