@@ -1313,9 +1313,19 @@ def get_metrics_all_envs(monitoring_metrics):
         try:
             logging.info(f"is_dev_mode - {is_dev_mode}")
             # es_exporter_host = monitoring_metrics.get("kibana_url", "").split(":")[0]
+
+            
+            ''' start time for the api performance tracking'''
+            start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+
             ''' If kibana url is different with argument, you may need to add this environment variable to ./standalone-export-run.sh '''
             es_exporter_host = "{}".format(str(os.environ["ES_EXPORTER_HOST"])) if os.environ.get("ES_EXPORTER_HOST") is not None else "{}:9114".format(monitoring_metrics.get("kibana_url", "").split(":")[0])
             resp = requests.get(url="http://{}/metrics".format(es_exporter_host), timeout=5)
+
+            end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+            ''' export the time for this get_global_configuration to api performance tracking'''
+            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_cpu_jvm_metrics_func").set(float(running_time(end_time_func, start_time_fun)))
+            api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
                     
             if not (resp.status_code == 200):
                 ''' save failure node with a reason into saved_failure_dict'''
@@ -1666,15 +1676,16 @@ def get_metrics_all_envs(monitoring_metrics):
         #--
 
         ''' start time for the api performance tracking'''
-        start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
+        # start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
 
         ''' Check CPU/JVM for ES'''
+        ''' Check the delay time inside this func..'''
         is_expected_to_cpu_down = get_cpu_jvm_metrics(monitoring_metrics)
 
-        end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
+        # end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time for this get_global_configuration to api performance tracking'''
-        es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_cpu_jvm_metrics_func").set(float(running_time(end_time_func, start_time_fun)))
-        api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
+        # es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_cpu_jvm_metrics_func").set(float(running_time(end_time_func, start_time_fun)))
+        # api_performance_total_delay += float(running_time(end_time_func, start_time_fun))
 
         global saved_critcal_sms_alert
 
@@ -3288,7 +3299,7 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_get_metrics_all").set(float(running_time(end_time_func, start_time_fun)))
             ''' **** '''
             ''' export the time for this get_global_configuration to api performance tracking'''
-            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_func_delay_all").set(float(api_performance_total_delay))
+            es_service_jobs_each_api_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_funcs_all_delay_all").set(float(api_performance_total_delay))
 
             
             ''' export application processing time '''
