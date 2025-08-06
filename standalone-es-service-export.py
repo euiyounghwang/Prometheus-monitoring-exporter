@@ -3814,6 +3814,7 @@ if __name__ == '__main__':
     parser.add_argument('--sql', dest='sql', default="select * from test", help='sql')
     parser.add_argument('--sql_backlog', dest='sql_backlog', default="select * from test", help='sql_backlog')
     parser.add_argument('--backlog', dest="backlog", default="False", help='If true, it will get backlog from DB\'s.')
+    parser.add_argument('--backlog_omx_enable', dest="backlog_omx_enable", default="False", help='If true, it will get backlog from DB\'s.')
     # parser.add_argument('--kafka_sql', dest='kafka_sql', default="select * from test", help='kafka_sql')
     ''' request DB interface restpi insteady of connecting db dircectly'''
     parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
@@ -3943,7 +3944,10 @@ if __name__ == '__main__':
 
     if args.backlog:
         backlog = args.backlog
-        
+
+    if args.backlog_omx_enable:
+        backlog_omx_enable = args.backlog_omx_enable
+                
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
 
@@ -4025,6 +4029,7 @@ if __name__ == '__main__':
     db_run = True if str(db_run).upper() == "TRUE" else False
     multiple_db = True if str(omx_db_con).upper() == "TRUE" else False
     backlog = True if str(backlog).upper() == "TRUE" else False
+    backlog_omx_enable = True if str(backlog_omx_enable).upper() == "TRUE" else False
 
     ''' global '''
     global_spark_cluster_https = spark_cluster_https
@@ -4132,12 +4137,11 @@ if __name__ == '__main__':
                 db_http_thread_Wmx_Backlog.start()
                 T.append(db_http_thread_Wmx_Backlog)
 
-                '''
-                db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
-                db_http_thread_Omx_Backlog.daemon = True
-                db_http_thread_Omx_Backlog.start()
-                T.append(db_http_thread_Omx_Backlog)
-                '''
+                if backlog_omx_enable:
+                    db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
+                    db_http_thread_Omx_Backlog.daemon = True
+                    db_http_thread_Omx_Backlog.start()
+                    T.append(db_http_thread_Omx_Backlog)
                 
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
