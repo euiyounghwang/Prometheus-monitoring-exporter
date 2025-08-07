@@ -108,7 +108,8 @@ func handleRequest(conn net.Conn, listen_info string, client_type string) {
 	if client_type == "disk" {
 		_, err = conn.Write([]byte(get_commands_df(message)))
 	} else {
-		_, err = conn.Write([]byte("message return.."))
+		// _, err = conn.Write([]byte("message return.."))
+		_, err = conn.Write([]byte(get_commands(message)))
 	}
 
 	if err != nil {
@@ -149,6 +150,7 @@ func server_work(conn_type string, listen_info string, client_type string) {
 /*
 cliet : Prometheus-monitoring-exporter/socket/client.py
 return disk usages from the host to the monitoring app
+sudo netstat -nlp | grep :1234
 */
 func main() {
 
