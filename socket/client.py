@@ -30,7 +30,8 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect(('localhost', 1234))
  
 try:
-    data = str.encode("/apps/")
+    # data = str.encode("/apps/")
+    data = str.encode("c://")
     client_socket.sendall(data)
 
     received = client_socket.recv(1024)
