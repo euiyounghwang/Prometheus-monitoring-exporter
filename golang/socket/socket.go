@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 /* get commands */
@@ -52,9 +53,45 @@ const (
 	CONN_TYPE = "tcp"
 )
 
+var (
+	/* To count the number of connected clients to a Golang socket server, a common approach involves maintaining a counter variable */
+	connectedClients      int
+	connectedClients_disk int
+	/* Declare a global or package-level integer variable, typically protected by a sync.Mutex to ensure thread-safe access in a concurrent environment. */
+	mu sync.Mutex
+)
+
 // Handles incoming requests.
 func handleRequest(conn net.Conn, listen_info string, client_type string) {
-	defer conn.Close() // Ensure the connection is closed when the goroutine exits
+	var currentConnected int
+	/* Defer is used to ensure that a function call is performed later in a program's execution */
+	defer func() {
+		mu.Lock()
+		if client_type == "disk" {
+			connectedClients_disk--
+			currentConnected = connectedClients_disk
+		} else {
+			connectedClients--
+			currentConnected = connectedClients
+		}
+
+		fmt.Printf("[%s] Client disconnected. Total clients: %d\n", listen_info, currentConnected)
+		mu.Unlock()
+		conn.Close()
+	}()
+
+	// defer conn.Close() // Ensure the connection is closed when the goroutine exits
+
+	mu.Lock()
+	if client_type == "disk" {
+		connectedClients_disk++
+		currentConnected = connectedClients_disk
+	} else {
+		connectedClients++
+		currentConnected = connectedClients
+	}
+	fmt.Printf("[%s] Client connected. Total clients: %d\n", listen_info, currentConnected)
+	mu.Unlock()
 
 	// Make a buffer to hold incoming data.
 	buf := make([]byte, 1024)
@@ -62,6 +99,7 @@ func handleRequest(conn net.Conn, listen_info string, client_type string) {
 	n, err := conn.Read(buf)
 	if err != nil {
 		fmt.Printf("[%s] Error reading: %s", listen_info, err)
+		return
 	}
 	message := string(buf[:n])
 	log.Printf("[%s] Received from client %s: %s", listen_info, conn.RemoteAddr(), message)
@@ -97,7 +135,8 @@ func server_work(conn_type string, listen_info string, client_type string) {
 		conn, err := l.Accept()
 		if err != nil {
 			log.Println("Error accepting connection: ", err.Error())
-			os.Exit(1)
+			// os.Exit(1)
+			continue
 		}
 
 		log.Printf("New client connected: %s", conn.RemoteAddr())
