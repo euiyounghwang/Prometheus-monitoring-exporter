@@ -122,6 +122,11 @@ func main() {
 	*/
 
 	/*
+		// To create a Go (Golang) socket server that listens on multiple ports,
+		// you need to create a separate net.Listener for each port you want to listen on.
+		// Each listener will then accept incoming connections on its respective port.
+		// You can handle each listener and its connections concurrently using Goroutines.
+
 		ports := []string{"8080", "8081", "8082"} // Define the ports to listen on
 
 		for _, port := range ports {
