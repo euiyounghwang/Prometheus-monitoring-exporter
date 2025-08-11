@@ -185,6 +185,28 @@ def run():
                         # update_dev_btn.click(fn=alert_radio_on_off, inputs=[dev_chk, dev_radio], outputs=[dev_chk, dev_result], api_name="alert")
                         update_dev_btn.click(fn=lambda: gr.update(interactive=False), inputs=None, outputs=update_dev_btn).then(fn=alert_radio_on_off, inputs=[dev_chk, dev_radio, dev_desc], outputs=[dev_result]).then(fn=lambda: gr.update(interactive=True), inputs=None, outputs=update_dev_btn)
                 
+                ''' add new-dev'''
+                with gr.Row():
+                    '''
+                    dev_chk = gr.Checkbox(label="Dev-new", value=alert_on_off('dev-new'), info="Alert Status", interactive=False)
+                    dev_chk = gr.Checkbox(label="Dev-new", info="Alert Status", interactive=False)
+                    '''
+                    dev_new_chk = gr.Checkbox(label="Dev-new", value=False, info="Alert Status", interactive=False)
+                    dev_new_radio = gr.Radio(["On", "Off"], value="Off", label="Dev Alert Status", info="Will update this value if you select and click 'Alert Update' btn!")
+                    dev_new_result = gr.Textbox(label="Output")
+                    dev_new_desc = gr.Textbox(label="env", visible=False, value='dev_new')
+                    # dev_desc.change(welcome, inp, out)
+
+                    with gr.Column():
+                        ''' Alert Refresh'''
+                        update_alert_dev_new_btn = gr.Button("Alert Refresh")   
+                        update_alert_dev_new_btn.click(fn=alert_on_off, inputs=[dev_new_desc], outputs=[dev_new_result], api_name="alert")
+
+                        ''' Alert Update'''
+                        update_dev_new_btn = gr.Button("Alert Update")   
+                        # update_dev_new_btn.click(fn=alert_radio_on_off, inputs=[dev_chk, dev_radio], outputs=[dev_chk, dev_result], api_name="alert")
+                        update_dev_new_btn.click(fn=lambda: gr.update(interactive=False), inputs=None, outputs=update_dev_new_btn).then(fn=alert_radio_on_off, inputs=[dev_new_chk, dev_new_radio, dev_new_desc], outputs=[dev_new_result]).then(fn=lambda: gr.update(interactive=True), inputs=None, outputs=update_dev_new_btn)
+                
 
                 with gr.Row():
                     smoke_chk = gr.Checkbox(label="SMOKE", value=False, info="Alert Status", interactive=False)
