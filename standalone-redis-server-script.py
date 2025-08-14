@@ -263,32 +263,36 @@ def push_log_to_grafana_loki(title_msg, body_msg, logger_level):
     def loki_timestamp():
       return f"{(int(time.time() * 1_000_000_000))}"
 
-    url = 'https://{}:3100/loki/api/v1/push'.format(os.getenv('LOKI_HOST'))
-    headers = {
-        'Content-type': 'application/json'
-    }
-    ''' 'service': 'prometheus-monitoring-service','message': '[DEV] Services, Alert : True, Issues : Server Active : Green, ES Data Pipline : Red','env': 'PROD' '''
-    payload = {
-        'streams': [
-            {
-                'stream' : {
-                    'service': 'prometheus-alert-service',
-                    "message": body_msg,
-                    "logger" : "prometheus-logger",
-                    "level" : logger_level
-                },
-                'values': [
-                    [
-                        loki_timestamp(),
-                        title_msg
+    try:
+        url = 'https://{}:3100/loki/api/v1/push'.format(os.getenv('LOKI_HOST'))
+        headers = {
+            'Content-type': 'application/json'
+        }
+        ''' 'service': 'prometheus-monitoring-service','message': '[DEV] Services, Alert : True, Issues : Server Active : Green, ES Data Pipline : Red','env': 'PROD' '''
+        payload = {
+            'streams': [
+                {
+                    'stream' : {
+                        'service': 'prometheus-alert-service',
+                        "message": body_msg,
+                        "logger" : "prometheus-logger",
+                        "level" : logger_level
+                    },
+                    'values': [
+                        [
+                            loki_timestamp(),
+                            title_msg
+                        ]
                     ]
-                ]
-            }
-        ]
-    }
-    # payload = json.dumps(payload)
-    response = requests.post(url, json=payload, headers=headers, verify=False)
-    print(response.status_code)
+                }
+            ]
+        }
+        # payload = json.dumps(payload)
+        response = requests.post(url, json=payload, headers=headers, verify=False)
+        print(response.status_code)
+
+    except Exception as e:
+        logging.error(e)
 
 
 def HTTP_Server():
