@@ -120,6 +120,11 @@ pip install pytz
 
 
 ### Using Poetry: Create the virtual environment in the same directory as the project and install the dependencies:
+- Gunicorn is a Python WSGI HTTP Server that usually lives between a reverse proxy (e.g., Nginx) or load balancer (e.g., AWS ELB) and a web application such as Django or Flask.
+- Better performance by optimizing Gunicorn config (https://medium.com/building-the-system/gunicorn-3-means-of-concurrency-efbb547674b7)
+- The suggested number of workers is (2*CPU)+1.
+- gunicorn --workers=5 --threads=2 --worker-class=gthread main:app, the maximum concurrent requests areworkers * threads 10 in our case.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
