@@ -562,3 +562,50 @@ ORDER BY CREATE_DATE DESC;
 - Matters service reliability platform helps DevOps, SREs, and Ops teams.
 - xMatters is a service reliability platform used for incident management, specifically designed to automate workflows, ensure infrastructure and application reliability, and accelerate incident resolution. It helps teams respond to and resolve IT issues faster by automating communications, orchestrating workflows, and providing real-time insights. 
 - Trigger Alerts by Webhook (https://help.xmatters.com/integrations/other/triggeralertsbywebhook.htm) : The Trigger Alerts by Webhook workflow is a pre-built workflow template designed to help you start notifying users and groups with minimal setup. It lets you create an alert and send notifications by simply sending an HTTP request to xMatters from any application capable of sending a webhook.
+
+
+### Auto Start Script
+
+```bash
+
+sudo vi /etc/systemd/system/rc-local.service
+
+--
+[Unit]
+ Description=/etc/rc.local Compatibility
+ ConditionPathExists=/etc/rc.local
+
+[Service]
+ Type=forking
+ ExecStart=/etc/rc.local start
+ TimeoutSec=0
+ StandardOutput=tty
+ RemainAfterExit=yes
+ SysVStartPriority=99
+
+[Install]
+ WantedBy=multi-user.target
+--
+
+sudo vi /etc/rc.d/rc.local
+# /home/test/test/test-run.sh start
+
+# sudo systemctl disable rc-local
+
+sudo chmod 755 /etc/rc.local && sudo systemctl enable rc-local
+
+# stop the service all
+sudo systemctl status rc-local.service
+sudo systemctl start rc-local.service
+
+sudo service rc-local stop
+sudo service rc-local status
+sudo service rc-local start
+
+# enable check
+systemctl list-unit-files |grep rc.local
+
+sudo service rc-local restart
+sudo service rc-local status
+sudo systemctl disable rc-local
+```
