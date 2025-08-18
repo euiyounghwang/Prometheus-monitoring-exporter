@@ -3249,7 +3249,11 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
     global api_performance_total_delay
 
     try:
+        ''' Prometehus start server '''
+        ''' *** '''
         start_http_server(int(port))
+        ''' *** '''
+        
         logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
         logging.info(f"es_http_host : {es_http_host}")
         logging.info(f"db_http_host : {db_http_host}")
