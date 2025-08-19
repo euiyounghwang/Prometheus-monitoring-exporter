@@ -711,7 +711,8 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' get header for security pack'''
         header =  {
             'Content-type': 'application/json', 
-            'Authorization' : '{}'.format(os.getenv('BASIC_AUTH')),
+            # 'Authorization' : '{}'.format(os.getenv('BASIC_AUTH')),
+            'Authorization' : 'basic {}'.format(os.environ.get('BASIC_AUTH_SH', '')),
             'Connection': 'close'
         }
             
@@ -2418,6 +2419,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"ssl_certificates_expired_date_es : {ssl_certificates_expired_date_es}, ssl_certificates_expired_date_spark : {ssl_certificates_expired_date_spark}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
+        logging.info(f"ES Monitoring Credentail Plan [basic {base64.b64decode(os.environ.get('BASIC_AUTH_SH')).decode('utf-8') if 'BASIC_AUTH_SH' in os.environ else ''}]: {os.environ.get('BASIC_AUTH_SH', '')}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
         
         ''' It can be displayed the log if backlog is enabled'''
