@@ -121,6 +121,7 @@ es_configuration_api_instance_gauge_g = Gauge("es_configuration_api_health_metri
 log_db_instance_gauge_g = Gauge("log_db_health_metric", 'Metrics scraped from localhost', ["server_job"])
 alert_monitoring_ui_gauge_g = Gauge("alert_monitoring_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_ui_gauge_g = Gauge("loki_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
+airflow_ui_gauge_g = Gauge("airflow_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_agent_instance_gauge_g = Gauge("loki_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 log_agent_instance_gauge_g = Gauge("log_agent_health_metric", 'Metrics scraped from localhost', ["server_job", "category"])
@@ -389,7 +390,8 @@ def get_metrics_all_envs(monitoring_metrics):
         socket.connect_ex( <address> ) similar to the connect() method but returns an error indicator of raising an exception for errors returned by C-level connect() call.
         Other errors like host not found can still raise exception though
         '''
-        exclude_port_detect = ['logstash_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
+        ''' logstash_url means saved_failure_dict dics does not add the error log if multiple ports from the Logstash has been closed..'''
+        exclude_port_detect = ['logstash_url', 'loki_url', 'airflow_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
         response_dict = {}
         for k, v in monitoring_metrics.items():
             response_dict.update({k : ""})
@@ -1855,12 +1857,20 @@ def get_metrics_all_envs(monitoring_metrics):
             alert_monitoring_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         # ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
-        # if 'loki_url' in monitoring_metrics:
-        #     active_cnt = int(response_dict["loki_url"]["GREEN_CNT"])
-        #     ''' Red is 2'''
-        #     if active_cnt < 1:
-        #         active_cnt = 2
-        #     loki_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
+        if 'loki_url' in monitoring_metrics:
+            active_cnt = int(response_dict["loki_url"]["GREEN_CNT"])
+            ''' Red is 2'''
+            if active_cnt < 1:
+                active_cnt = 2
+            loki_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
+
+         # ''' Update the status of Apache airflow URL by using socket.connect_ex only Dev'''
+        if 'airflow_url' in monitoring_metrics:
+            active_cnt = int(response_dict["airflow_url"]["GREEN_CNT"])
+            ''' Red is 2'''
+            if active_cnt < 1:
+                active_cnt = 2
+            airflow_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         # ''' Update the status of Loki interface API service by using socket.connect_ex only Dev'''
         # if 'loki_api_url' in monitoring_metrics:
@@ -3805,7 +3815,9 @@ if __name__ == '__main__':
     parser.add_argument('--log_db_url', dest='log_db_url', default="", help='log_db_url')
     parser.add_argument('--alert_monitoring_url', dest='alert_monitoring_url', default="", help='alert_monitoring_ui_url')
     # ''' loki url : http://localhost:3100'''
-    # parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
+    parser.add_argument('--loki_url', dest='loki_url', default="", help='loki_url') 
+    # ''' airflow url : http://localhost:7001'''
+    parser.add_argument('--airflow_url', dest='airflow_url', default="", help='airflow_url') 
     # ''' loki REST API url : http://localhost:8010'''
     # parser.add_argument('--loki_api_url', dest='loki_api_url', default="", help='loki_url')
     # parser.add_argument('--loki_custom_promtail_agent_url', dest='loki_custom_promtail_agent_url', default="", help='loki_custom_promtail_agent_url')
@@ -3890,42 +3902,34 @@ if __name__ == '__main__':
     else:
         logstash_validation_type = 'process'
 
-    redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url = None, None, None, None, None, None, None, None, None
-
+    global redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url, airflow_url
+    
     ''' Redis port checking'''
-    if args.redis_url:
-        redis_url = args.redis_url
+    redis_url = args.redis_url if args.redis_url else None
 
-    ''' es-configuration json file write job checking'''
-    if args.configuration_job_url:
-        configuration_job_url = args.configuration_job_url
+    ''' es-configuration json file write job checking '''
+    configuration_job_url = args.configuration_job_url if args.configuration_job_url else None
 
     ''' es-configuration API Service checking'''
-    if args.es_configuration_api_url:
-        es_configuration_api_url = args.es_configuration_api_url
+    es_configuration_api_url = args.es_configuration_api_url if args.es_configuration_api_url else None
 
     ''' log_db_url checking'''
-    if args.log_db_url:
-        log_db_url = args.log_db_url
+    log_db_url = args.log_db_url if args.log_db_url else None
 
     ''' alert_monitoring_url '''
-    if args.alert_monitoring_url:
-        alert_monitoring_url = args.alert_monitoring_url
+    alert_monitoring_url = args.alert_monitoring_url if args.alert_monitoring_url else None
 
-    # ''' loki_url for text logs from the agent '''
-    # if args.loki_url:
-    #     loki_url = args.loki_url
+    ''' loki_url for text logs from the agent '''
+    loki_url = args.loki_url if args.loki_url else None
+
+    ''' airflow_url '''
+    airflow_url = args.airflow_url if args.airflow_url else None
 
     # ''' loki_api_url as interface api for text logs from the agent '''
-    # if args.loki_api_url:
-    #     loki_api_url = args.loki_api_url
+    # loki_api_url = args.loki_api_url if args.loki_api_url else None
 
-    # ''' loki_agent for text logs '''
-    # if args.loki_custom_promtail_agent_url:
-    #     loki_custom_promtail_agent_url = args.loki_custom_promtail_agent_url
-
-    if args.log_aggregation_agent_url:
-        log_aggregation_agent_url = args.log_aggregation_agent_url
+    ''' loki_agent for text logs '''
+    log_aggregation_agent_url = args.log_aggregation_agent_url if args.log_aggregation_agent_url else None
 
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
@@ -4016,8 +4020,12 @@ if __name__ == '__main__':
         monitoring_metrics.update({"loki_url" : loki_url})
 
     ''' loki_api_url checking '''
-    if loki_api_url:
-        monitoring_metrics.update({"loki_api_url" : loki_api_url})
+    # if loki_api_url:
+    #     monitoring_metrics.update({"loki_api_url" : loki_api_url})
+
+    ''' airflow_url checking '''
+    if airflow_url:
+        monitoring_metrics.update({"airflow_url" : airflow_url})
 
     ''' loki_custom_promtail_agent_url checking '''
     # if loki_custom_promtail_agent_url:
