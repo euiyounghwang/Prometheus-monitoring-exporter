@@ -1,9 +1,7 @@
 #!/bin/bash
 set -e
 
-KIBANA_PATH="/apps/kibana/latest/bin/kibana"
-
-SERVICE_NAME='kibana-instance-service'
+KIBANA_CMD="/apps/kibana/latest/bin/kibana &"
 
 SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
@@ -12,8 +10,8 @@ hn=$(hostname -f)
 host_name=`echo $hn | cut -d '.' -f 1`
 #echo $host_name
 
-#es_config_api_host=$1
-es_config_api_host='localhost'
+es_config_api_host=$1
+#es_config_api_host='localhost'
 
 # Get threshold from ES configuration API service
 curl_host="http://$es_config_api_host:8004/config/get_mail_config"
@@ -30,11 +28,12 @@ if [[ -n "$alert" ]]; then
     else
         echo "[$host_name] $SERVICE_NAME was not Running"
         if [ "$alert" == "true" ]; then
-            echo "[$host_name] Need to start $SERVICE_NAMEES service cmd"
-            # sudo $KIBANA_PATH &
+            echo "[$host_name] Need to start $SERVICE_NAME service cmd"
+            # sudo $KIBANA_CMD &
             # insert_log "KIBANA_RESTARTED"
+            sudo KIBANA_CMD
         else
-            echo "[$host_name] Not started $SERVICE_NAMEES due to alert [$alert]"
+            echo "[$host_name] Not started $SERVICE_NAME due to alert [$alert]"
         fi
     fi
 else
