@@ -261,6 +261,7 @@ limits_config:
 # --
 ```
 - Pushing Logs to Loki Without Using Promtail (https://medium.com/geekculture/pushing-logs-to-loki-without-using-promtail-fc31dfdde3c6, https://github.com/sleleko/devops-kb/blob/master/python/push-to-loki.py)
+- Pushing Logs to Loki Without Using Promtail (https://medium.com/geekculture/pushing-logs-to-loki-without-using-promtail-fc31dfdde3c6, https://github.com/sleleko/devops-kb/blob/master/python/push-to-loki.py)
 - Pushing Logs to Loki with "python-logging-loki"
 - Push logs to Grafana-loki(`./Grafana-log/push_to_loki.sh`) via REST API (https://github.com/euiyounghwang/Prometheus-Grafana-Loki-API-Service)
 - Grafana Dashboard : `sum(count_over_time({service=~"prometheus-monitoring-service|prometheus-grafana-loki-logging-service|prometheus-alert-service"}[$__interval]))`, `{service=~"prometheus-grafana-loki-logging-service", env=~"$Kafka_Data_Source_Env"}`
@@ -474,6 +475,48 @@ Source Connector imports data from other System to Kafka Topic. For eg; Source C
 
 - Sink Connector
 Sink Connector exports data from Kafka topic to other Systems. For eg; Sink Connector can deliver data from Kafka topic to an HDFS File.
+
+```bash
+
+a.json
+{
+  "name": "a_jdbc",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "timestamp.column.name": "ADDTS",
+    "tasks.max": "1",
+    "transforms.InsertKey.fields": "P_KEY",
+    "transforms": "InsertKey,ExtractId",
+    "batch.max.rows": "5000",
+    "timestamp.delay.interval.ms": "1000",
+    "table.types": "TABLE",
+    "transforms.ExtractId.field": "P_KEY",
+    "query": "select * from (SELECT * FROM user_schema.A_QUEUE_VW where status = 'N')",
+    "mode": "timestamp",
+    "topic.prefix": "A_QUEUE",
+    "poll.interval.ms": "1000",
+    "schema.pattern":"user_schema",
+    "connection.backoff.ms":"60000",
+    "connection.attempts":"60",
+    "connection.url": "jdbc:oracle:thin:test/testt@localhost:1234/localhost.sid",
+    "transforms.InsertKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+    "transforms.ExtractId.type": "org.apache.kafka.connect.transforms.ExtractField$Key"
+    }
+  }
+
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181
+/apps/kafka_2.11-0.11.0.0/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --topic A_QUEUE--broker-list localhost1:9092,localhost2:9092,localhost3:9092
+
+curl -XGET  'localhost:8083/connectors/' | jq
+curl -XGET  'localhost:8083/connectors/a_jdbc/status' | jq
+
+curl -XDELETE  'localhost:8083/connectors/a_jdbc' | jq
+curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./a.json
+curl -XPOST 'localhost:8083/connectors/a_jdbc/tasks/0/restart' | jq
+
+curl -XDELETE  'localhost:8083/connectors/b_jdbc' | jq
+curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./b.json
+```
 
 
 
