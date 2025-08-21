@@ -26,6 +26,7 @@ from collections import defaultdict
 # import paramiko
 import base64
 import pytz
+from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
 import warnings
 warnings.filterwarnings("ignore")
@@ -751,6 +752,8 @@ def get_metrics_all_envs(monitoring_metrics):
                 # -- make a call to cluster for checking the disk space on all nodes in the cluster
                 es_urls = "{}://{}/_cat/shards?format=json&v=true&h=index,shard,prirep,state,node,unassigned.reason&s=state".format(es_cluster_call_protocal, each_es_host)
                 ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
+                ''' To implement HTTP Basic Authentication with the Python requests library, you can use the HTTPBasicAuth class from requests.auth. '''
+                # resp = requests.get(url=es_urls.format(es_cluster_call_protocal, each_es_host), auth=HTTPBasicAuth(username, password), verify=False, timeout=5)
                 resp = requests.get(url=es_urls.format(es_cluster_call_protocal, each_es_host), headers=get_header(), verify=False, timeout=5)
                     
                 if not (resp.status_code == 200):
