@@ -142,7 +142,8 @@ db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Met
 # db_jobs_backlogs_gauge_g = Gauge("db_jobs_backlog_running_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 db_jobs_wmx_db_active_gauge_g = Gauge("db_wmx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
-
+''' db connection'''
+db_jobs_db_connection_active_gauge_g = Gauge("db_connection_active_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
 
@@ -2791,6 +2792,8 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     ''' expose failure node with a reason'''
                     saved_failure_db_dict.update({'db-jobs-{}_{}'.format(db_info,db_info) : "{} db -> ".format(db_info) + resp.json()['message']})
                     all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
+                    ''' connection metrics'''
+                    db_jobs_db_connection_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(2)
                     saved_status_dict.update({'es_pipeline' : 'Red'})
 
                     logging.info(f"saved_failure_db_dict in 404 response - {saved_failure_db_dict}, saved_status_dict - {saved_status_dict}")
@@ -2807,6 +2810,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     db_transactin_time_WMx = resp.json()["running_time"]
                 elif db_info == "OMx":
                     db_transactin_time_OMx = resp.json()["running_time"]
+
+                ''' connection metrics with green status'''
+                db_jobs_db_connection_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(1)
          
             else:
                 ''' This logic perform to connect to DB directly and retrieve records from processd table '''
