@@ -31,13 +31,15 @@ func get_commands(input string) string {
 }
 
 /* get commands */
-func get_sudo_commands(arg string, input string, action string) string {
+func get_sudo_commands(cmd_input string) string {
 
+	// fmt.Println(cmd_input)
 	// cmd := exec.Command("sudo", "ls", "-l", "/root") // Example: listing contents of /root
 	// cmd := exec.Command("sudo", arg, input, action) // Example: listing contents of /root
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo %s %s %s", arg, input, action)) // Example: listing contents of /root
-	cmd.Stderr = os.Stderr                                                                 // Direct stderr to the program's stderr
-	cmd.Stdin = os.Stdin                                                                   // Direct stdin to the program's stdin (for password prompt)
+	// cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("sudo %s %s %s", arg, input, action)) // Example: listing contents of /root
+	cmd := exec.Command("/bin/sh", "-c", cmd_input) // Example: listing contents of /root
+	cmd.Stderr = os.Stderr                          // Direct stderr to the program's stderr
+	cmd.Stdin = os.Stdin                            // Direct stdin to the program's stdin (for password prompt)
 
 	output, err := cmd.Output()
 	if err != nil {
@@ -143,7 +145,7 @@ var (
 	SERVICE_ALIVE = false
 )
 
-func get_process(args string, process_name string, validate string, action string) {
+func get_process(process_name string, cmd string) {
 	SERVICE_ALIVE = false
 	processes, _ := process.Processes()
 	for _, process := range processes {
@@ -152,11 +154,12 @@ func get_process(args string, process_name string, validate string, action strin
 		if strings.Contains(cmd_line, os.Getenv("GREP_PROCESS")) {
 			log.Println(name, cmd_line)
 			/* logstash is Running as PID: 1698083 */
-			pid := get_sudo_commands(args, process_name, validate)
-			log.Println(pid)
+			// pid := get_sudo_commands(args, process_name, validate)
+			pid := get_sudo_commands(fmt.Sprintf("ps ax | grep -i '%s' | grep -v grep | awk '{print $1}'", os.Getenv("GREP_COMMAND_AX")))
+			log.Println(fmt.Sprintf("%s is Running as PID: %s", process_name, pid))
 			// fmt.Println(get_sudo_commands(process_name, "start"))
 			SERVICE_ALIVE = true
-			pid = get_sudo_commands("netstat", "-nlp | grep -E", os.Getenv("CHECK_PORTS"))
+			pid = get_sudo_commands(fmt.Sprintf("sudo netstat -nlp | grep -E %s", os.Getenv("CHECK_PORTS")))
 			log.Println(pid)
 			return
 		}
@@ -164,7 +167,7 @@ func get_process(args string, process_name string, validate string, action strin
 
 	if !SERVICE_ALIVE {
 		log.Printf("Service - %s is not running...\n", process_name)
-		pid := get_sudo_commands("service", process_name, action)
+		pid := get_sudo_commands(cmd)
 		log.Println(pid)
 	}
 }
@@ -205,7 +208,7 @@ func main() {
 		fmt.Printf("\n\n")
 		log.Printf("Watchdog is checking...\n")
 		/* GET Process */
-		go get_process("service", "logstash", "status", "start")
+		go get_process("logstash", "sudo service logstash start")
 
 		time.Sleep(time.Duration(TIME_INTERVAL) * time.Second)
 	}
