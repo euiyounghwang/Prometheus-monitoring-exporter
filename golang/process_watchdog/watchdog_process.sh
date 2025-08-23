@@ -14,10 +14,16 @@ export CHECK_PORTS="':(5043|5044|5045|5046|5047|5048)'"
 
 case "$1" in
   start)
-        # Start daemon.
-        echo "Starting $SERVICE_NAME";
-        #nohup $WATCHDOG_SERVICE_PATH/process_autostart &> /dev/null &
-        $WATCHDOG_SERVICE_PATH/process_autostart
+        pid=`ps ax | grep -i '/process_autostart' | grep -v grep | awk '{print $1}'`
+        if [ -n "$pid" ]
+          then
+          echo "$SERVICE_NAME is Running as PID: $pid"
+         else
+          # Start daemon.
+          echo "Starting $SERVICE_NAME";
+          #nohup $WATCHDOG_SERVICE_PATH/process_autostart &> /dev/null &
+          $WATCHDOG_SERVICE_PATH/process_autostart
+        fi
         ;;
   stop)
         # Stop daemons.
