@@ -38,7 +38,7 @@ case "$1" in
   stop)
         # Stop daemons.
         echo "🦄 Shutting down $SERVICE_NAME";
-        pid=`ps ax | grep -i '/standalone-es-service-export.py' | grep -v grep | awk '{print $1}'`
+        pid=`ps ax | grep -i '/standalone-es-service-export.py --env_name dev_new --port 9002' | grep -v grep | awk '{print $1}'`
         if [ -n "$pid" ]
           then
           kill -9 $pid
@@ -54,7 +54,7 @@ case "$1" in
         sleep 2
         ;;
   status)
-        pid=`ps ax | grep -i '/standalone-es-service-export.py' | grep -v grep | awk '{print $1}'`
+        pid=`ps ax | grep -i '/standalone-es-service-export.py --env_name dev_new --port 9002' | grep -v grep | awk '{print $1}'`
         if [ -n "$pid" ]
           then
           echo "🦄 $SERVICE_NAME is Running as PID: $pid"
