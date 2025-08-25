@@ -155,12 +155,14 @@ func get_process(process_name string, cmd string) {
 			log.Println(name, cmd_line)
 			/* logstash is Running as PID: 1698083 */
 			// pid := get_sudo_commands(args, process_name, validate)
-			pid := get_sudo_commands(fmt.Sprintf("ps ax | grep -i '%s' | grep -v grep | awk '{print $1}'", os.Getenv("GREP_COMMAND_AX")))
-			log.Println(fmt.Sprintf("%s is Running as PID: %s", process_name, pid))
-			// fmt.Println(get_sudo_commands(process_name, "start"))
+
+			// pid := get_sudo_commands(fmt.Sprintf("ps ax | grep -i '%s' | grep -v grep | awk '{print $1}'", os.Getenv("GREP_COMMAND_AX")))
+			// log.Println(fmt.Sprintf("%s is Running as PID: %s", process_name, pid))
+			log.Println(fmt.Sprintf("%s is Running as PID: %d", process_name, process.Pid))
+
 			SERVICE_ALIVE = true
-			pid = get_sudo_commands(fmt.Sprintf("sudo netstat -nlp | grep -E %s", os.Getenv("CHECK_PORTS")))
-			log.Println(pid)
+			// pid = get_sudo_commands(fmt.Sprintf("sudo netstat -nlp | grep -E %s", os.Getenv("CHECK_PORTS")))
+			// log.Println(pid)
 			return
 		}
 	}
@@ -208,7 +210,7 @@ func main() {
 		fmt.Printf("\n\n")
 		log.Printf("Watchdog is checking...\n")
 		/* GET Process */
-		go get_process("logstash", "sudo service logstash start")
+		go get_process(os.Getenv("PROCESS_NAME"), os.Getenv("PROCESS_CMD"))
 
 		time.Sleep(time.Duration(TIME_INTERVAL) * time.Second)
 	}
