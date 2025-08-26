@@ -90,7 +90,7 @@ es_exporter_cpu_usage_gauge_g = Gauge("es_exporter_cpu_metrics", 'Metrics scrape
 es_exporter_jvm_usage_gauge_g = Gauge("es_exporter_jvm_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
 
 ''' es ssl certifcats expired date'''
-es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "service", "node", "expired_date"])
+es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "env", "service", "node", "expiration_date"])
 
 ''' type : cluster/data_pipeline'''
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
@@ -943,11 +943,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     es_ssl_certificates_expired_date_gauge_g._metrics.clear()
                     ''' set value'''
                     if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expired_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expiration_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
                         ssl_certificates_expired_date_es = ssl_es_certificates_expired_date
                     
                     if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expired_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expiration_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
                         ssl_certificates_expired_date_spark = ssl_spark_certificates_expired_date
 
                     return resp.json(), es_basic_info
