@@ -20,7 +20,7 @@ export PROCESS_CMD="sudo service logstash start"
 # LOGSTASH PORT CHECK
 #export CHECK_PORTS="':(5043|5044|5045|5046|5047|5048)'"
 
-# -- Cronjob
+# -- Cronjob Autostart
 #*/30 * * * * /home/biadmin/UtilityScripts/watchdog_process.sh start
 
 
