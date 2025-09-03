@@ -5,10 +5,17 @@ set -e
 WATCHDOG_SERVICE_PATH=/home/devuser/monitoring/log_to_logstash
 SERVICE_NAME=watchdog-service-auto-start
 
-# Arguments for the script
-export GREP_PROCESS="/apps/logstash/latest/config/"
+# -- logstash
+#export GREP_PROCESS="/apps/logstash/latest/config/"
+export GREP_PROCESS="/apps/logstash/logstash-5.6.4"
 export PROCESS_NAME="logstash"
 export PROCESS_CMD="sudo service logstash start"
+
+# -- kibana
+#export GREP_PROCESS="/apps/kibana/latest/"
+#export PROCESS_NAME="kibana"
+#export PROCESS_CMD="sudo /apps/kibana/latest/bin/kibana &"
+
 #export GREP_COMMAND_AX="ps ax | grep -i '/apps/logstash/latest/logstash-core' | grep -v grep | awk '{print $1}'"
 # LOGSTASH PORT CHECK
 #export CHECK_PORTS="':(5043|5044|5045|5046|5047|5048)'"

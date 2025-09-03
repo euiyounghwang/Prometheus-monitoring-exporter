@@ -209,6 +209,12 @@ func main() {
 
 		fmt.Printf("\n\n")
 		log.Printf("Watchdog is checking...\n")
+
+		if os.Getenv("PROCESS_NAME") == "" || os.Getenv("PROCESS_CMD") == "" {
+			log.Printf("Please check the env for \"PROCESS_NAME\" or \"PROCESS_CMD\" with watchdog_process.sh \n")
+			return
+		}
+
 		/* GET Process */
 		go get_process(os.Getenv("PROCESS_NAME"), os.Getenv("PROCESS_CMD"))
 
