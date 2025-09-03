@@ -2438,6 +2438,7 @@ def get_metrics_all_envs(monitoring_metrics):
         
         ''' It can be displayed the log if backlog is enabled'''
         if backlog:
+            logging.info(f"Backlog Threashold : {gloabl_configuration.get('config').get('backlog_threshold')}")
             logging.info(f"WMx_backlog : {WMx_backlog}, OMx_backlog : {OMx_backlog}, db_transactin_time_WMx : {db_transactin_time_WMx}, db_transactin_time_OMx : {db_transactin_time_OMx}")
             logging.info(f"recheck_WMx : {recheck_WMx}, WMx_backlog_list : {WMx_backlog_list}")
                 
@@ -3009,7 +3010,8 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
     # Max_History_For_Hour = 12
 
     # Max_Backlog_CNT = 0
-    Max_Backlog_CNT = 10000
+    # Max_Backlog_CNT = 10000
+    Max_Backlog_CNT = gloabl_configuration.get('config').get('backlog_threshold') if gloabl_configuration else 10000
     
     while True:
         try:
