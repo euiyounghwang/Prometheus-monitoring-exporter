@@ -53,7 +53,15 @@ export ES_HOST_URL_PREFIX="https"
 # -- 
 
 #-- ARG
-LOGSTASH_URL=localhost:5044,localhost:5045,localhost:5046,localhost:5043,localhost:5047,localhost:5048
+DATA_TRANSFER_NODE_1=localhost_dt_1
+DATA_TRANSFER_NODE_2=localhost_dt_2
+DATA_TRANSFER_NODE_3=localhost_dt_3
+ES_NODE_1=localhost_es_1
+ES_NODE_2=localhost_es_2
+ES_NODE_2=localhost_es_3
+LOGSTASH_HOST=localhost
+KIBANA_URL=localhost:5601
+LOGSTASH_URL=$LOGSTASH_HOST:5043,$LOGSTASH_HOST:5044,$LOGSTASH_HOST:5045,$LOGSTASH_HOST:5046,$LOGSTASH_HOST:5047,$LOGSTASH_HOST:5048
 DOMAIN_NICK_NAME=localhost.com
 RUN_PORT=9002
 #--
@@ -68,4 +76,4 @@ RUN_PORT=9002
 # -- collect records through DB interface Restapi
 # -- Only Dev has "--redis_url localhost:6379 --configuration_job_url localhost:9116 ----es_configuration_api_url localhost:8004"
 # python ./standalone-es-service-export.py --env_name localhost --interface http --db_http_host localhost:8002 --url jdbc:oracle:thin:id/passwd@address:port/test_db,jdbc:oracle:thin:id/passwd@address:port/test_db --db_run false --kafka_url localhost:9092,localhost:9092,localhost:9092 --kafka_connect_url localhost:8083,localhost:8083,localhost:8083 --zookeeper_url  localhost:2181,localhost:2181,localhost:2181 --es_url localhost:9200,localhost:9201,localhost:9201,localhost:9200 --kibana_url localhost:5601 --redis_url localhost:6379 --configuration_job_url localhost:9116 --es_configuration_api_url localhost:8004 --log_db_url localhost:9092 --alert_monitoring_url localhost:8501 --loki_url localhost:3100 --loki_api_url localhost:8010 --loki_custom_promtail_agent_url localhost1:2000,localhost2:2000,localhost3:2000 --log_aggregation_agent_url localhost1:2000,localhost2:2000,localhost3:2000 --sql "SELECT processname from test" --kafka_sql "SELECT processname from test"
-python ./standalone-es-service-export.py --env_name localhost --port $RUN_PORT --domain_name_as_nick_name $DOMAIN_NICK_NAME --spark_cluster_https true --interface http --db_http_host localhost:8002 --url jdbc:oracle:thin:id/passwd@address:port/test_db,jdbc:oracle:thin:id/passwd@address:port/test_db --db_run false --kafka_url localhost:9092,localhost:9092,localhost:9092 --kafka_connect_url localhost:8083,localhost:8083,localhost:8083 --zookeeper_url  localhost:2181,localhost:2181,localhost:2181 --es_url localhost:9200,localhost:9201,localhost:9201,localhost:9200 --kibana_url localhost:5601 --logstash_url $LOGSTASH_URL --redis_url localhost:6379 --configuration_job_url localhost:9116 --es_configuration_api_url localhost:8004 --log_db_url localhost:9092 --alert_monitoring_url localhost:8501 --log_aggregation_agent_url localhost1:2000,localhost2:2000,localhost3:2000 --sql "SELECT processname from test" --sql_backlog "SELECT backlog from test" --backlog true --spark_cluster_https true
+python ./standalone-es-service-export.py --env_name localhost --port $RUN_PORT --domain_name_as_nick_name $DOMAIN_NICK_NAME --spark_cluster_https true --interface http --db_http_host localhost:8002 --url jdbc:oracle:thin:id/passwd@address:port/test_db,jdbc:oracle:thin:id/passwd@address:port/test_db --db_run false --kafka_url $DATA_TRANSFER_NODE_1:9092,$DATA_TRANSFER_NODE_2:9092,$DATA_TRANSFER_NODE_3:9092 --kafka_connect_url $DATA_TRANSFER_NODE_1:8083,$DATA_TRANSFER_NODE_2:8083,$DATA_TRANSFER_NODE_3:8083 --zookeeper_url  $DATA_TRANSFER_NODE_1:2181,$DATA_TRANSFER_NODE_2:2181,$DATA_TRANSFER_NODE_3:2181 --es_url $ES_NODE_1:9200,$ES_NODE_2:9201,$ES_NODE_3:9201 --kibana_url $KIBANA_URL --logstash_url $LOGSTASH_URL --redis_url localhost:6379 --configuration_job_url localhost:9116 --es_configuration_api_url localhost:8004 --log_db_url localhost:9092 --alert_monitoring_url localhost:8501 --log_aggregation_agent_url localhost1:2000,localhost2:2000,localhost3:2000 --sql "SELECT processname from test" --sql_backlog "SELECT backlog from test" --backlog true --spark_cluster_https true
