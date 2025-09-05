@@ -15,8 +15,8 @@ logger = logging.getLogger("mcp-server")
 
 # Create an MCP server
 # mcp = FastMCP("MCP 서버")
-# mcp = FastMCP(name="MCP 서버", port=5100, debug=True)
-mcp = FastMCP(name="MCP 서버", debug=True)
+mcp = FastMCP(name="MCP 서버", port=5100, debug=True)
+# mcp = FastMCP(name="MCP 서버", debug=True)
 
 # Add an addition tool
 @mcp.tool()
