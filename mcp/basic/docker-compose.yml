@@ -1,0 +1,29 @@
+version: '3'
+#docker-compose -f ./docker-compose.yml up or docker-compose up
+name: python-mcp-server-basic
+
+services:
+  mcp-python-250309:
+    image: gundam/mcp-python-250309:1.0.0
+    container_name: python-mcp-server-basic
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app
+    restart: unless-stopped
+    networks:
+      - mcp-network
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - FASTMCP_PORT=8000
+      - FASTMCP_TRANSPORT=sse
+      - FASTMCP_DEBUG=true
+      - FASTMCP_HOST=0.0.0.0
+networks:
+  mcp-network:
+    driver: bridge
