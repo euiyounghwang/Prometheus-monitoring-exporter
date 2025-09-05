@@ -63,6 +63,7 @@ def echo_resource(message: str) -> str:
 ''' http://localhost:8000/sse '''
 if __name__ == "__main__":
     logger.info("Starting MCP server...")
+    # If you were to run this as a standalone server, you would typically add:
     # mcp.run(transport='stdio')
     # transport 옵션을 변경해봅니다
     mcp.run(transport="sse")
