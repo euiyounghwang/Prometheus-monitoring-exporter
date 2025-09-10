@@ -39,6 +39,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 SSL/TLS servers 
   - openssl s_client -connect localhost:9200 -showcerts 
   - echo | openssl s_client -connect localhost:8480 | openssl x509 -noout -dates
+  - To find a remote server's certificate expiration date using `Python's pyOpenSSL library`, you can use the SSL_get_peer_certificate() method to get the certificate and then inspect its get_notAfter() method, which returns a datetime object representing the expiration
 
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
