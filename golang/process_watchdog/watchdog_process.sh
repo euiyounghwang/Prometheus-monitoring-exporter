@@ -22,7 +22,7 @@ export PROCESS_CMD="sudo service logstash start"
 
 # -- Cronjob Autostart
 #*/30 * * * * /home/biadmin/UtilityScripts/watchdog_process.sh start
-
+#*/30 * * * * sudo bash -l -c "/home/devuser/UtilityScripts/watchdog_process.sh start"
 
 case "$1" in
   start)
