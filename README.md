@@ -466,7 +466,39 @@ python ./standalone-es-service-export.py --interface http --db_http_host localho
 - Kafka Service
 ```bash
  /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe --zookeeper localhost.am.co.gxo.com:2181,localhost.am.co.gxo.com:2181,localhost.am.co.gxo.com:2181 --topic ELASTIC_PIPELINE_QUEUE
- curl -X POST http://localhost:8083/connectors/epq_wmxd_jdbc/tasks/0/restart
+
+./test_jdbc.json
+{
+  "name": "test_jdbc",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+    "timestamp.column.name": "ADDTS",
+    "tasks.max": "1",
+    "transforms.InsertKey.fields": "SRC_TBL_KEY",
+    "transforms": "InsertKey,ExtractId",
+    "batch.max.rows": "5000",
+    "timestamp.delay.interval.ms": "1000",
+    "table.types": "TABLE",
+    "transforms.ExtractId.field": "SRC_TBL_KEY",
+    "query": "select * from (SELECT * FROM test_schema.test_VM where status = 'N')",
+    "mode": "timestamp",
+    "topic.prefix": "TEST_QUEUE",
+    "poll.interval.ms": "1000",
+    "schema.pattern":"bi$reporting",
+    "connection.backoff.ms":"60000",
+    "connection.attempts":"60",
+    "connection.url": "jdbc:oracle:thin:test/testw@localhost:1234/testdb",
+    "transforms.InsertKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
+    "transforms.ExtractId.type": "org.apache.kafka.connect.transforms.ExtractField$Key"
+  }
+}
+
+
+curl -XGET  'localhost:8083/connectors/test_jdbc/status' | jq
+curl -XDELETE  'localhost:8083/connectors/test_jdbc' | jq
+curl -X POST http://localhost:8083/connectors/test_jdbc/tasks/0/restart
+curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./test_jdbc.json
+
  ```
 
 

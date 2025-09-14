@@ -2254,7 +2254,7 @@ def get_metrics_all_envs(monitoring_metrics):
         service_status_dict.update({"zookeeper_nodes" : int(response_dict["zookeeper_url"]["GREEN_CNT"])})
 
         ''' update server active status for Kibana'''
-        all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kibana_url"]["GREEN_CNT"]), types='kibana')
+        # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kibana_url"]["GREEN_CNT"]), types='kibana')
         ''' save service_status_dict for alerting on all serivces'''
         kibana_status = 'Green' if int(response_dict["kibana_url"]["GREEN_CNT"]) > 0 else 'Red'
         service_status_dict.update({"kibana" : kibana_status})
@@ -2262,7 +2262,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' update server active status for Logstash'''
         if logstash_validation_type == 'socket':
             MAX_NUMBERS = len(monitoring_metrics.get("logstash_url").split(","))
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["logstash_url"]["GREEN_CNT"]), types='logstash')
+            # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["logstash_url"]["GREEN_CNT"]), types='logstash')
             logstash_status = 'Green' if int(response_dict["logstash_url"]["GREEN_CNT"]) > 0 else 'Red'
             if int(response_dict["logstash_url"]["GREEN_CNT"]) < 1:
                 saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
@@ -2272,7 +2272,7 @@ def get_metrics_all_envs(monitoring_metrics):
             service_status_dict.update({"logstash" : logstash_status})
                         
         else:
-            all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(get_Process_Id()), types='logstash')
+            # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(get_Process_Id()), types='logstash')
             ''' save service_status_dict for alerting on all serivces'''
             logstash_status = 'Green' if int(get_Process_Id()) > 0 else 'Red'
             service_status_dict.update({"logstash" : logstash_status})
