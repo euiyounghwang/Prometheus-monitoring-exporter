@@ -134,6 +134,7 @@ pip install pytz
 - The suggested number of workers is (2*CPU)+1.
 - gunicorn --workers=5 --threads=2 --worker-class=gthread main:app, the maximum concurrent requests areworkers * threads 10 in our case.
 
+- Poetry (https://velog.io/@qlgks1/python-poetry-%EC%84%A4%EC%B9%98%EB%B6%80%ED%84%B0-project-initializing-%ED%99%9C%EC%9A%A9%ED%95%98%EA%B8%B0)
 ```bash
 python -m venv .venv
 source .venv/bin/activate
@@ -149,6 +150,34 @@ poetry add JPype1
 poetry add psycopg2-binary
 poetry add jaydebeapi
 
+# ------------------
+# Sample
+poetry add django
+# 개발환경에서 필요한 패키지 설치
+poetry add --group dev pytest
+# 버전을 지정가능
+poetry add django@^3.0.0
+poetry add "django=3.0.0"
+# 최신버전을 설치
+poetry add django@latest
+# 깃 저장소에 있는 패키지 설치
+poetry add git+https://github.com/django/django.git
+# 깃 저장소의 패키지에서 브랜치를 지정
+poetry add git+https://github.com/django/django.git#stable/2.2.x
+# 로컬에 디렉토리의 파일로 설치하기
+poetry add ./my-package/
+poetry add ./my-package/dist/my-package-0.1.0.tar.gz
+poetry add ./my-package/dist/my-package-0.1.0.whl
+
+# 의존성 설치
+poetry install
+# 개발환경의 의존성은 빼고 설치
+poetry install --no-dev
+# -E 또는 --extras 로 추가 의존성을 설정가능
+poetry install --extras "mysql redis"
+poerty install -E mysql -E redis
+...
+# ------------------
 ...
 
 # start with gunicorn config
