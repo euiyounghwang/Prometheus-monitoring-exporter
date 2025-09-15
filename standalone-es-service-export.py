@@ -2433,6 +2433,7 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"save_thread_alert_history : {save_thread_alert_history}")
         logging.info(f"ssl_certificates_expired_date_es : {ssl_certificates_expired_date_es}, ssl_certificates_expired_date_spark : {ssl_certificates_expired_date_spark}")
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
+        logging.info(f"xmatters_webhook_url : {gloabl_configuration.get('config').get('xmatters_webhook_url')}")
         logging.info(f"ES Monitoring Credentail Plan [basic {base64.b64decode(os.environ.get('BASIC_AUTH_SH')).decode('utf-8') if 'BASIC_AUTH_SH' in os.environ else ''}]: {os.environ.get('BASIC_AUTH_SH', '')}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
         
@@ -2479,7 +2480,42 @@ def get_metrics_all_envs(monitoring_metrics):
         pass
         
 
+''' push msg through xMatters WebHook '''
+def push_sms_xmatters(env, message):
+    ''' push msg through xMatters WebHook '''
 
+    try:
+        url = '{}'.format(gloabl_configuration.get('config').get('xmatters_webhook_url'))
+        headers = {
+            'Content-type': 'application/json'
+        }
+        
+        """
+        {
+            "recipients": "TEST Group",
+            "summary": "[Dev] Prometheus Alert",
+            "description": "The alert is a test message \nnew line\n\nnext new line",
+            "priority": "MEDIUM"
+        }
+        """
+        payload = {
+            "recipients": "{}".format(gloabl_configuration.get('config').get('xmatters_recipients')),
+            "summary": "[{}] Prometheus Alert".format(env),
+            "description": message,
+            "priority": "MEDIUM"
+        }
+        # payload = json.dumps(payload)
+        ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
+        response = requests.post(url, json=payload, headers=headers, verify=False)
+        print(response.status_code)
+        ''' {"requestId": "25582df1-2e10-4f25-887b-c03688db3579"}'''
+
+    except Exception as e:
+        logging.error(e)
+        pass
+
+
+''' push logs into grafana-loki'''
 def push_log_to_grafana_loki(env, title_msg, body_msg, logger_level):
     ''' push msg log into grafana-loki '''
 
@@ -3201,6 +3237,7 @@ def get_global_configuration(es_http_host):
             ''' save failure node with a reason into saved_failure_dict'''
             logging.error(f"get_global_configuration api do not reachable")
             saved_failure_dict.update({domain_name_as_nick_name: "get_global_configuration api do not reachable"})
+            return {}
                 
         # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
         logging.info(f"get_global_configuration - {resp}")
@@ -3740,7 +3777,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
             body = """- Enviroment: %s, Prometheus Export Application Runnig Host : %s - Service Status: <b>%s</b>, ES_PIPELINE Status : <b>%s</b> - <b>Alert Message : </b>%s
                 """ % (env, host, status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"), message)
 
-
+        ''' email with sms via http'''
         html = """
             <h4>Monitoring [ES Team Dashboard on export application]</h4>
             <HTML><head>
@@ -3766,6 +3803,9 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         recipients_list = you + cc
         s.sendmail(me, recipients_list, msg.as_string())
         s.quit()
+
+        ''' sms via xmatters'''
+        # push_sms_xmatters(env, body)
 
     try:
         ''' send mail through mailx based on python environment'''
