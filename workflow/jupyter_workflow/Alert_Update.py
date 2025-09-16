@@ -127,7 +127,7 @@ def run():
                 request_body = {
                                 "env" : env,
                                 "alert" : will_update_alert,
-                                "message": "Security Patching"
+                                "message": "the ES team's script"
                 }
 
                 logging.info(f"request_body : {request_body}")
