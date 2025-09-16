@@ -528,8 +528,9 @@ curl -XGET  'localhost:8083/connectors/test_jdbc/status' | jq
 curl -XDELETE  'localhost:8083/connectors/test_jdbc' | jq
 curl -X POST http://localhost:8083/connectors/test_jdbc/tasks/0/restart
 curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./test_jdbc.json
+curl -XPUT 'localhost:8083/connectors/test_jdbc/resume'
 
- ```
+```
 
 
 ### Services
