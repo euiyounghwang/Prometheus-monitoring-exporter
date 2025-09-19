@@ -732,3 +732,41 @@ sudo service rc-local restart
 sudo service rc-local status
 sudo systemctl disable rc-local
 ```
+
+
+## Cronjob
+- A cron job is a scheduled task in a Unix-like operating system that runs automatically at a specific time or interval, typically for repetitive system or application maintenance, like running scripts, performing backups, or sending out newsletters.
+
+```bash
+
+* * * * * <command_to_run>
+- - - - -
+| | | | |
+| | | | +----- Day of the week (0-6) (Sunday is 0 or 7)
+| | | +------- Month (1-12)
+| | +--------- Day of the month (1-31)
+| +----------- Hour (0-23)
++------------- Minute (0-59)
+
+# ------
+# alert update via this script and send to the REST API
+# 1 : Monday
+40 07 * * 1 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
+30 15 * * 1 /apps_rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+
+# Monday ~ Thursday
+30 06 16 09 * /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
+30 16 16 09 * /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+
+# Friday
+40 22 19 09 5 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
+30 07 20 09 5 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+
+# Saturday
+40 22 20 09 6 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
+30 07 21 09 6 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+
+# Sunday
+00 16 21 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
+30 05 22 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+```
