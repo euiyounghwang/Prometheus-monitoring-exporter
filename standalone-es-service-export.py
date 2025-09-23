@@ -1617,7 +1617,7 @@ def get_metrics_all_envs(monitoring_metrics):
         global ALERT_RESENT
         global global_env_name
         global WMx_backlog, OMx_backlog
-
+        
         ES_CLUSTER_RED = False
 
         #-- es node cluster health
@@ -2600,7 +2600,7 @@ DATA_PIPELINE_THRESHOLD = 0.58
 KAFKA_OFFSET_EDITTS_UPDATED_THRESHOLD = 0.1
 
 ''' Backlog '''
-WMx_backlog, OMx_backlog = 0, 0
+WMx_backlog, OMx_backlog, Max_Backlog_CNT = 0, 0, 0
 
 
 ''' Team does not wont to monitor this metrics for DB performace'''
@@ -3035,7 +3035,7 @@ WMx_backlog_list = []
 
 def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, db_info):
     ''' Get backlogs for both DB's'''
-    global WMx_backlog, OMx_backlog, WMx_backlog_list, recheck_WMx
+    global WMx_backlog, OMx_backlog, WMx_backlog_list, recheck_WMx, Max_Backlog_CNT
     
     # Max_History_For_Hour (5 minute * 12)
     WMx_backlog_list = [] 
