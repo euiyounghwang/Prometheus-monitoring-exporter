@@ -146,6 +146,8 @@ db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped 
 db_jobs_db_connection_active_gauge_g = Gauge("db_connection_active_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
+''' xMatters_service '''
+xMatters_service_gauge_g = Gauge("xMatters_service_health_metric", 'Metrics scraped from localhost', ["server_job"])
 
 
 app = Flask(__name__)
@@ -3222,6 +3224,24 @@ def inserted_post_log(status, message):
    
 
 
+def get_xMatters_service(es_http_host):
+    ''' get global configuration through ES configuration REST API'''
+
+    try:
+        # es_config_host = str(es_http_host).split(":")[0]
+        # resp = requests.get(url="http://{}:8004/config/get_gloabl_config".format(es_config_host), timeout=5)
+                
+        # # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
+        # logging.info(f"get_global_configuration - {resp}")
+        # gloabl_configuration = resp.json()
+        logging.info(f"Checking the xMatters_service : {es_http_host}")
+
+        xMatters_service_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
+        
+    except Exception as e:
+        logging.error(e)
+        xMatters_service_gauge_g.labels(server_job=domain_name_as_nick_name).set(2)
+
 
 gloabl_configuration = {}
 def get_global_configuration(es_http_host):
@@ -3377,7 +3397,11 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
 
             ''' ES Monitoring Running Time'''
             es_service_jobs_performance_gauge_g.labels(server_job=domain_name_as_nick_name, category="es_service_all").set(float(Delay_Time))
-            
+
+            ''' Get checking the status of xMatters if xMatters_enable value is True'''
+            if xMatters_enable:
+                get_xMatters_service(gloabl_configuration.get('config').get('xmatters_webhook_url'))
+
             time.sleep(interval)
         
         '''
@@ -3887,6 +3911,8 @@ if __name__ == '__main__':
     # parser.add_argument('--kafka_sql', dest='kafka_sql', default="select * from test", help='kafka_sql')
     ''' request DB interface restpi insteady of connecting db dircectly'''
     parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
+    ''' xMatters is running'''
+    parser.add_argument('--xMatters', dest='xMatters', default="False", help='xMatters API url')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
@@ -3954,6 +3980,7 @@ if __name__ == '__main__':
         logstash_validation_type = 'process'
 
     global redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url, airflow_url
+    global xMatters_enable
     
     ''' Redis port checking'''
     redis_url = args.redis_url if args.redis_url else None
@@ -4008,6 +4035,9 @@ if __name__ == '__main__':
 
     if args.backlog_omx_enable:
         backlog_omx_enable = args.backlog_omx_enable
+
+    if args.xMatters:
+        xMatters = args.xMatters
                 
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
@@ -4095,7 +4125,8 @@ if __name__ == '__main__':
     multiple_db = True if str(omx_db_con).upper() == "TRUE" else False
     backlog = True if str(backlog).upper() == "TRUE" else False
     backlog_omx_enable = True if str(backlog_omx_enable).upper() == "TRUE" else False
-
+    xMatters_enable = True if str(xMatters).upper() == "TRUE" else False
+   
     ''' global '''
     global_spark_cluster_https = spark_cluster_https
 
