@@ -3225,18 +3225,16 @@ def inserted_post_log(status, message):
 
 
 def get_xMatters_service(es_http_host):
-    ''' get global configuration through ES configuration REST API'''
+    ''' Checking the xMatters_service '''
 
     try:
-        # es_config_host = str(es_http_host).split(":")[0]
-        # resp = requests.get(url="http://{}:8004/config/get_gloabl_config".format(es_config_host), timeout=5)
-                
-        # # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
-        # logging.info(f"get_global_configuration - {resp}")
-        # gloabl_configuration = resp.json()
         logging.info(f"Checking the xMatters_service : {es_http_host}")
-
-        xMatters_service_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
+        resp = requests.get(url=es_http_host, verify=False, timeout=5)
+        
+        if resp.status_code == 404:
+            xMatters_service_gauge_g.labels(server_job=domain_name_as_nick_name).set(2)
+        else:
+            xMatters_service_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
         
     except Exception as e:
         logging.error(e)
