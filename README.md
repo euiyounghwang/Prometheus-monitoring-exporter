@@ -516,7 +516,8 @@ python ./standalone-es-service-export.py --interface http --db_http_host localho
     "poll.interval.ms": "1000",
     "schema.pattern":"bi$reporting",
     "connection.backoff.ms":"60000",
-    "connection.attempts":"60",
+    "connection.attempts":"10",
+    "connection.pool.size": "5",
     "connection.url": "jdbc:oracle:thin:test/testw@localhost:1234/testdb",
     "transforms.InsertKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
     "transforms.ExtractId.type": "org.apache.kafka.connect.transforms.ExtractField$Key"
@@ -568,7 +569,8 @@ a.json
     "poll.interval.ms": "1000",
     "schema.pattern":"user_schema",
     "connection.backoff.ms":"60000",
-    "connection.attempts":"60",
+    "connection.attempts":"10",
+    "connection.pool.size": "5",
     "connection.url": "jdbc:oracle:thin:test/testt@localhost:1234/localhost.sid",
     "transforms.InsertKey.type": "org.apache.kafka.connect.transforms.ValueToKey",
     "transforms.ExtractId.type": "org.apache.kafka.connect.transforms.ExtractField$Key"
