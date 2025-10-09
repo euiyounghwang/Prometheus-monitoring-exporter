@@ -90,7 +90,7 @@ es_exporter_cpu_usage_gauge_g = Gauge("es_exporter_cpu_metrics", 'Metrics scrape
 es_exporter_jvm_usage_gauge_g = Gauge("es_exporter_jvm_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
 
 ''' es ssl certifcats expired date'''
-es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "env", "service", "node", "expiration_date"])
+es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_date_metric", 'Metrics scraped from localhost', ["server_job", "env", "service", "node", "certificate_health", "diff_days", "expiration_date"])
 
 ''' type : cluster/data_pipeline'''
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
@@ -781,7 +781,25 @@ def get_metrics_all_envs(monitoring_metrics):
                 logging.error(e)
                 pass
 
-        
+
+        def subtract_dates_yyyymmdd(date_str1, date_str2):
+            """
+            Calculates the number of days between two dates in YYYYMMDD format.
+
+            Args:
+                date_str1 (str): The first date string in YYYYMMDD format.
+                date_str2 (str): The second date string in YYYYMMDD format.
+
+            Returns:
+                int: The number of days between the two dates.
+            """
+            date1 = datetime.datetime.strptime(date_str1, "%Y-%m-%d")
+            date2 = datetime.datetime.strptime(date_str2, "%Y-%m-%d")
+            
+            time_difference = date1 - date2
+            return time_difference.days
+
+
         def retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassign_index_list):
             """
             https://www.elastic.co/guide/en/elasticsearch/reference/current/diagnose-unassigned-shards.html
@@ -943,13 +961,27 @@ def get_metrics_all_envs(monitoring_metrics):
 
                     ''' clear '''
                     es_ssl_certificates_expired_date_gauge_g._metrics.clear()
+
+                    ''' certificate_diff_days_threshold : Get this value from the ES configuration API'''
+                    certificate_diff_days_threshold = 60
+
                     ''' set value'''
                     if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, expiration_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        ''' diff_days'''
+                        diff_days_es = subtract_dates_yyyymmdd(ssl_es_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
+                        es_certificate_health = 'Red' if int(diff_days_es) < certificate_diff_days_threshold else 'Green'
+                        es_certificate_status = 0 if int(diff_days_es) < certificate_diff_days_threshold else 1
+                        # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(es_certificate_status)
                         ssl_certificates_expired_date_es = ssl_es_certificates_expired_date
                     
                     if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), expiration_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        ''' diff_days'''
+                        diff_days_spark = subtract_dates_yyyymmdd(ssl_spark_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
+                        spark_certificate_health = 'Red' if int(diff_days_spark) < certificate_diff_days_threshold else 'Green'
+                        spark_certificate_status = 0 if int(diff_days_spark) < certificate_diff_days_threshold else 1
+                        # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(spark_certificate_status)
                         ssl_certificates_expired_date_spark = ssl_spark_certificates_expired_date
 
                     return resp.json(), es_basic_info
