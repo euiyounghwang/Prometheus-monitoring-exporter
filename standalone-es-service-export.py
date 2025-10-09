@@ -963,7 +963,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     es_ssl_certificates_expired_date_gauge_g._metrics.clear()
 
                     ''' certificate_diff_days_threshold : Get this value from the ES configuration API'''
-                    certificate_diff_days_threshold = 60
+                    certificate_diff_days_threshold = gloabl_configuration.get('config').get('certificate_diff_days_threshold')
 
                     ''' set value'''
                     if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
