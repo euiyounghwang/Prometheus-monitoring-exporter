@@ -3898,6 +3898,44 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
 
 
 
+def alert_certs_work(interval):
+    """
+        * Requests to the Prometheus URl (http://localhost:9090/api/v1/query?query=es_ssl_certificates_expired_date_metric)
+        * Check certificate expiration date ** 
+    """
+    try:
+        while True:
+            print("\n\n\n**alert_certs_work**")
+            if gloabl_configuration:
+                print(f"Global Configuration [disk_usage_percentage_threshold] : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')}")
+            print("****\n\n\n")
+            ''' Get the expiration date of ssl certificate for the ES/Spark cluster if they are running with secure connection'''
+
+            try:
+                resp = requests.get(
+                                    url="http://{}:9090/api/v1/query?query=es_ssl_certificates_expired_date_metric".format(os.getenv("ES_CONFIGURATION_HOST")), 
+                                    auth=(os.getenv("PROMETHEUS_USERNAME"), os.getenv("PROMETHEUS_PASSWORD")), 
+                                    timeout=5, 
+                                    verify=False
+                                )
+                        
+                # logging.info(f"activeapps - {resp}, {resp.status_code}, {resp.json()}")
+                if not (resp.status_code == 200):
+                    continue
+                # logging.info(f"alert_certs_work - {resp}, {resp.status_code}, {resp.json()}")
+                logging.info(f"alert_certs_work - {resp}, {resp.status_code}")
+                
+            except Exception as e:
+                logging.error(e)
+                pass
+            
+            time.sleep(interval)
+            
+
+    except Exception as e:
+        logging.error(e)
+        pass
+
 
 if __name__ == '__main__':
     '''
@@ -3948,6 +3986,7 @@ if __name__ == '__main__':
     parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
     ''' xMatters is running'''
     parser.add_argument('--xMatters', dest='xMatters', default="False", help='xMatters API url')
+    parser.add_argument('--certs_alert', dest='certs_alert', default="False", help='certs_alert')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
@@ -4073,6 +4112,9 @@ if __name__ == '__main__':
 
     if args.xMatters:
         xMatters = args.xMatters
+
+    if args.certs_alert:
+        certs_alert = args.certs_alert
                 
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
@@ -4161,6 +4203,7 @@ if __name__ == '__main__':
     backlog = True if str(backlog).upper() == "TRUE" else False
     backlog_omx_enable = True if str(backlog_omx_enable).upper() == "TRUE" else False
     xMatters_enable = True if str(xMatters).upper() == "TRUE" else False
+    certs_alert = True if str(certs_alert).upper() == "TRUE" else False
    
     ''' global '''
     global_spark_cluster_https = spark_cluster_https
@@ -4202,6 +4245,12 @@ if __name__ == '__main__':
         mail_th.daemon = True
         mail_th.start()
         T.append(mail_th)
+
+        if certs_alert:
+            certs_alert_thread = Thread(target=alert_certs_work, args=(60,))
+            certs_alert_thread.daemon = True
+            certs_alert_thread.start()
+            T.append(certs_alert_thread)
 
         
         ''' Set DB connection to validate the status of data pipelines after restart kafka cluster when security patching '''
