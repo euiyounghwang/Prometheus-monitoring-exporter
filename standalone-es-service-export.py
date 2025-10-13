@@ -3924,6 +3924,39 @@ def alert_certs_work(interval):
                     continue
                 # logging.info(f"alert_certs_work - {resp}, {resp.status_code}, {resp.json()}")
                 logging.info(f"alert_certs_work - {resp}, {resp.status_code}")
+
+                ''' Get the expiration date of ssl certificate'''
+                ssl_certificate_info_alert_dict = {}
+                ssl_certificate_info = []
+                for each_metric in resp.json()["data"]["result"]:
+                    diff_days = int(each_metric.get("metric").get("diff_days").replace(",",""))
+                    # logging.info(f"diff_days - {diff_days}")
+                    if gloabl_configuration and diff_days < int(gloabl_configuration.get('config').get('certificate_diff_days_threshold')):
+                        ssl_certificate_info.append({
+                            "env" : each_metric.get("metric").get("env"),
+                            "node" : each_metric.get("metric").get("node"),
+                            "service" : each_metric.get("metric").get("service"),
+                            "expiration_date" : each_metric.get("metric").get("expiration_date")
+                        })
+
+                # logging.info(f"ssl_certificate_info - {json.dumps(ssl_certificate_info, indent=4)}")
+                '''
+                ssl_certificate_info : 
+                [
+                    {
+                        "env": "test",
+                        "node": "localhost:9200",
+                        "service": "ES Cluster (v.8.17.0)",
+                        "expiration_date": "2035-09-23"
+                    },
+                    ...
+                ]
+                '''
+                # The ES Monitoring Application will be sent an alert if The number of days remaining until the certificate expires from today's date is less than threshold. 
+                if ssl_certificate_info:
+                    ''' Will send a email alert for the certificate'''
+                    logging.error(f"ssl_certificate_alert")
+                    logging.error(f"ssl_certificate_info - {ssl_certificate_info}")
                 
             except Exception as e:
                 logging.error(e)
@@ -4247,7 +4280,7 @@ if __name__ == '__main__':
         T.append(mail_th)
 
         if certs_alert:
-            certs_alert_thread = Thread(target=alert_certs_work, args=(60,))
+            certs_alert_thread = Thread(target=alert_certs_work, args=(10,))
             certs_alert_thread.daemon = True
             certs_alert_thread.start()
             T.append(certs_alert_thread)
