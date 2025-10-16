@@ -3908,8 +3908,24 @@ def alert_certs_work(interval):
         * Requests to the Prometheus URl (http://localhost:9090/api/v1/query?query=es_ssl_certificates_expired_date_metric)
         * Check certificate expiration date ** 
     """
+    ssl_certificate_info = {}
+
+    def set_json(new_json, key):
+        ''' update json '''
+        if new_json.get(key) not in ssl_certificate_info.keys():
+            ssl_certificate_info.update({
+                new_json.get(key) : [new_json]
+            })
+        else:
+            ssl_certificate_info.update({
+                new_json.get(key) : ssl_certificate_info.get(new_json.get(key)) + [new_json]
+            })
+
     try:
         while True:
+            
+            ssl_certificate_info.clear()
+
             print("\n\n\n**alert_certs_work**")
             if gloabl_configuration:
                 print(f"Global Configuration [disk_usage_percentage_threshold] : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')}")
@@ -3918,6 +3934,7 @@ def alert_certs_work(interval):
 
             try:
                 resp = requests.get(
+                                    # url="http://{}:9090/api/v1/query?query=es_ssl_certificates_expired_date_metric".format(os.getenv("ES_CONFIGURATION_HOST")), 
                                     url="http://{}:9090/api/v1/query?query=es_ssl_certificates_expired_date_metric".format(os.getenv("ES_CONFIGURATION_HOST")), 
                                     auth=(os.getenv("PROMETHEUS_USERNAME"), os.getenv("PROMETHEUS_PASSWORD")), 
                                     timeout=5, 
@@ -3931,37 +3948,83 @@ def alert_certs_work(interval):
                 logging.info(f"alert_certs_work - {resp}, {resp.status_code}")
 
                 ''' Get the expiration date of ssl certificate'''
-                ssl_certificate_info_alert_dict = {}
-                ssl_certificate_info = []
+                # ssl_certificate_info = []
                 for each_metric in resp.json()["data"]["result"]:
                     diff_days = int(each_metric.get("metric").get("diff_days").replace(",",""))
                     # logging.info(f"diff_days - {diff_days}")
                     if gloabl_configuration and diff_days < int(gloabl_configuration.get('config').get('certificate_diff_days_threshold')):
-                        ssl_certificate_info.append({
+                        # ssl_certificate_info.append({
+                        #     "env" : each_metric.get("metric").get("env"),
+                        #     "node" : each_metric.get("metric").get("node"),
+                        #     "service" : each_metric.get("metric").get("service"),
+                        #     "expiration_date" : each_metric.get("metric").get("expiration_date")
+                        # })
+                        set_json({
                             "env" : each_metric.get("metric").get("env"),
                             "node" : each_metric.get("metric").get("node"),
                             "service" : each_metric.get("metric").get("service"),
+                            "server_job" : each_metric.get("metric").get("server_job"),
+                            "diff_days": each_metric.get("metric").get("diff_days"),
                             "expiration_date" : each_metric.get("metric").get("expiration_date")
-                        })
+                        }, "env")
 
                 # logging.info(f"ssl_certificate_info - {json.dumps(ssl_certificate_info, indent=4)}")
                 '''
-                ssl_certificate_info : 
-                [
-                    {
-                        "env": "test",
-                        "node": "localhost:9200",
-                        "service": "ES Cluster (v.8.17.0)",
-                        "expiration_date": "2035-09-23"
-                    },
-                    ...
-                ]
+                ssl_certificate_info : {
+                    "DEV_NEW": [
+                        {
+                            "env": "test1",
+                            "node": "localhost:9200",
+                            "service": "ES Cluster (v.8.17.0)",
+                            "server_job" : "localhost",
+                            "diff_days": 1,000,
+                            "expiration_date": "2035-08-09"
+                        },
+                        {
+                            "env": "test2",
+                            "node": "localhost:8480",
+                            "service": "Spark Cluster (master node)",
+                            "server_job" : "localhost",
+                            "diff_days": 1,001,
+                            "expiration_date": "2031-02-12"
+                        }
+                    ]
+                }
+               
                 '''
                 # The ES Monitoring Application will be sent an alert if The number of days remaining until the certificate expires from today's date is less than threshold. 
                 if ssl_certificate_info:
                     ''' Will send a email alert for the certificate'''
                     logging.error(f"ssl_certificate_alert")
-                    logging.error(f"ssl_certificate_info - {ssl_certificate_info}")
+                    # logging.error(f"ssl_certificate_info - {json.dumps(ssl_certificate_info, indent=2)}")
+                    # logging.error(f"ssl_certificate_info - {ssl_certificate_info}")
+                    message_alert_certificate_dict = {}
+                    for k, v in ssl_certificate_info.items():
+                        # logging.info(f"Env: {k}, value : {v}")
+                        message_alert_certificate = []
+                        for each_cert_info in v:
+                            # logging.info(f"*certificate *, env : {each_cert_info.get('env')}, server_job: {each_cert_info.get('server_job').split('.')[0]}, service : {each_cert_info.get('service')}")
+                            message_alert_certificate.append(f"<b>Warning for the SSL Certificate Expiration Date - [ENV : {each_cert_info.get('env')}]</b>, service : {each_cert_info.get('service')}, diff_days : {each_cert_info.get('diff_days')}, expiration_date : {each_cert_info.get('expiration_date')}")
+                        # message_alert_certificate_dict.update({k: "<BR/>".join(message_alert_certificate)})
+                        message_alert_certificate_dict.update({each_cert_info.get('server_job').split('.')[0]: "<BR/>".join(message_alert_certificate)})
+                    logging.info(f"{message_alert_certificate_dict}")
+
+                    '''*** send mail for the certificate'''
+                    # for key_hostname, message in message_alert_certificate_dict.items():
+                    #     ''' only send dev-new'''
+                    #     if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
+                    #         send_mail(
+                    #                 body=message, 
+                    #                 host= key_hostname, 
+                    #                 env=global_mail_configuration[key_hostname].get("env"), 
+                    #                 status_dict=saved_status_dict, 
+                    #                 to=global_mail_configuration[key_hostname].get("dev_mail_list", ""), 
+                    #                 cc="", 
+                    #                 _type='mail'
+                    #         )
+                    
+                    # if message_alert_certificate_dict:
+                    #     logging.info(f"** Finished to send an email **")    
                 
             except Exception as e:
                 logging.error(e)

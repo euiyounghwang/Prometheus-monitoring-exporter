@@ -44,6 +44,7 @@ export SPARK_APP_CEHCK="StreamProcessEXP"
 export BASIC_AUTH_SH="basic_auth_encoded"
 export PROMETHEUS_USERNAME="test"
 export PROMETHEUS_PASSWORD="test"
+export CERTIFICATE_TEST_HOST="localhost"
 
 
 export ZOOKEEPER_URLS="localhost:2181,localhost:2181,localhost:2181"
