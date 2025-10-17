@@ -2629,6 +2629,11 @@ tracking_failure_dict = {
     "alert_sent_time" : "1900-01-01 00:00:00"
 }
 
+''' Tracking certificate alert_message '''
+tracking_certificate_dict = {
+    "alert_sent_time" : "1900-01-01 00:00:00"
+}
+
 api_performance_total_delay = 0.0
 
 
@@ -3902,6 +3907,20 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         pass
 
 
+def get_alert_resend_func(alert_duration_time):
+    ''' Whenever app does check for the alerts every 10 minutes, sends the first alert, and then resends the alert after 1 hour.'''
+    global tracking_certificate_dict
+
+    get_tracking_alert_time = datetime.datetime.strptime(tracking_certificate_dict.get("alert_sent_time"), "%Y-%m-%d %H:%M:%S")
+    alert_time_difference = get_time_difference(get_tracking_alert_time)
+    
+    ''' update current the duration time for the time of alert was sent'''
+    if alert_time_difference >= alert_duration_time:
+       tracking_certificate_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
+       return True
+    else:
+        return False
+    
 
 def alert_certs_work(interval):
     """
@@ -3992,6 +4011,8 @@ def alert_certs_work(interval):
                 }
                
                 '''
+                hostname = domain_name_as_nick_name.split('.')[0]
+                logging.info(f"tracking_certificate_dict : {tracking_certificate_dict}, hostname : {hostname}, is_certificate_mailing : {global_mail_configuration[hostname].get('is_certificate_mailing')}")
                 # The ES Monitoring Application will be sent an alert if The number of days remaining until the certificate expires from today's date is less than threshold. 
                 if ssl_certificate_info:
                     ''' Will send a email alert for the certificate'''
@@ -4009,23 +4030,30 @@ def alert_certs_work(interval):
                         message_alert_certificate_dict.update({each_cert_info.get('server_job').split('.')[0]: "<BR/>".join(message_alert_certificate)})
                     logging.info(f"{message_alert_certificate_dict}")
 
+
+                    ''' alert resend after 24 hours'''
+                    if message_alert_certificate_dict:
+                        ALERT_RESENT_FLAG = get_alert_resend_func(24)
+                        logging.info(f"ALERT_RESENT_FLAG : {ALERT_RESENT_FLAG}, tracking_certificate_dict : {tracking_certificate_dict}")
+
                     '''*** send mail for the certificate'''
-                    # for key_hostname, message in message_alert_certificate_dict.items():
-                    #     ''' only send dev-new'''
-                    #     if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
-                    #         send_mail(
-                    #                 body=message, 
-                    #                 host= key_hostname, 
-                    #                 env=global_mail_configuration[key_hostname].get("env"), 
-                    #                 status_dict=saved_status_dict, 
-                    #                 to=global_mail_configuration[key_hostname].get("dev_mail_list", ""), 
-                    #                 cc="", 
-                    #                 _type='mail'
-                    #         )
-                    
-                    # if message_alert_certificate_dict:
-                    #     logging.info(f"** Finished to send an email **")    
-                
+                    # if ALERT_RESENT_FLAG:
+                        # for key_hostname, message in message_alert_certificate_dict.items():
+                        #     ''' only send dev-new'''
+                        #     if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
+                        #         send_mail(
+                        #                 body=message, 
+                        #                 host= key_hostname, 
+                        #                 env=global_mail_configuration[key_hostname].get("env"), 
+                        #                 status_dict=saved_status_dict, 
+                        #                 to=global_mail_configuration[key_hostname].get("dev_mail_list", ""), 
+                        #                 cc="", 
+                        #                 _type='mail'
+                        #         )
+
+                        # if message_alert_certificate_dict:
+                        #     logging.info(f"** Finished to send an email **")    
+
             except Exception as e:
                 logging.error(e)
                 pass
