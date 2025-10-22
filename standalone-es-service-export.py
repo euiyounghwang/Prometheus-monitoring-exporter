@@ -4025,7 +4025,7 @@ def alert_certs_work(interval):
                         message_alert_certificate = []
                         for each_cert_info in v:
                             # logging.info(f"*certificate *, env : {each_cert_info.get('env')}, server_job: {each_cert_info.get('server_job').split('.')[0]}, service : {each_cert_info.get('service')}")
-                            message_alert_certificate.append(f"<b>Warning for the SSL Certificate Expiration Date - [ENV : {each_cert_info.get('env')}]</b>, service : {each_cert_info.get('service')}, diff_days : {each_cert_info.get('diff_days')}, expiration_date : {each_cert_info.get('expiration_date')}")
+                            message_alert_certificate.append(f"<b>Warning for the SSL Certificate Expiration Date - [ENV : {each_cert_info.get('env')}, Threshold : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')} days]</b>, service : {each_cert_info.get('service')}, diff_days : {each_cert_info.get('diff_days')}, expiration_date : {each_cert_info.get('expiration_date')}")
                         # message_alert_certificate_dict.update({k: "<BR/>".join(message_alert_certificate)})
                         message_alert_certificate_dict.update({each_cert_info.get('server_job').split('.')[0]: "<BR/>".join(message_alert_certificate)})
                     logging.info(f"{message_alert_certificate_dict}")
@@ -4037,22 +4037,34 @@ def alert_certs_work(interval):
                         logging.info(f"ALERT_RESENT_FLAG : {ALERT_RESENT_FLAG}, tracking_certificate_dict : {tracking_certificate_dict}")
 
                     '''*** send mail for the certificate'''
-                    # if ALERT_RESENT_FLAG:
-                        # for key_hostname, message in message_alert_certificate_dict.items():
-                        #     ''' only send dev-new'''
-                        #     if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
-                        #         send_mail(
-                        #                 body=message, 
-                        #                 host= key_hostname, 
-                        #                 env=global_mail_configuration[key_hostname].get("env"), 
-                        #                 status_dict=saved_status_dict, 
-                        #                 to=global_mail_configuration[key_hostname].get("dev_mail_list", ""), 
-                        #                 cc="", 
-                        #                 _type='mail'
-                        #         )
+                    if global_mail_configuration:
+                        logging.info(f"global_mail_configuration[hostname] : {global_mail_configuration.get(hostname), type(global_mail_configuration.get(hostname))}")
+                        # email_list = global_mail_configuration[hostname].get("mail_list")
+                        email_list = global_mail_configuration.get(hostname).get("dev_mail_list")
+                        email_list = str(email_list) if isinstance(email_list, tuple) else email_list
+                        cc_list = global_mail_configuration[hostname].get("cc_list", "") if "cc_list" in global_mail_configuration[hostname].keys() else ""
+                        cc_list = str(cc_list) if isinstance(cc_list, tuple) else cc_list
+                
+                        logging.info(f"email_list : {email_list}, cc_list : {cc_list}")
+                        # logging.info(f"email_list : {email_list}, type(email_list) : {type(email_list)}")
+                        if ALERT_RESENT_FLAG:
+                            for key_hostname, message in message_alert_certificate_dict.items():
+                                ''' only send dev-new'''
+                                if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
+                                    logging.info(f"** Sending an email alert **")    
+                                    send_mail(
+                                            body=message, 
+                                            host= key_hostname, 
+                                            env=global_mail_configuration[key_hostname].get("env"), 
+                                            status_dict=saved_status_dict, 
+                                            to=email_list, 
+                                            cc="",
+                                            # cc=cc_list,
+                                            _type='mail'
+                                    )
 
-                        # if message_alert_certificate_dict:
-                        #     logging.info(f"** Finished to send an email **")    
+                            if message_alert_certificate_dict:
+                                logging.info(f"** Finished to send an email **")    
 
             except Exception as e:
                 logging.error(e)
