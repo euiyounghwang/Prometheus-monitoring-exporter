@@ -3186,7 +3186,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
                             status_dict=saved_status_dict, 
                             to=dev_email_list, cc="", _type='mail')
                     ''' send sms'''
-                    send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
+                    # send_mail(body=alert_msg,  host=host_name,  env=data[host_name].get("env"),  status_dict=saved_status_dict,  to=dev_sms_list, cc=None, _type="sms")
 
                     ''' disbaled this variable for sending every 1 hour'''
                     recheck_WMx = False
@@ -3642,12 +3642,6 @@ def alert_work(db_http_host):
                     if is_sent_alert and is_resent_if_alert_need_to:
                         alert_to_text(data, get_es_config_interface_api_host_key, sms_list, saved_status_dict)
                 ''' ----------------------'''
-
-                ''' MS Teams chat for the alert'''
-                ''' Microsoft Teams webhooks provide a mechanism for external services to post messages and notifications into Teams channels using HTTP requests. '''
-                ''' webhook url : curl -X POST "https://webhook_url" -H "Content-Type: application/json"  -d '{"text":"alert test<br/>new line"}'''
-
-                ''' ----------------------'''
                             
             """ Grafana-Loki Log """
             if saved_thread_alert:
@@ -3855,26 +3849,31 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
             </body></HTML>
             """ % (body)
 
-        part2 = MIMEText(html, 'html')
-        msg.attach(part2)
+        if _type == "mail":
+            ''' email alert will be sent '''
+            part2 = MIMEText(html, 'html')
+            msg.attach(part2)
 
-        # print msg
-        s = smtplib.SMTP(smtp_host, smtp_port)
+            # print msg
+            s = smtplib.SMTP(smtp_host, smtp_port)
 
-        if not you:
-            you = []
+            if not you:
+                you = []
 
-        if not cc:
-            cc = []
-        else:
-            cc = [cc]
-        
-        recipients_list = you + cc
-        s.sendmail(me, recipients_list, msg.as_string())
-        s.quit()
+            if not cc:
+                cc = []
+            else:
+                cc = [cc]
+            
+            recipients_list = you + cc
+            s.sendmail(me, recipients_list, msg.as_string())
+            s.quit()
 
-        ''' sms via xmatters'''
-        # push_sms_xmatters(env, body)
+        elif _type == "sms":
+            ''' ----------------------'''
+            ''' sms will be sent via xMatters '''
+            push_sms_xmatters(env, body)
+            ''' ----------------------'''
 
     try:
         ''' send mail through mailx based on python environment'''
