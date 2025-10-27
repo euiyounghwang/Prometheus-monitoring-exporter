@@ -369,6 +369,23 @@ pip install prometheus-client
 ```
 
 
+### POST JSON
+- POST Json payload command
+```bash
+curl -X 'POST' \
+  'https://localhost/triggers' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Basic test=' \
+  -d '{
+   "recipients": "TEST app",
+   "summary": "[TEST] Prometheus Monitoring Alert",
+   "description": "The alert is a message for testing",
+   "priority": "MEDIUM"
+}'
+```
+
+
 ### Custom Promethues Exporter
 - Expose my metrics for dev kafka cluster to http://localhost:9115
 - Expose ES cluster/Kafka/Kibana/Logstash metrics by using this exporter based on ES API/socket library
