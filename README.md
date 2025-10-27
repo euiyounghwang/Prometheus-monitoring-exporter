@@ -359,6 +359,7 @@ scrape_configs:
 # --
 ```
 - Promtail Format
+
 ![Alt text](./architecture/LOKI_FORMAT.PNG)
 
 
