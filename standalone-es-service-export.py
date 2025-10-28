@@ -719,7 +719,7 @@ def get_metrics_all_envs(monitoring_metrics):
         header =  {
             'Content-type': 'application/json', 
             # 'Authorization' : '{}'.format(os.getenv('BASIC_AUTH')),
-            'Authorization' : 'basic {}'.format(os.environ.get('BASIC_AUTH_SH', '')),
+            'Authorization' : 'Basic {}'.format(os.environ.get('BASIC_AUTH_SH', '')),
             'Connection': 'close'
         }
             
@@ -2530,8 +2530,11 @@ def push_sms_xmatters(env, message):
 
     try:
         url = '{}'.format(gloabl_configuration.get('config').get('xmatters_webhook_url'))
+        ''' loading .env file '''
         headers = {
-            'Content-type': 'application/json'
+            'Content-type': 'application/json',
+            # 'Authorization' : 'Basic {}'.format(os.environ.get('XMATTERS_BASIC_AUTH', '')),
+            'Authorization' : '{}'.format(os.environ.get('XMATTERS_BASIC_AUTH', '')),
         }
         
         """
