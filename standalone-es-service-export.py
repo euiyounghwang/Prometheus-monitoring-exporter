@@ -2554,7 +2554,7 @@ def push_sms_xmatters(env, message):
         # payload = json.dumps(payload)
         ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
         response = requests.post(url, json=payload, headers=headers, verify=False)
-        print(response.status_code)
+        print(f"response.status_code : {response.status_code}, response.json(): {response.json()}")
         ''' {"requestId": "25582df1-2e10-4f25-887b-c03688db3579"}'''
 
     except Exception as e:
