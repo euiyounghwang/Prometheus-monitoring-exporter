@@ -27,4 +27,6 @@ golang/tools_script/go_run_qa.sh
 golang/socket/output/
 golang/process_watchdog/output/
 mcp/.venv/
+ssh-client.py
+ssh-client.sh
 
