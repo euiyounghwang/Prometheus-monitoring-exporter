@@ -36,11 +36,19 @@ def ssh_client(service, cmd):
         # Execute a command
         stdin, stdout, stderr = ssh_client.exec_command(cmd)
 
+        """
         # Read and print the output
         print("STDOUT:")
         print(stdout.read().decode('utf-8'))
         print("STDERR:")
         print(stderr.read().decode('utf-8'))
+        """
+        output = stdout.read().decode('utf-8')
+        if output:
+            return True
+        else:
+            logging.error(f"Error : {stderr.read().decode('utf-8')}")
+            return False
 
     except paramiko.AuthenticationException:
         print("Authentication failed. Check your username and password or key.")
