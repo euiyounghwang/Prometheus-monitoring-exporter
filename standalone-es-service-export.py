@@ -2268,6 +2268,8 @@ def get_metrics_all_envs(monitoring_metrics):
         if is_flag_active_primary_node_for_kafka_connect:
             ''' Update the status of Kafka connect to Server active for alert -> set the value as three nodes if master node is active'''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_connect_url").split(",")), types='kafka')
+            '''  Kafka Connect technically only needs to be running on the primary Kafka node (node 1).  '''
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(len(monitoring_metrics.get("kafka_connect_url").split(",")))
         else:
             kafka_connect_status_primary_node = 'Red'
             # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
