@@ -143,6 +143,8 @@ db_jobs_backlogs_OMx_gauge_g = Gauge("db_jobs_backlog_omx_running_metrics", 'Met
 # db_jobs_backlogs_gauge_g = Gauge("db_jobs_backlog_running_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 db_jobs_wmx_db_active_gauge_g = Gauge("db_wmx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
 db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped from localhost', ["server_job"])
+''' spark_jobs'''
+spark_custom_jobs_gauge_g = Gauge("spark_custom_jobs_metrics", 'Metrics scraped from localhost', ["env", "server_job", "spark_custom_jobs"])
 ''' db connection'''
 db_jobs_db_connection_active_gauge_g = Gauge("db_connection_active_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
 ''' export failure instance list metric'''
@@ -2054,10 +2056,16 @@ def get_metrics_all_envs(monitoring_metrics):
         spark_app_check_list = str(os.environ['SPARK_APP_CEHCK']).split(",")
         is_runnng_spark = True
         _not_running_app_name = []
+        
+        ''' clear spark_custom_jobs_gauge_g'''
+        spark_custom_jobs_gauge_g._metrics.clear()
         for running_spark in spark_app_check_list:
             if running_spark not in custom_apps:
                 is_runnng_spark = False
                 _not_running_app_name.append(running_spark)
+            else:
+                ''' add spark custom apps are running'''
+                spark_custom_jobs_gauge_g.labels(env=global_env_name, server_job=domain_name_as_nick_name, spark_custom_jobs=running_spark).set(1)
 
         ''' --------------------------- '''
         ''' We need to check automatically whether the indepenent ES Data Pipeline is being processed even if SPARK_APP_CHECK has opnly "StreamProcess_EXP" '''
@@ -2070,6 +2078,8 @@ def get_metrics_all_envs(monitoring_metrics):
                 for running_spark in Streaming_Process:
                     if running_spark in custom_apps:
                         independent_prcess.append(True)
+                        ''' add spark custom apps are running'''
+                        spark_custom_jobs_gauge_g.labels(env=global_env_name, server_job=domain_name_as_nick_name, spark_custom_jobs=running_spark).set(1)
                     else:
                         independent_prcess.append(False)
             else:
@@ -2258,6 +2268,8 @@ def get_metrics_all_envs(monitoring_metrics):
         if is_flag_active_primary_node_for_kafka_connect:
             ''' Update the status of Kafka connect to Server active for alert -> set the value as three nodes if master node is active'''
             all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, len(monitoring_metrics.get("kafka_connect_url").split(",")), types='kafka')
+            '''  Kafka Connect technically only needs to be running on the primary Kafka node (node 1).  '''
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(len(monitoring_metrics.get("kafka_connect_url").split(",")))
         else:
             kafka_connect_status_primary_node = 'Red'
             # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["kafka_connect_url"]["GREEN_CNT"]), types='kafka')
