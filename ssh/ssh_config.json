@@ -3,40 +3,46 @@
         "userid" : "userid",
         "userpw" : "userpw",
         "es": {
-            "es_node_1" : "localhost",
-            "es_node_2" : "localhost",
-            "es_node_3" : "localhost",
+            "service" : "elasticsearch",
+            "es_nodes" : ["localhost"],
+            "process_lookup_command" : "ps ax | grep -i '/elasticsearch' | grep -v grep | awk '{print $1}'",
             "start_command" : "sudo service elasticsearch start",
-            "stop_command" : "sudo service elasticsearch stop"
+            "stop_command" : "sudo servce elasticsearch stop"
         },
         "kibana": {
-            "kinana_nodes" : "localhost",
+            "service" : "kibana",
+            "kinana_nodes" : ["localhost"],
+            "process_lookup_command" : "ps ax | grep -i '/apps/kibana/latest/bin' | grep -v grep | awk '{print $1}'",
             "start_command" : "sudo /apps/kibana/latest/bin/kibana &",
-            "stop_command" : "sudo ./scrits/kills.sh"
+            "stop_command" : "sudo /apps/scrits/kills.sh"
         },
         "logstash": {
-            "logstash_nodes" : "localhost",
+            "service" : "logstash",
+            "logstash_nodes" : ["localhost"],
+            "process_lookup_command" : "ps ax | grep -i '/logstash' | grep -v grep | awk '{print $1}'",
             "start_command" : "sudo service logstash start",
             "stop_command" : "sudo service logstash stop"
         },
         "kafka": {
+            "service" : "kafka",
             "kafka_nodes" : ["localhost1","localhost2","localhost3"],
             "start_command" : "sudo ./utils/kafkaUtil.sh restart",
             "stop_command" : "sudo ./utils/kafkaUtil.sh stop"
         },
         "kafka_connect": {
-            "kafka_connect_node_1" : "localhost",
-            "kafka_connect_node_2" : "localhost",
-            "kafka_connect_node_3" : "localhost",
+            "service" : "kafka_connect",
+            "kafka_connect_nodes" : ["localhost1","localhost2","localhost3"],
             "start_command" : "sudo ./utils/connectUtil.sh start",
             "stop_command" : "sudo ./utils/connectUtil.sh stop"
         },
         "spark_cluster": {
+            "service" : "spark_cluster",
             "spark_nodes" : ["localhost1"],
             "start_command" : "sudo /apps/spark/latest/sbin/start-all.sh",
             "stop_command" : "sudo /apps/spark/latest/sbin/stop-all.sh"
         },
         "spark_app": {
+            "service" : "spark_app",
             "spark_nodes" : ["localhost1"],
             "spark_apps" : ["SparkSubmitWmx.sh", "SparkSubmitOmx.sh"],
             "start_command" : "./utils/SparkSubmit.sh start",
