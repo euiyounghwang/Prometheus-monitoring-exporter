@@ -3784,16 +3784,6 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
             print(errors)
         """
 
-        ''' using smtp'''
-        me = os.environ["MAIL_SENDER"]
-        you = user_list
-
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = '[{}] Prometheus Monitoring Alert'.format(env)
-        msg['From'] = me
-        msg['To'] = ','.join(you)
-        msg['Cc'] = cc
- 
         """
         service_status_dict - {
             "es": "Green",
@@ -3816,7 +3806,9 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
 
         ''' set the default value if env name doesn't exist from the shell script'''
         running_host_name = socket.gethostname().split(".")[0]
+        # print(f"running_host_name - {running_host_name}")
         ES_MONITORING_APPS_EXPORTER_RUN_HOST = os.environ.get("ES_MONITORING_APPS_EXPORTER_RUN_HOST","{}:9115".format(running_host_name))
+        # print(f"ES_MONITORING_APPS_EXPORTER_RUN_HOST - {ES_MONITORING_APPS_EXPORTER_RUN_HOST}")
         # ES_MONITORING_APPS_EXPORTER_URL_HOST = os.environ.get("ES_MONITORING_APPS_EXPORTER_URL_HOST","http://{}:1115".format(running_host_name))
         
         if _type == "mail":
@@ -3855,22 +3847,39 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
             body = """- Enviroment: %s, Prometheus Export Application Runnig Host : %s - Service Status: <b>%s</b>, ES_PIPELINE Status : <b>%s</b> - <b>Alert Message : </b>%s
                 """ % (env, host, status_dict.get("server_active","Green"), status_dict.get("es_pipeline","Green"), message)
 
-        ''' email with sms via http'''
-        html = """
-            <h4>Monitoring [ES Team Dashboard on export application]</h4>
-            <HTML><head>
-            <body>
-            %s
-            </body></HTML>
-            """ % (body)
+        print(f"body - {body}")
 
         if _type == "mail":
+            ''' using smtp'''
+            me = os.environ["MAIL_SENDER"]
+            # print(f"me : {me}")
+            you = user_list
+
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = '[{}] Prometheus Monitoring Alert'.format(env)
+            msg['From'] = me
+            msg['To'] = ','.join(you)
+            msg['Cc'] = cc
+ 
+            # print("sending mail..")
+            ''' email with sms via http'''
+            html = """
+                <h4>Monitoring [ES Team Dashboard on export application]</h4>
+                <HTML><head>
+                <body>
+                %s
+                </body></HTML>
+                """ % (body)
+        
             ''' email alert will be sent '''
+            # print(f"html : {html}")
             part2 = MIMEText(html, 'html')
             msg.attach(part2)
 
+            # print("\*** ", smtp_host, smtp_port)
             # print msg
             s = smtplib.SMTP(smtp_host, smtp_port)
+            # print(f"\*** you : {you}, cc : {cc}")
 
             if not you:
                 you = []
@@ -3881,6 +3890,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 cc = [cc]
             
             recipients_list = you + cc
+            print(me, recipients_list, msg.as_string())
             s.sendmail(me, recipients_list, msg.as_string())
             s.quit()
 
@@ -3894,8 +3904,13 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
         ''' send mail through mailx based on python environment'''
         # grafana_dashboard_url = os.environ["GRAFANA_DASHBOARD_URL"]
         grafana_dashboard_url = gloabl_configuration.get('config').get('grafana_dashboard_url')
-        smtp_host = os.environ["SMTP_HOST"]
-        smtp_port = os.environ["SMTP_PORT"]
+        # smtp_host = os.environ["SMTP_HOST"]
+        # smtp_port = os.environ["SMTP_PORT"]
+
+        smtp_host = os.getenv('SMTP_HOST_ENV')
+        smtp_port = os.getenv('SMTP_HOST_PORT')
+
+        # print(f"SMTP_HOST_ENV : {os.getenv('SMTP_HOST_ENV')}, SMTP_HOST_PORT : {os.getenv('SMTP_HOST_PORT')}")
         
         ''' remove special characters'''
         '''
