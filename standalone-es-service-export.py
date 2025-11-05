@@ -3945,7 +3945,7 @@ def get_alert_resend_func(alert_duration_time):
     
     ''' update current the duration time for the time of alert was sent'''
     if alert_time_difference >= alert_duration_time:
-       tracking_certificate_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
+    #    tracking_certificate_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
        return True
     else:
         return False
@@ -3970,6 +3970,14 @@ def alert_certs_work(interval):
             })
 
     try:
+
+        global tracking_certificate_dict
+
+        ''' get mail configuration'''
+        if not global_mail_configuration:
+            get_mail_configuration(db_http_host)
+        # data = global_mail_configuration
+
         while True:
             
             ssl_certificate_info.clear()
@@ -3979,6 +3987,13 @@ def alert_certs_work(interval):
                 print(f"Global Configuration [disk_usage_percentage_threshold] : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')}")
             print("****\n\n\n")
             ''' Get the expiration date of ssl certificate for the ES/Spark cluster if they are running with secure connection'''
+
+          
+            hostname = domain_name_as_nick_name.split(".")[0]
+
+            print(f"domain_name_as_nick_name : {hostname}, certi_alert_value : {global_mail_configuration.get(hostname).get('is_certificate_mailing')}")
+            # print(f"domain_name_as_nick_name : {hostname}")
+            
 
             try:
                 resp = requests.get(
@@ -4040,8 +4055,8 @@ def alert_certs_work(interval):
                 }
                
                 '''
-                hostname = domain_name_as_nick_name.split('.')[0]
-                logging.info(f"tracking_certificate_dict : {tracking_certificate_dict}, hostname : {hostname}, is_certificate_mailing : {global_mail_configuration[hostname].get('is_certificate_mailing')}")
+                # hostname = domain_name_as_nick_name.split('.')[0]
+                logging.info(f"tracking_certificate_dict : {tracking_certificate_dict}, hostname : {hostname}")
                 # The ES Monitoring Application will be sent an alert if The number of days remaining until the certificate expires from today's date is less than threshold. 
                 if ssl_certificate_info:
                     ''' Will send a email alert for the certificate'''
@@ -4059,7 +4074,6 @@ def alert_certs_work(interval):
                         message_alert_certificate_dict.update({each_cert_info.get('server_job').split('.')[0]: "<BR/>".join(message_alert_certificate)})
                     logging.info(f"{message_alert_certificate_dict}")
 
-
                     ''' alert resend after 24 hours'''
                     if message_alert_certificate_dict:
                         ALERT_RESENT_FLAG = get_alert_resend_func(24)
@@ -4076,24 +4090,30 @@ def alert_certs_work(interval):
                 
                         logging.info(f"email_list : {email_list}, cc_list : {cc_list}")
                         # logging.info(f"email_list : {email_list}, type(email_list) : {type(email_list)}")
+
+                        ''' after 24 hours'''
                         if ALERT_RESENT_FLAG:
                             for key_hostname, message in message_alert_certificate_dict.items():
                                 ''' only send dev-new'''
-                                if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
-                                    logging.info(f"** Sending an email alert **")    
-                                    send_mail(
-                                            body=message, 
-                                            host= key_hostname, 
-                                            env=global_mail_configuration[key_hostname].get("env"), 
-                                            status_dict=saved_status_dict, 
-                                            to=email_list, 
-                                            cc="",
-                                            # cc=cc_list,
-                                            _type='mail'
-                                    )
+                                print(f"\n** [{key_hostname}] mailing value for certs : {global_mail_configuration.get(key_hostname).get('is_certificate_mailing')}")
+                                if global_mail_configuration.get(key_hostname).get('is_certificate_mailing'):
+                                    if key_hostname == os.getenv("CERTIFICATE_TEST_HOST"):
+                                        logging.info(f"** Sending an email alert **")    
+                                        send_mail(
+                                                body=message, 
+                                                host= key_hostname, 
+                                                env=global_mail_configuration[key_hostname].get("env"), 
+                                                status_dict=saved_status_dict, 
+                                                to=email_list, 
+                                                cc="",
+                                                # cc=cc_list,
+                                                _type='mail'
+                                        )
+                                        ''' Update timestamp for the cert alerts'''
+                                        tracking_certificate_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
 
-                            if message_alert_certificate_dict:
-                                logging.info(f"** Finished to send an email **")    
+                                    if message_alert_certificate_dict:
+                                        logging.info(f"** Finished to send an email **")    
 
             except Exception as e:
                 logging.error(e)
