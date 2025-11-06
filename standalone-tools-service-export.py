@@ -39,13 +39,22 @@ tracking_xMatters_alert_dict = {
 }
 
 def get_alert_resend_func(alert_duration_time, tracking_alert_dict) -> bool:
+    """
+    Request to api 'get_alert_resend_func'
+
+    Args:
+        alert_duration_time (str) : time
+        tracking_alert_dict (Json) : Manage the alert event using timestamp to send an email alert at a set time inverval
+    Returns:
+        Json
+    """
        
     ''' global func to call for validating'''
     def get_time_difference(audit_process_name_time):
             ''' get time difference'''
             # lock.acquire()
             # now_time = datetime.datetime.now()
-            now_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
+            # now_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
                     
             # print(f"audit_process_name_time - {audit_process_name_time}, : {type(audit_process_name_time)}, now_time - {now_time} : {type(now_time)}")
             """
@@ -76,7 +85,14 @@ def get_alert_resend_func(alert_duration_time, tracking_alert_dict) -> bool:
     
 
 def post_request_mail_alert(url, service) -> json:
-    ''' request to api endpoint'''
+    """
+    Request to api endpoint
+
+    Args:
+        None
+    Returns:
+        Json
+    """
     try:
         
         headers = {
@@ -86,14 +102,21 @@ def post_request_mail_alert(url, service) -> json:
          
         payload = {
             "env": "Tools",
-            "to_user": os.getenv("MAIL_TO"),
-            "cc_user": os.getenv("MAIL_CC"),
-            "subject": "Prometheus Monitoring Alert",
-            "message": "The <b>{}</b> service was offline. <BR/> Please check the service now.".format(service)
+            # "to_user": os.getenv("MAIL_TO"),
+            # "cc_user": os.getenv("MAIL_CC"),
+            # "to_user": global_mail_configuration.get("tools").get("dev_mail_list"),
+            # "cc_user": global_mail_configuration.get("tools").get("dev_mail_list"),
+            "to_user": global_mail_configuration.get("tools").get("mail_list"),
+            "cc_user": global_mail_configuration.get("tools").get("cc_list"),
+            "subject": "Prometheus Monitoring Alert for the Service",
+            "message": "The <b>{}</b> service (<a href=\"{}\">{}</a>) was offline. <BR/>Please check the service now.".format(
+                service, 
+                gloabl_configuration.get("config").get("xmatters_webhook_url"),
+                gloabl_configuration.get("config").get("xmatters_webhook_url")
+            )
         }
         
         # payload = json.dumps(payload)
-        ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
         resp = requests.post(url, json=payload, headers=headers, verify=False)
                         
         if not (resp.status_code == 200):
@@ -109,7 +132,14 @@ def post_request_mail_alert(url, service) -> json:
 
 
 def post_request_to_prometheus() -> json:
-    ''' request to proemtheus for the metrics'''
+    """
+    Request to proemtheus for the metrics
+
+    Args:
+        None
+    Returns:
+        Json
+    """
     try:
         resp = requests.get(
                 url="http://{}:9090/api/v1/query?query=xMatters_service_health_metric{{}}".format(os.getenv("PROMETHEUS_APPS_HOST"), os.getenv("PROMETHEUS_LOOKUP_HOST")), 
@@ -132,9 +162,46 @@ def post_request_to_prometheus() -> json:
 
 
 
+gloabl_configuration = {}
+def get_global_configuration() -> None:
+    """
+    get global configuration through ES configuration REST API
+
+    Args:
+        None
+    Returns:
+        None
+    """
+   
+    global gloabl_configuration
+
+    try:
+        es_config_host = os.getenv("PROMETHEUS_APPS_HOST")
+        resp = requests.get(url="http://{}:8004/config/get_gloabl_config".format(es_config_host), timeout=5)
+                
+        if not (resp.status_code == 200):
+            ''' save failure node with a reason into saved_failure_dict'''
+            logger.error(f"get_global_configuration api do not reachable")
+            return {}
+                
+        # logging.info(f"get_mail_config - {resp}, {json.dumps(resp.json(), indent=2)}")
+        logger.info(f"get_global_configuration - {resp}")
+        gloabl_configuration = resp.json()
+        
+    except Exception as e:
+        logger.error(e)
+
+
 global_mail_configuration = {}
-def get_mail_configuration() -> json:
-    ''' interface es_config_api http://localhost:8004/config/get_mail_config '''
+def get_mail_configuration() -> None:
+    """
+    interface es_config_api http://localhost:8004/config/get_mail_config
+
+    Args:
+        None
+    Returns:
+        None
+    """
 
     global global_mail_configuration
     try:
@@ -180,8 +247,8 @@ def get_xMatters_status(resp, service) -> None:
                 logger.info(f"Alert is False")
 
             ''' Active if xMatters_value is 1, InActive if xMatters_value is 2'''
-            # if xMatters_value == 1:
-            if xMatters_value == 2:
+            if xMatters_value == 1:
+            # if xMatters_value == 2:
                 logger.info(f"{service} Status - Active..")
             else:  
                 logger.info(f"{service} Status - InActive..")
@@ -191,15 +258,20 @@ def get_xMatters_status(resp, service) -> None:
                 ''' Sending alerts to the Team'''
                 ''' Send alerts every 24 hours '''
                 ''' *** '''
-                if not global_mail_configuration.get('tools').get('is_mailing'):
+                if global_mail_configuration.get('tools').get('is_mailing'):
                     ''' ** Checking the time interval '''
                     if get_alert_resend_func(24, tracking_xMatters_alert_dict):
                         logger.warning(f"** Sending an alert **")
-                        # post_request_mail_alert("http://{}:8004/service/push_alert_mail".format(os.getenv("PROMETHEUS_APPS_HOST")), service)
+                        
+                        ''' Send an email alert'''
+                        post_request_mail_alert("http://{}:8004/service/push_alert_mail".format(os.getenv("PROMETHEUS_APPS_HOST")), service)
+
                         ''' Update timestamp for the alerts'''
                         tracking_xMatters_alert_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
                     else:
-                        logger.info(f"** Will be sent an alert within 24 hrs **")
+                        logger.info(f"** Will be sent an alert every 24 hrs **")
+                else:
+                    logger.warning(f"** Alert value was False for the endpoint **")
 
     except Exception as e:
         logger.error(e)
@@ -220,18 +292,21 @@ def work() -> None:
             logger.info("\n\n")
             logger.info("** work func")
 
-            ''' Call get_mail_configuration'''
+            ''' Call get_global_configuration func'''
+            get_global_configuration()
+
+            ''' Call get_mail_configuration func'''
             get_mail_configuration()
 
             ''' Call to the Proemtheus for the status of xMatters'''
             get_xMatters_status(post_request_to_prometheus(), "xMatters")
-                
-            time.sleep(30)
 
         # except (KeyboardInterrupt, SystemExit) as e:           
         except Exception as e:
             logger.error(f"work func : {e}")
             pass
+
+        time.sleep(60)
    
 
 app = Flask(__name__)
