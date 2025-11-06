@@ -29,7 +29,8 @@ export PROMETHEUS_APPS_HOST="localhost"
 export PROMETHEUS_LOOKUP_HOST="localhost"
 export PROMETHEUS_USERNAME="test"
 export PROMETHEUS_PASSWORD="test"
-
+export MAIL_TO="test@test"
+export MAIL_CC="testg@test"
 
 # -- standalone type
 # local

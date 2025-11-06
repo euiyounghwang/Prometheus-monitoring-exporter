@@ -12,9 +12,9 @@ from threading import Thread
 import requests
 import logging
 import warnings
-import time
 import socket
 import pytz
+import datetime, time
 from flask import Flask, render_template
 
 
@@ -25,19 +25,20 @@ load_dotenv()
 # 로깅 설정
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s',
     handlers=[
         logging.StreamHandler(sys.stdout)
     ]
 )
 
+logger = logging.getLogger("Tools-Alert-Script")
 
 ''' Tracking thread_alert_message '''
-tracking_alert_dict = {
+tracking_xMatters_alert_dict = {
     "alert_sent_time" : "1900-01-01 00:00:00"
 }
 
-def get_alert_resend_func(alert_duration_time):
+def get_alert_resend_func(alert_duration_time, tracking_alert_dict) -> bool:
        
     ''' global func to call for validating'''
     def get_time_difference(audit_process_name_time):
@@ -46,7 +47,7 @@ def get_alert_resend_func(alert_duration_time):
             # now_time = datetime.datetime.now()
             now_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
                     
-            print(f"audit_process_name_time - {audit_process_name_time}, : {type(audit_process_name_time)}, now_time - {now_time} : {type(now_time)}")
+            # print(f"audit_process_name_time - {audit_process_name_time}, : {type(audit_process_name_time)}, now_time - {now_time} : {type(now_time)}")
             """
             date_diff = now_time-audit_process_name_time
             print(f"Time Difference - {date_diff}")
@@ -54,11 +55,11 @@ def get_alert_resend_func(alert_duration_time):
             """
             # current_time = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
             current_time = datetime.datetime.now(tz=gloabal_default_timezone).strftime('%Y-%m-%d %H:%M:%S')
-            print(f"current_time : {current_time}")
+            # print(f"current_time : {current_time}")
             dt_a = datetime.datetime.strptime(str(current_time), '%Y-%m-%d %H:%M:%S')
             dt_b = audit_process_name_time
             time_hours = float((dt_a-dt_b).total_seconds() / 3600)
-            print(f"Time Difference to hours - {time_hours}")
+            print(f"\nCurrent_time : {current_time}, Time Difference to hours - {time_hours}\n")
 
             return round(time_hours,3)
         
@@ -74,7 +75,7 @@ def get_alert_resend_func(alert_duration_time):
         return False
     
 
-def post_request_mail_alert(url):
+def post_request_mail_alert(url, service) -> json:
     ''' request to api endpoint'''
     try:
         
@@ -84,32 +85,30 @@ def post_request_mail_alert(url):
         }
          
         payload = {
-            "env": "dev",
-            "to_user": "localhost@testcom",
-            "cc_user": "localhost@testcom",
+            "env": "Tools",
+            "to_user": os.getenv("MAIL_TO"),
+            "cc_user": os.getenv("MAIL_CC"),
             "subject": "Prometheus Monitoring Alert",
-            "message": "Push Alert"
+            "message": "The <b>{}</b> service was offline. <BR/> Please check the service now.".format(service)
         }
         
         # payload = json.dumps(payload)
         ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
         resp = requests.post(url, json=payload, headers=headers, verify=False)
                         
-        logging.info(f"post_request")
-
         if not (resp.status_code == 200):
             return None
         
-        logging.info(f"post_request_mail_alert - {resp}, {resp.status_code}")
+        logger.info(f"post_request_mail_alert - {resp}, {resp.status_code}")
 
         return resp.json()
 
     except Exception as e:
-        logging.info(e)
+        logger.error(e)
 
 
 
-def post_request_to_prometheus():
+def post_request_to_prometheus() -> json:
     ''' request to proemtheus for the metrics'''
     try:
         resp = requests.get(
@@ -119,61 +118,123 @@ def post_request_to_prometheus():
                 verify=False
             )
                         
-        logging.info(f"post_request_to_prometheus")
+        logger.info(f"post_request_to_prometheus")
 
         if not (resp.status_code == 200):
             return None
         
-        logging.info(f"post_request_to_prometheus - {resp}, {resp.status_code}")
+        logger.info(f"post_request_to_prometheus - {resp}, {resp.status_code}")
 
         return resp.json()
 
     except Exception as e:
-        logging.info(e)
+        logger.error(e)
 
 
-def work():
-    ''' main process '''
+
+global_mail_configuration = {}
+def get_mail_configuration() -> json:
+    ''' interface es_config_api http://localhost:8004/config/get_mail_config '''
+
+    global global_mail_configuration
     try:
-         
-        while True:
-            try:
-                logging.info("\n\n")
-                logging.info("** work func")
+        es_config_host = os.getenv("PROMETHEUS_APPS_HOST")
+        logger.info(f"get_mail_configuration_es_config_host : {es_config_host}")
+        resp = requests.get(url="http://{}:8004/config/get_mail_config".format(es_config_host), timeout=5)
+                
+        if not (resp.status_code == 200):
+            ''' save failure node with a reason into saved_failure_dict'''
+            logger.error(f"es_config_interface api do not reachable")
+            return None
+                
+        global_mail_configuration = resp.json()
+        
 
-                ''' request to proemtheus for the metrics'''
-                resp = post_request_to_prometheus()
-                if resp:
-                    logging.info(f"resp - {json.dumps(resp, indent=2)}")
-                    data = resp.get('data').get('result')[0]
-                    xMatters_value = int(data.get('value')[1])
-                    ''' Active if xMatters_value is 1, InActive if xMatters_value is 2'''
-                    if xMatters_value == 1:
-                        logging.info(f"xMatters Status - Active..")
-                    else:
-                        logging.info(f"xMatters Status - InActive..")
-                        ''' Sending alerts to the Team'''
-                        ''' *** '''
-                        ''' Send alerts every 24 hours '''
-                        ''' *** '''
-                        # post_request_mail_alert("http://{}:8004/service/push_alert_mail".format(os.getenv("PROMETHEUS_APPS_HOST")))
+    except Exception as e:
+        logger.error(e)
+        pass
+
+
+def get_xMatters_status(resp, service) -> None:
+    """
+    get_xMatters_status
+
+    Args:
+        resp (Json) : Json result from the Prometheus
+        service (str) : The name of service
+    Returns:
+        None
+    """
+    try:
+        if resp:
+            logger.info(f"resp - {json.dumps(resp, indent=2)}")
+            data = resp.get('data').get('result')[0]
+            xMatters_value = int(data.get('value')[1])
+
+            ''' Printout '''
+            # logging.info(f"global_mail_configuration : {json.dumps(global_mail_configuration.get('tools'), indent=2)}")
+            # logging.info(f"global_mail_configuration : {json.dumps(global_mail_configuration.get('tools').get('is_mailing'), indent=2)}")
+            if global_mail_configuration.get('tools').get('is_mailing'):
+                logger.info(f"Alert is True")
+            else:
+                logger.info(f"Alert is False")
+
+            ''' Active if xMatters_value is 1, InActive if xMatters_value is 2'''
+            # if xMatters_value == 1:
+            if xMatters_value == 2:
+                logger.info(f"{service} Status - Active..")
+            else:  
+                logger.info(f"{service} Status - InActive..")
+                logger.info(f"tracking_xMatters_alert_dict - {tracking_xMatters_alert_dict}")
+                ''' *** '''
+                ''' Will be sent an alert if the value of is_mailing in global configuration file is True '''
+                ''' Sending alerts to the Team'''
+                ''' Send alerts every 24 hours '''
+                ''' *** '''
+                if not global_mail_configuration.get('tools').get('is_mailing'):
+                    ''' ** Checking the time interval '''
+                    if get_alert_resend_func(24, tracking_xMatters_alert_dict):
+                        logger.warning(f"** Sending an alert **")
+                        # post_request_mail_alert("http://{}:8004/service/push_alert_mail".format(os.getenv("PROMETHEUS_APPS_HOST")), service)
                         ''' Update timestamp for the alerts'''
-                        # tracking_alert_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
+                        tracking_xMatters_alert_dict.update({"alert_sent_time" : str(datetime.datetime.now(tz=gloabal_default_timezone).strftime("%Y-%m-%d %H:%M:%S"))})
+                    else:
+                        logger.info(f"** Will be sent an alert within 24 hrs **")
 
-               
-            except Exception as e:
-                logging.info(f"work func : {e}")
-                pass
-                               
+    except Exception as e:
+        logger.error(e)
+        pass
+
+
+def work() -> None:
+    """
+    work main function
+
+    Args:
+        None
+    Returns:
+        None
+    """
+    while True:
+        try:
+            logger.info("\n\n")
+            logger.info("** work func")
+
+            ''' Call get_mail_configuration'''
+            get_mail_configuration()
+
+            ''' Call to the Proemtheus for the status of xMatters'''
+            get_xMatters_status(post_request_to_prometheus(), "xMatters")
+                
             time.sleep(30)
 
-    # except (KeyboardInterrupt, SystemExit) as e:
-    except Exception as e:
-        logging.info(e)
+        # except (KeyboardInterrupt, SystemExit) as e:           
+        except Exception as e:
+            logger.error(f"work func : {e}")
+            pass
    
 
 app = Flask(__name__)
-
 
 @app.route('/')
 def hello():
@@ -217,7 +278,7 @@ if __name__ == '__main__':
         # app.run(host="0.0.0.0", port=int(port)-4000)
         from waitress import serve
         serve(app, host="0.0.0.0", port=_port)
-        logging.info(f"# Flask App's Port : {_port}")
+        logger.info(f"# Flask App's Port : {_port}")
 
         for t in T:
             while t.is_alive():
@@ -225,5 +286,4 @@ if __name__ == '__main__':
         # work(target_server)
    
     except Exception as e:
-        logging.error(e)
-        pass
+        logger.error(e)
