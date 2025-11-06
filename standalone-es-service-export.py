@@ -4189,7 +4189,7 @@ if __name__ == '__main__':
     parser.add_argument('--certs_alert', dest='certs_alert', default="False", help='certs_alert')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' Additional serivce metrics for the alert'''
-    parser.add_argument('--tools_alert_url', dest='tools_alert_url', default="False", help='Tools API Monitoring')
+    parser.add_argument('--tools_alert_url', dest='tools_alert_url', default="", help='Tools API Monitoring')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
@@ -4280,6 +4280,9 @@ if __name__ == '__main__':
     ''' airflow_url '''
     airflow_url = args.airflow_url if args.airflow_url else None
 
+    ''' tools_alert_url '''
+    tools_alert_url = args.tools_alert_url if args.tools_alert_url else None
+
     # ''' loki_api_url as interface api for text logs from the agent '''
     # loki_api_url = args.loki_api_url if args.loki_api_url else None
 
@@ -4320,9 +4323,6 @@ if __name__ == '__main__':
     if args.certs_alert:
         certs_alert = args.certs_alert
 
-    if args.tools_alert_url:
-        tools_alert_url = args.tools_alert_url
-                
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
 
