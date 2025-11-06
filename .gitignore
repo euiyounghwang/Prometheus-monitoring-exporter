@@ -30,4 +30,5 @@ mcp/.venv/
 ssh-client.py
 ssh-client.sh
 ssh_config.json
+standalone-tools-export-run-dev.sh
 
