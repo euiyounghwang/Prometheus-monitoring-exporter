@@ -122,6 +122,7 @@ es_configuration_instance_gauge_g = Gauge("es_configuration_writing_job_health_m
 es_configuration_api_instance_gauge_g = Gauge("es_configuration_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
 log_db_instance_gauge_g = Gauge("log_db_health_metric", 'Metrics scraped from localhost', ["server_job"])
 alert_monitoring_ui_gauge_g = Gauge("alert_monitoring_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
+tools_monitoring_gauge_g = Gauge("tools_monitoring_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_ui_gauge_g = Gauge("loki_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 airflow_ui_gauge_g = Gauge("airflow_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -398,7 +399,7 @@ def get_metrics_all_envs(monitoring_metrics):
         Other errors like host not found can still raise exception though
         '''
         ''' logstash_url means saved_failure_dict dics does not add the error log if multiple ports from the Logstash has been closed..'''
-        exclude_port_detect = ['logstash_url', 'loki_url', 'airflow_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url']
+        exclude_port_detect = ['logstash_url', 'loki_url', 'airflow_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url', 'tools_alert_url']
         response_dict = {}
         for k, v in monitoring_metrics.items():
             response_dict.update({k : ""})
@@ -1906,7 +1907,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 active_cnt = 2
             alert_monitoring_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
-        # ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
+        ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
         if 'loki_url' in monitoring_metrics:
             active_cnt = int(response_dict["loki_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1914,13 +1915,22 @@ def get_metrics_all_envs(monitoring_metrics):
                 active_cnt = 2
             loki_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
-         # ''' Update the status of Apache airflow URL by using socket.connect_ex only Dev'''
+        ''' Update the status of Apache airflow URL by using socket.connect_ex only Dev'''
         if 'airflow_url' in monitoring_metrics:
             active_cnt = int(response_dict["airflow_url"]["GREEN_CNT"])
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
             airflow_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
+
+        ''' Update the status of Tools such as xMatters Alert script by using socket.connect_ex only Dev'''
+        if 'tools_alert_url' in monitoring_metrics:
+            active_cnt = int(response_dict["tools_alert_url"]["GREEN_CNT"])
+            ''' Red is 2'''
+            if active_cnt < 1:
+                active_cnt = 2
+            tools_monitoring_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
+
 
         # ''' Update the status of Loki interface API service by using socket.connect_ex only Dev'''
         # if 'loki_api_url' in monitoring_metrics:
@@ -4175,8 +4185,11 @@ if __name__ == '__main__':
     ''' request DB interface restpi insteady of connecting db dircectly'''
     parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
     ''' xMatters is running'''
-    parser.add_argument('--xMatters', dest='xMatters', default="False", help='xMatters API url')
+    parser.add_argument('--xMatters', dest='xMatters', default="False", help='xMatters API Use?')
     parser.add_argument('--certs_alert', dest='certs_alert', default="False", help='certs_alert')
+    ''' ----------------------------------------------------------------------------------------------------------------'''
+    ''' Additional serivce metrics for the alert'''
+    parser.add_argument('--tools_alert_url', dest='tools_alert_url', default="False", help='Tools API Monitoring')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
@@ -4273,6 +4286,7 @@ if __name__ == '__main__':
     ''' loki_agent for text logs '''
     log_aggregation_agent_url = args.log_aggregation_agent_url if args.log_aggregation_agent_url else None
 
+    
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
     if args.interface:
@@ -4305,6 +4319,9 @@ if __name__ == '__main__':
 
     if args.certs_alert:
         certs_alert = args.certs_alert
+
+    if args.tools_alert_url:
+        tools_alert_url = args.tools_alert_url
                 
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
@@ -4382,6 +4399,9 @@ if __name__ == '__main__':
     ''' log_aggregation_agent_url checking '''
     if log_aggregation_agent_url:
         monitoring_metrics.update({"log_aggregation_agent_url" : log_aggregation_agent_url})
+
+    if tools_alert_url:
+        monitoring_metrics.update({"tools_alert_url" : tools_alert_url})
         
     logging.info(json.dumps(monitoring_metrics, indent=2))
     logging.info(interval)
