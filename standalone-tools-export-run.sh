@@ -33,4 +33,4 @@ export PROMETHEUS_PASSWORD="test"
 
 # -- standalone type
 # local
-python ./standalone-tools-service-export.py
+python ./standalone-tools-service-export.py --port 9999
