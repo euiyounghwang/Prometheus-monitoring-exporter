@@ -1,3 +1,4 @@
+.vscode/
 ./Playbook
 .venv/
 scripts/output/
