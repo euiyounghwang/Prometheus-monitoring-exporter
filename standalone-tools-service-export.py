@@ -38,6 +38,11 @@ tracking_xMatters_alert_dict = {
     "alert_sent_time" : "1900-01-01 00:00:00"
 }
 
+''' Status for the services'''
+saved_status_xMatters = "red"
+saved_alert_xMatters_thread = False
+
+
 def get_alert_resend_func(alert_duration_time, tracking_alert_dict) -> bool:
     """
     Request to api 'get_alert_resend_func'
@@ -233,6 +238,9 @@ def get_xMatters_status(resp, service) -> None:
     Returns:
         None
     """
+    global saved_status_xMatters
+    global saved_alert_xMatters_thread
+
     try:
         if resp:
             logger.info(f"resp - {json.dumps(resp, indent=2)}")
@@ -251,7 +259,12 @@ def get_xMatters_status(resp, service) -> None:
             if xMatters_value == 1:
             # if xMatters_value == 2:
                 logger.info(f"{service} Status - Active..")
+                saved_status_xMatters = "green"
+                saved_alert_xMatters_thread = False
             else:  
+                saved_status_xMatters = "red"
+                saved_alert_xMatters_thread = True
+
                 logger.info(f"{service} Status - InActive..")
                 logger.info(f"tracking_xMatters_alert_dict - {tracking_xMatters_alert_dict}")
                 ''' *** '''
@@ -315,7 +328,16 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
     # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
-    return {"app" : "standalone-tools-service-export.py"}
+    return {
+        "app" : "standalone-tools-service-export.py",
+        "tools": {
+            "xMatters" : {
+                "health" : saved_status_xMatters,
+                "alert" : saved_alert_xMatters_thread,
+                "alert_last_sent_timestamp" : tracking_xMatters_alert_dict
+            }
+        }
+    }
 
 
 
