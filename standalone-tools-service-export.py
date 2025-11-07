@@ -190,6 +190,7 @@ def get_global_configuration() -> None:
         
     except Exception as e:
         logger.error(e)
+        pass
 
 
 global_mail_configuration = {}

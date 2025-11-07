@@ -3121,13 +3121,15 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
 
     # Max_Backlog_CNT = 0
     # Max_Backlog_CNT = 10000
-    Max_Backlog_CNT = gloabl_configuration.get('config').get('backlog_threshold') if gloabl_configuration else 10000
+    # Max_Backlog_CNT = gloabl_configuration.get('config').get('backlog_threshold') if gloabl_configuration else 10000
     
     while True:
         try:
 
             StartTime = datetime.datetime.now(tz=gloabal_default_timezone)
             db_transactin_time_Backlog_WMx, db_transactin_time_Backlog_OMx = 0.0, 0.0
+
+            Max_Backlog_CNT = gloabl_configuration.get('config').get('backlog_threshold') if gloabl_configuration else 10000
 
             if db_http_host:
                 '''  retrieve records from DB interface REST API URL using requests library'''
