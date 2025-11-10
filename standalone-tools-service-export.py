@@ -330,15 +330,17 @@ def hello():
     # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
     return {
         "app" : "standalone-tools-service-export.py",
-        "tools": {
-            "xMatters" : {
-                "health" : saved_status_xMatters,
-                "alert" : saved_alert_xMatters_thread,
-                "alert_last_sent_timestamp" : tracking_xMatters_alert_dict
+        "started_time" : datetime.datetime.now(),
+        "tools": [
+            {
+                "xMatters" : {
+                    "health" : saved_status_xMatters,
+                    "alert" : saved_alert_xMatters_thread,
+                    "alert_last_sent_timestamp" : tracking_xMatters_alert_dict
+                }
             }
-        }
+        ]
     }
-
 
 
 if __name__ == '__main__':
