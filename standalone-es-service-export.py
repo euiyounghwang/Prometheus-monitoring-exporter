@@ -3875,13 +3875,26 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
  
             # print("sending mail..")
             ''' email with sms via http'''
+            es_config_host = os.getenv("ES_CONFIGURATION_HOST")
+            """
+            <div>
+                <b> - Disable the alert for the %s env: <a href="http://%s:8004/config/update_alert_config?env=%s&alert=false" target="_blank">Disable</a></b><BR/>
+                <b> - Enable the alert for the %s env: <a href="http://%s:8004/config/update_alert_config?env=%s&alert=true" target="_blank">Enable</a></b><BR/>
+            </div>
+            <div style="height: 30px;"></div>
+            """
             html = """
                 <h4>Monitoring [ES Team Dashboard on export application]</h4>
-                <HTML><head>
+                <HTML>
+                <head></head>
                 <body>
+                <div>
                 %s
+                </div>
                 </body></HTML>
-                """ % (body)
+                """ % (env.upper(), es_config_host, env.lower(), env.upper(), es_config_host, env.lower(), 
+                       body
+                )
         
             ''' email alert will be sent '''
             # print(f"html : {html}")
