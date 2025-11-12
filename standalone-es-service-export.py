@@ -4009,7 +4009,7 @@ def alert_certs_work(interval):
 
             print("\n\n\n**alert_certs_work**")
             if gloabl_configuration:
-                print(f"Global Configuration [disk_usage_percentage_threshold] : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')}")
+                print(f"Global Configuration [certificate_diff_days_threshold] : {gloabl_configuration.get('config').get('certificate_diff_days_threshold')}")
             print("****\n\n\n")
             ''' Get the expiration date of ssl certificate for the ES/Spark cluster if they are running with secure connection'''
 
