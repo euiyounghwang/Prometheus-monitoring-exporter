@@ -4164,6 +4164,8 @@ if __name__ == '__main__':
     ***
     # Delete old logs
     sudo su - spark -c 'find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \;'
+    sudo su - kafka -c 'find /apps/kafka_2.11-0.11.0.0/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \;'
+    sudo su - kafka -c 'find /apps/kafka/latest/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \;'
     ***
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of custom prometheus exporter")
