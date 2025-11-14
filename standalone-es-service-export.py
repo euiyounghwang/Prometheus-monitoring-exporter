@@ -4160,6 +4160,11 @@ if __name__ == '__main__':
     python ./standalone-es-service-export.py --interface db --url jdbc:oracle:thin:id/passwd@address:port/test_db --db_run false --kafka_url localhost:9092,localhost:9092,localhost:9092 --kafka_connect_url localhost:8083,localhost:8083,localhost:8083 --zookeeper_url  localhost:2181,localhost:2181,localhost:2181 --es_url localhost:9200,localhost:9201,localhost:9201,localhost:9200 --kibana_url localhost:5601 --sql "SELECT processname from test"
     # -- collect records through DB interface Restapi
     python ./standalone-es-service-export.py --interface http --db_http_host localhost:8002 --url jdbc:oracle:thin:id/passwd@address:port/test_db --db_run false --kafka_url localhost:9092,localhost:9092,localhost:9092 --kafka_connect_url localhost:8083,localhost:8083,localhost:8083 --zookeeper_url  localhost:2181,localhost:2181,localhost:2181 --es_url localhost:9200,localhost:9201,localhost:9201,localhost:9200 --kibana_url localhost:5601 --sql "SELECT processname from test"
+    
+    ***
+    # Delete old logs
+    sudo su - spark -c 'find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \;'
+    ***
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of custom prometheus exporter")
     parser.add_argument('--env_name', dest='env_name', default="env_name", help='env_name')
