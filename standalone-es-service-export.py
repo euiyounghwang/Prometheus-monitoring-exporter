@@ -3882,6 +3882,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 <b> - Enable the alert for the %s env: <a href="http://%s:8004/config/update_alert_config?env=%s&alert=true" target="_blank">Enable</a></b><BR/>
             </div>
             <div style="height: 30px;"></div>
+            env.upper(), es_config_host, env.lower(), env.upper(), es_config_host, env.lower(), 
             """
             html = """
                 <h4>Monitoring [ES Team Dashboard on export application]</h4>
@@ -3892,9 +3893,7 @@ def send_mail(body, host, env, status_dict, to, cc, _type):
                 %s
                 </div>
                 </body></HTML>
-                """ % (env.upper(), es_config_host, env.lower(), env.upper(), es_config_host, env.lower(), 
-                       body
-                )
+                """ % (body)
         
             ''' email alert will be sent '''
             # print(f"html : {html}")
