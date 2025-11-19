@@ -596,12 +596,21 @@ a.json
 }
 
 sudo netstat -nlp | grep :8083
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper  localhost1:2181,localhost2:2181,localhost3:2181
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic A_QUEUE
+
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --delete  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181  --topic connect-configs
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --delete  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181  --topic connect-offsets
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --delete  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181  --topic connect-status
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper  localhost1:2181,localhost2:2181,localhost3:2181
+
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --create --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic connect-configs --replication-factor 3 --partitions 3 --config cleanup.policy=compact
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --create --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic connect-offsets --replication-factor 3 --partitions 10 --config cleanup.policy=compact
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --create --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic connect-status --replication-factor 3 --partitions 10 --config cleanup.policy=compact
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper  localhost1:2181,localhost2:2181,localhost3:2181
+/apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic A_QUEUE
+
+curl -XGET  'localhost:8083/connectors/' | jq
 curl -XPOST -H 'Content-type:application/json'   'localhost1:8083/connectors' --data @./a.json
 
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181
