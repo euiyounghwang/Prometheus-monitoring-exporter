@@ -16,7 +16,7 @@
             "kinana_nodes": [
                 "localhost"
             ],
-            "process_lookup_command": "ps ax | grep -i '/apps/kibana/latest/bin' | grep -v grep | awk '{print $1}'",
+            "process_lookup_command": "sudo netstat -npl --inet | awk '/:5601/ {print $7}' | awk -F \"[ /]+\" '{print $1}'",
             "start_command": "sudo /apps/kibana/latest/bin/kibana &",
             "stop_command": "sudo /apps/scrits/kills.sh"
         },
