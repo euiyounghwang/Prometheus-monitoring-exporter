@@ -1729,6 +1729,16 @@ def get_metrics_all_envs(monitoring_metrics):
 
             ''' update ES status is RED'''
             ES_CLUSTER_RED = True
+
+            ''' --- '''
+            ''' Set ES info 0'''
+            es_nodes_basic_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+            es_nodes_basic_info_indices_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+            es_nodes_total_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+            es_nodes_total_info_indices_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+            es_nodes_group_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name, category="wmx_omx_indices").set(0)
+            es_nodes_group_info_docs_gauge_g.labels(server_job=domain_name_as_nick_name, category="total_indices").set(0)
+            ''' --- '''
         #--
 
         ''' start time for the api performance tracking'''
