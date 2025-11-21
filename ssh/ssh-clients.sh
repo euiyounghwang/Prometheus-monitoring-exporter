@@ -22,6 +22,7 @@ fi
 # sh -c 'sudo ~/utils/kafkaUtil.sh status'
 # sh -c 'sudo ~/utils/connectUtil.sh status'
 # sh -c 'sudo su - elasticsearch -c "/apps/elasticsearch/latest/bin/elasticsearch -d"'
+# "sudo netstat -npl --inet | awk '/:9200/ {print $7}' | awk -F \"[ /]+\" '{print $1}'"
 
 # python $SCRIPTDIR/ssh-client.py --service elasticsearch --cmd "ls -l"
 # python $SCRIPTDIR/ssh-clients.py --service elasticsearch --cmd "ps ax | grep -i '/elasticsearch' | grep -v grep | awk '{print \$1}'"
