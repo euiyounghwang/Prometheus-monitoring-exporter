@@ -73,8 +73,6 @@ if __name__ == '__main__':
     
     try:
 
-
-    
         ''' Expose this app to acesss'''
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
