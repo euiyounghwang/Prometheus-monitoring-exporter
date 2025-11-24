@@ -8,6 +8,8 @@ import argparse
 import logging
 import sys
 from flask import Flask, jsonify
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 import datetime, time
 import warnings
 from ssh_client import utils, work
@@ -25,6 +27,22 @@ logging.basicConfig(level=logging.INFO,
 
 
 app = Flask(__name__)
+# app = FastAPI(
+#     title="FastAPI Basic Docker with k8s Service",
+#     description="FastAPI Basic Docker with k8s Service",
+#     version="0.0.1",
+#     # terms_of_service="http://example.com/terms/",
+# )
+
+
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
+
 
 @app.route("/ssh/<string:env>/<string:service>/<string:cmd>", methods=["GET"])
 def service(env, service, cmd):

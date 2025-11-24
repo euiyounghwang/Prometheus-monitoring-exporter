@@ -772,6 +772,37 @@ sudo systemctl disable rc-local
 ```
 
 
+
+### Register Service (SSH Web Server)
+- Running this service that allows us to excute the command to start/stop the service
+- sudo service es_ssh_monitoring_api status/stop/start/restart
+```bash
+#-- /etc/systemd/system/es_ssh_monitoring_api.service
+[Unit]
+Description=ES SSH Service
+
+[Service]
+User=devuser
+Group=devuser
+Type=simple
+ExecStart=/bin/bash /home/devuser/es_ssh_monitoring_api/ssh_client_web.sh.sh
+ExecStop= /usr/bin/killall /es_ssh_monitoring_api
+
+[Install]
+WantedBy=default.target
+
+
+# Service command
+sudo systemctl daemon-reload 
+sudo systemctl enable es_ssh_monitoring_api.service
+sudo systemctl start es_ssh_monitoring_api.service 
+sudo systemctl status es_ssh_monitoring_api.service 
+sudo systemctl stop es_ssh_monitoring_api.service 
+
+sudo service es_ssh_monitoring_api status/stop/start
+```
+
+
 ## Cronjob
 - A cron job is a scheduled task in a Unix-like operating system that runs automatically at a specific time or interval, typically for repetitive system or application maintenance, like running scripts, performing backups, or sending out newsletters.
 
@@ -786,25 +817,26 @@ sudo systemctl disable rc-local
 | +----------- Hour (0-23)
 +------------- Minute (0-59)
 
-# ------
-# alert update via this script and send to the REST API
-# 1 : Monday
+
+### ------
+### alert update via this script and send to the REST API
+### 1 : Monday
 40 07 * * 1 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 15 * * 1 /apps_rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
 
-# Monday ~ Thursday
+### Monday ~ Thursday
 30 06 16 09 * /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 16 16 09 * /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
 
-# Friday
+### Friday
 40 22 19 09 5 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 07 20 09 5 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
 
-# Saturday
+### Saturday
 40 22 20 09 6 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 07 21 09 6 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
 
-# Sunday
+### Sunday
 00 16 21 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 05 22 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
 ```
