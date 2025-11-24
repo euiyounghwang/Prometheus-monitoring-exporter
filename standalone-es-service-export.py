@@ -1859,7 +1859,9 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' update health of Kafka connect'''
         if master_kafka_active == "OK":
             ''' If Kafka Connect is not running on node #2 or node #3 or a combination of both nodes #2 and #3, then the color code check should show as yellow if Kafka Connect is running on the primary node (node 1).'''
-            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+            # kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kafka_connect_url"]["GREEN_CNT"]))
+            ''' the color colde show as green if the primary node for the connect is running as expected'''
+            kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(len(monitoring_metrics.get("kafka_connect_url").split(",")))
         else:
             ''' If Kafka Connect is not running on the primary node, then the color code check should show as “red” since this means data is not being processed for our ES pipeline queue for WMx and OMx. '''
             kafka_connect_nodes_health_gauge_g.labels(domain_name_as_nick_name).set(0)
