@@ -49,7 +49,7 @@ case "$1" in
         echo "🦄 Starting $SERVICE_NAME";
         # nohup python $SCRIPTDIR/ssh_client_web.py &> /dev/null &
         python $SCRIPTDIR/ssh_client_web.py
-        # gunicorn ssh_client_web:app --bind 0.0.0.0:8000 --workers 4
+        # gunicorn -k uvicorn.workers.UvicornWorker ssh_client_web:app --bind 0.0.0.0:8000 --workers 4 -k gevent
         ;;
   stop)
         # Stop daemons.
