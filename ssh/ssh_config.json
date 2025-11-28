@@ -87,5 +87,101 @@
             ],
             "process_lookup_command": "sudo find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \\; && sudo find /apps/kafka/latest/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \\;"
         }
+    },
+    "test": {
+        "userid": "userid",
+        "userpw": "userpw",
+        "serviceid": "userid",
+        "servicepw": "userpw",
+        "es": {
+            "service": "elasticsearch",
+            "es_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/apps/elasticsearch/elasticsearch-8.17.0' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo service elasticsearch start",
+            "stop_command": "sudo service elasticsearch stop"
+        },
+        "kibana": {
+            "service": "kibana",
+            "kinana_nodes": [
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/apps/kibana' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo -u kibana /apps/scripts/startkibana",
+            "stop_command": "sudo /apps/scripts/killps.sh"
+        },
+        "logstash": {
+            "service": "logstash",
+            "logstash_nodes": [
+                "localhost2"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/apps/logstash/latest/logstash-core/' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo service logstash start",
+            "stop_command": "sudo service logstash stop"
+        },
+        "kafka": {
+            "service": "kafka",
+            "kafka_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i 'config/server.properties' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo su - kafka -c '/apps/utils/kafkaUtil.sh restart'",
+            "stop_command": "sudo su - kafka -c '/apps/utils/kafkaUtil.sh stop'"
+        },
+        "kafka_connect": {
+            "service": "kafka_connect",
+            "kafka_connect_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/apps/kafka/latest/config/connect-distributed.properties' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo su - kafka -c '/apps/utils/connectUtil.sh start'",
+            "stop_command": "sudo su - kafka -c '/apps/utils/connectUtil.sh stop'"
+        },
+        "spark_cluster": {
+            "service": "spark_cluster",
+            "spark_nodes": [
+                "localhost1"
+            ],
+            "process_lookup_command": "ps ax | grep -i 'org.apache.spark.deploy.master.Master' | grep -v grep | awk '{print $1}'",
+            "start_command": "sudo su - spark -c '/apps/spark/latest/sbin/start-all.sh'",
+            "stop_command": "sudo su - spark -c '/apps/spark/latest/sbin/stop-all.sh'"
+        },
+        "spark_app": {
+            "service": "spark_app",
+            "spark_nodes": [
+                "localhost1"
+            ],
+            "spark_app_list": [
+                "sparkSubmitA.sh",
+                "sparkSubmitB.sh"
+            ],
+            "process_lookup_command": "sudo su - spark -c '/apps/utils/{} status'",
+            "start_command": "sudo su - spark -c '/apps/utils/{} start'",
+            "stop_command": "sudo su - spark -c '/apps/utils/{} stop'"
+        },
+        "metrics": {
+            "service": "metrics",
+            "metrics_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/monitoring/metrics_socket/server.py' | grep -v grep | awk '{print $1}'",
+            "start_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh start",
+            "stop_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh stop"
+        },
+        "logs": {
+            "service": "logs",
+            "logs_nodes": [
+                "localhost1"
+            ],
+            "process_lookup_command": "sudo find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \\; && sudo find /apps/kafka/latest/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \\;"
+        }
     }
-}
