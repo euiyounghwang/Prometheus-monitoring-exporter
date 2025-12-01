@@ -48,6 +48,7 @@ case "$1" in
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
         # nohup python $SCRIPTDIR/ssh_client_web.py &> /dev/null &
+        # python -m uvicorn ssh_client_web:app --reload --host=0.0.0.0 --port=8000 --workers 2
         python $SCRIPTDIR/ssh_client_web.py
         # gunicorn -k uvicorn.workers.UvicornWorker ssh_client_web:app --bind 0.0.0.0:8000 --workers 4 -k gevent
         ;;

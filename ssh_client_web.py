@@ -51,8 +51,15 @@ def service(env, service, cmd):
     '''
     try:
         logging.info(f"ENV : {env}, Service : {service}, CMD = {cmd}")
+        
         ''' load ssh_config.json'''
         ssh_config = utils.load_json_config("./ssh_config.json", env)
+        if ssh_config is None:
+            return  {
+                "status" : 500,
+                "message" : "{}".format("Please ensure the env name")
+           }
+        
         logging.info(json.dumps(ssh_config, indent=2))
 
         # ''' call to perform the ssh commands'''
