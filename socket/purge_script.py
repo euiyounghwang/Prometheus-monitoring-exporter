@@ -44,6 +44,7 @@ if __name__ == "__main__":
 
     ''' sudo find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \; '''
     ''' sudo find /apps/kafka_2.11-0.11.0.0/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \; '''
+    ''' adm account: cd /apps/kafka/latest/ -> sudo chmod 775 -R ./logs/'''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of purge scheduler")
     parser.add_argument('--delete_interval', dest='delete_interval', default=7, help='delete-interval')
     args = parser.parse_args()
@@ -59,17 +60,17 @@ if __name__ == "__main__":
         ''' In Python 2.7, the threading module is used to work with threads, which allow for concurrent execution of multiple parts of a program within a single process. '''
         # Create two threads
         thread1 = threading.Thread(target=purge_old_logs, args=("/apps/var/spark/logs", delete_interval))
-        # thread2 = threading.Thread(target=purge_old_logs, args=("/apps/kafka/latest/logs", delete_interval))
+        thread2 = threading.Thread(target=purge_old_logs, args=("/apps/kafka/latest/logs", delete_interval))
 
         ''' a daemon thread is a thread that runs in the background and is terminated automatically when the main program exits.'''
         thread1.daemon = True
         thread1.start()
 
-        # thread2.daemon = True
-        # thread2.start()
+        thread2.daemon = True
+        thread2.start()
 
         T.append(thread1)
-        # T.append(thread2)
+        T.append(thread2)
 
         """
         # Start the threads

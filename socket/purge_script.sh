@@ -10,7 +10,7 @@ case "$1" in
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
         # nohup python $SCRIPTDIR/purge_script.py &> /dev/null &
-        python $SCRIPTDIR/purge_script.py
+        python $SCRIPTDIR/purge_script.py --delete_interval 2
         ;;
   stop)
         # Stop daemons.
