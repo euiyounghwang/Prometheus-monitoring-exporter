@@ -80,6 +80,17 @@
             "start_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh start",
             "stop_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh stop"
         },
+        "purge": {
+            "service": "purge",
+            "purge_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/monitoring/metrics_socket/purge_script.py' | grep -v grep | awk '{print $1}'",
+            "start_command": "~/monitoring/metrics_socket/purge_script.sh start",
+            "stop_command": "~/monitoring/metrics_socket/purge_script.sh stop"
+        },
         "logs": {
             "service": "logs",
             "logs_nodes": [
@@ -176,6 +187,17 @@
             "process_lookup_command": "ps ax | grep -i '/monitoring/metrics_socket/server.py' | grep -v grep | awk '{print $1}'",
             "start_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh start",
             "stop_command": "~/monitoring/metrics_socket/prometheus-gather-server.sh stop"
+        },
+        "purge": {
+            "service": "purge",
+            "purge_nodes": [
+                "localhost1",
+                "localhost2",
+                "localhost3"
+            ],
+            "process_lookup_command": "ps ax | grep -i '/monitoring/metrics_socket/purge_script.py' | grep -v grep | awk '{print $1}'",
+            "start_command": "~/monitoring/metrics_socket/purge_script.sh start",
+            "stop_command": "~/monitoring/metrics_socket/purge_script.sh stop"
         },
         "logs": {
             "service": "logs",

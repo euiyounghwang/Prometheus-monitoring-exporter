@@ -10,7 +10,7 @@ import threading
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 
-def purge_old_logs(folder_path, delete_interval):
+def purge_old_logs(folder_path, interval, delete_interval):
     ''' Delete old logs'''
     
     def delete_old_files(folder_path, days_old):
@@ -37,7 +37,7 @@ def purge_old_logs(folder_path, delete_interval):
 
         delete_old_files(folder_path, delete_interval) 
 
-        time.sleep(10)
+        time.sleep(interval)
 
 
 if __name__ == "__main__":
@@ -45,9 +45,14 @@ if __name__ == "__main__":
     ''' sudo find /apps/var/spark/logs/*log* -mtime +0 -exec rm {} \; '''
     ''' sudo find /apps/kafka_2.11-0.11.0.0/logs -name '*log*' -type f -mtime +0 -exec rm -f {} \; '''
     ''' adm account: cd /apps/kafka/latest/ -> sudo chmod 775 -R ./logs/'''
+    ''' python ./purge_script.py --interval 60 --delete_interval 2'''
     parser = argparse.ArgumentParser(description="Script that might allow us to use it as an application of purge scheduler")
+    parser.add_argument('--interval', dest='interval', default=10, help='interval')
     parser.add_argument('--delete_interval', dest='delete_interval', default=7, help='delete-interval')
     args = parser.parse_args()
+
+    if args.interval:
+        interval = int(args.interval)
 
     if args.delete_interval:
         delete_interval = int(args.delete_interval)
@@ -59,8 +64,8 @@ if __name__ == "__main__":
     try:
         ''' In Python 2.7, the threading module is used to work with threads, which allow for concurrent execution of multiple parts of a program within a single process. '''
         # Create two threads
-        thread1 = threading.Thread(target=purge_old_logs, args=("/apps/var/spark/logs", delete_interval))
-        thread2 = threading.Thread(target=purge_old_logs, args=("/apps/kafka/latest/logs", delete_interval))
+        thread1 = threading.Thread(target=purge_old_logs, args=("/apps/var/spark/logs", interval, delete_interval))
+        thread2 = threading.Thread(target=purge_old_logs, args=("/apps/kafka/latest/logs", interval, delete_interval))
 
         ''' a daemon thread is a thread that runs in the background and is terminated automatically when the main program exits.'''
         thread1.daemon = True
