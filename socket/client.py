@@ -27,7 +27,7 @@ def make_dict_disk_space(message):
 
 # Create a connection to the server application on port 81
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect(('localhost', 1233))
+client_socket.connect(('localhost', 1234))
  
 try:
     # data = str.encode("/apps/")
