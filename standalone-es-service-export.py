@@ -123,6 +123,7 @@ es_configuration_api_instance_gauge_g = Gauge("es_configuration_api_health_metri
 log_db_instance_gauge_g = Gauge("log_db_health_metric", 'Metrics scraped from localhost', ["server_job"])
 alert_monitoring_ui_gauge_g = Gauge("alert_monitoring_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 tools_monitoring_gauge_g = Gauge("tools_monitoring_health_metric", 'Metrics scraped from localhost', ["server_job"])
+purge_script_monitoring_gauge_g = Gauge("purge_script_health_metric", 'Metrics scraped from localhost', ["server_job", "health", "category"])
 loki_ui_gauge_g = Gauge("loki_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 airflow_ui_gauge_g = Gauge("airflow_ui_health_metric", 'Metrics scraped from localhost', ["server_job"])
 loki_api_instance_gauge_g = Gauge("loki_api_health_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -399,7 +400,7 @@ def get_metrics_all_envs(monitoring_metrics):
         Other errors like host not found can still raise exception though
         '''
         ''' logstash_url means saved_failure_dict dics does not add the error log if multiple ports from the Logstash has been closed..'''
-        exclude_port_detect = ['logstash_url', 'loki_url', 'airflow_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url', 'tools_alert_url']
+        exclude_port_detect = ['logstash_url', 'loki_url', 'airflow_url', 'redis_url', 'configuration_url', 'loki_custom_promtail_agent_url', 'log_aggregation_agent_url', 'alert_monitoring_url', 'tools_alert_url', 'purge_script_url']
         response_dict = {}
         for k, v in monitoring_metrics.items():
             response_dict.update({k : ""})
@@ -1880,6 +1881,7 @@ def get_metrics_all_envs(monitoring_metrics):
             alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
 
         ''' Update the status of Redis service by using socket.connect_ex only Dev'''
+        redis_instance_gauge_g._metrics.clear()
         if 'redis_url' in monitoring_metrics:
             active_cnt = int(response_dict["redis_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1888,6 +1890,7 @@ def get_metrics_all_envs(monitoring_metrics):
             redis_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of ES Confiuration write job service by using socket.connect_ex only Dev'''
+        es_configuration_instance_gauge_g._metrics.clear()
         if 'configuration_job_url' in monitoring_metrics:
             active_cnt = int(response_dict["configuration_job_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1896,6 +1899,7 @@ def get_metrics_all_envs(monitoring_metrics):
             es_configuration_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of ES Confiuration API service by using socket.connect_ex only Dev'''
+        es_configuration_api_instance_gauge_g._metrics.clear()
         if 'es_configuration_api_url' in monitoring_metrics:
             active_cnt = int(response_dict["es_configuration_api_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1904,6 +1908,7 @@ def get_metrics_all_envs(monitoring_metrics):
             es_configuration_api_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of LOG DB URL by using socket.connect_ex only Dev'''
+        log_db_instance_gauge_g._metrics.clear()
         if 'log_db_url' in monitoring_metrics:
             active_cnt = int(response_dict["log_db_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1912,6 +1917,7 @@ def get_metrics_all_envs(monitoring_metrics):
             log_db_instance_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of Alert Monitoring URL by using socket.connect_ex only Dev'''
+        alert_monitoring_ui_gauge_g._metrics.clear()
         if 'alert_monitoring_url' in monitoring_metrics:
             active_cnt = int(response_dict["alert_monitoring_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1920,6 +1926,7 @@ def get_metrics_all_envs(monitoring_metrics):
             alert_monitoring_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of Apache Loki URL by using socket.connect_ex only Dev'''
+        loki_ui_gauge_g._metrics.clear()
         if 'loki_url' in monitoring_metrics:
             active_cnt = int(response_dict["loki_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1928,6 +1935,7 @@ def get_metrics_all_envs(monitoring_metrics):
             loki_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of Apache airflow URL by using socket.connect_ex only Dev'''
+        airflow_ui_gauge_g._metrics.clear()
         if 'airflow_url' in monitoring_metrics:
             active_cnt = int(response_dict["airflow_url"]["GREEN_CNT"])
             ''' Red is 2'''
@@ -1936,12 +1944,26 @@ def get_metrics_all_envs(monitoring_metrics):
             airflow_ui_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
 
         ''' Update the status of Tools such as xMatters Alert script by using socket.connect_ex only Dev'''
+        tools_monitoring_gauge_g._metrics.clear()
         if 'tools_alert_url' in monitoring_metrics:
             active_cnt = int(response_dict["tools_alert_url"]["GREEN_CNT"])
             ''' Red is 2'''
             if active_cnt < 1:
                 active_cnt = 2
             tools_monitoring_gauge_g.labels(domain_name_as_nick_name).set(active_cnt)
+
+        # print('\n\n\n')
+        # print(json.dumps(response_dict, indent=2))
+        # print('\n\n\n')
+        
+        ''' Update the status of purge_script_url by using socket.connect_ex only Dev'''
+        purge_script_monitoring_gauge_g._metrics.clear()
+        if 'purge_script_url' in monitoring_metrics:
+            active_cnt = int(response_dict["purge_script_url"]["GREEN_CNT"])
+            for k, v in response_dict["purge_script_url"].items():
+                if k != 'GREEN_CNT':
+                    # print(domain_name_as_nick_name, k)
+                    purge_script_monitoring_gauge_g.labels(server_job=domain_name_as_nick_name, health="Green" if v == 'OK' else "Red", category=str(k)).set(1 if v == 'OK' else 2)
 
 
         # ''' Update the status of Loki interface API service by using socket.connect_ex only Dev'''
@@ -1964,6 +1986,7 @@ def get_metrics_all_envs(monitoring_metrics):
         #             loki_agent_instance_gauge_g.labels(server_job=domain_name_as_nick_name, category=str(k)).set(1 if v == 'OK' else 2)
         
         ''' Update the status of log_aggregation_agent_url agent by using socket.connect_ex only Dev'''
+        log_agent_instance_gauge_g._metrics.clear()
         if 'log_aggregation_agent_url' in monitoring_metrics:
             active_cnt = int(response_dict["log_aggregation_agent_url"]["GREEN_CNT"])
             ''' 'log_aggregation_agent_url': {'localhost1:2000': 'FAIL', 'GREEN_CNT': 0, 'localhost2:2000': 'FAIL', 'localhost3:2000': 'FAIL'}} '''
@@ -4223,6 +4246,7 @@ if __name__ == '__main__':
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' Additional serivce metrics for the alert'''
     parser.add_argument('--tools_alert_url', dest='tools_alert_url', default="", help='Tools API Monitoring')
+    parser.add_argument('--purge_script', dest='purge_script', default="localhost:8001,localhost1:8001,localhost1:8001", help='purge_script')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
@@ -4359,6 +4383,9 @@ if __name__ == '__main__':
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
 
+    if args.purge_script:
+        purge_script = args.purge_script
+
     ''' request DB interface restpi insteady of connecting db dircectly'''
     if args.db_http_host:
         db_http_host = args.db_http_host
@@ -4416,6 +4443,10 @@ if __name__ == '__main__':
     ''' loki_url checking '''
     if loki_url:
         monitoring_metrics.update({"loki_url" : loki_url})
+
+    ''' purge_script '''
+    if purge_script:
+        monitoring_metrics.update({"purge_script_url" : purge_script})
 
     ''' loki_api_url checking '''
     # if loki_api_url:

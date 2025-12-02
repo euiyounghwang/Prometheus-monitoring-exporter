@@ -57,31 +57,40 @@ def Http_Listen(http_port):
 
 def Socket_Listen(socket_port):
     ''' A server has a bind() method which binds it to a specific IP and port so that it can listen to incoming requests on that IP and port. '''
-    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
     try:
-        # With the help of bind() function 
-        # binding host and port
-        soc.bind(("0.0.0.0", socket_port))
-        
-    except socket.error as message:
-        
-        # if any error occurs then with the 
-        # help of sys.exit() exit from the program
-        logging.error('Bind failed. Error Code : ' + str(message[0]) + ' Message ' + message[1])
-        sys.exit()
-        
-    # print if Socket binding operation completed    
-    print('Socket binding operation completed')
-    
-    # With the help of listening () function
-    # starts listening
-    soc.listen(9)
-    
-    conn, address = soc.accept()
-    # print the address of connection
-    logging.info('Connected with ' + address[0] + ':' + str(address[1]))
+        serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        serversocket.bind(("0.0.0.0", socket_port))
+        serversocket.listen(5) # become a server socket, maximum 5 connections
 
+        logging.info("Wating a session..")
+
+        while True:
+            # logging.info("Waiting for connection")
+            connection, client = serversocket.accept()
+            
+            try:
+                
+                # print("Connected to client IP: {}".format(client))
+                    
+                # Receive and print data 1024 bytes at a time, as long as the client is sending something
+                while True:
+                    data = connection.recv(1024)
+                    data = data.decode('utf-8')
+                    # logging.info("Received data: {}".format(data))
+                    if not data:
+                        break
+
+            except Exception as e:
+                logging.info("# Interrupted..")
+
+            finally:
+                connection.close()
+        
+    except socket.error as e:
+        logging.error(e)
+        pass
+        
+   
 
 if __name__ == "__main__":
 
