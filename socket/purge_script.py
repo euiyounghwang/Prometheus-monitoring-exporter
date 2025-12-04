@@ -20,19 +20,23 @@ def purge_old_logs(folder_path, interval, delete_interval):
         now = time.time()
         
         for filename in os.listdir(folder_path):
-            # print(filename)
-            if "log" in filename:
-                file_path = os.path.join(folder_path, filename)
-                
-                file_mtime = os.path.getmtime(file_path) 
-                
-                file_age_seconds = now - file_mtime
-                
-                file_age_days = file_age_seconds / (60 * 60 * 24)
-                
-                if file_age_days > days_old:
-                    logging.info("Will be deleted this file {}".format(file_path))
-                    os.remove(file_path)
+
+            try:
+                # print(filename)
+                if "log" in filename:
+                    file_path = os.path.join(folder_path, filename)
+                    
+                    file_mtime = os.path.getmtime(file_path) 
+                    
+                    file_age_seconds = now - file_mtime
+                    
+                    file_age_days = file_age_seconds / (60 * 60 * 24)
+                    
+                    if file_age_days > days_old:
+                        logging.info("Will be deleted this file {}".format(file_path))
+                        os.remove(file_path)
+            except Exception as e:
+                pass
                 
     
     while True:
@@ -59,6 +63,8 @@ def Socket_Listen(socket_port):
     ''' A server has a bind() method which binds it to a specific IP and port so that it can listen to incoming requests on that IP and port. '''
     try:
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ''' This option allows the socket to bind to an address that is in a TIME_WAIT state, potentially avoiding the error if the previous process is no longer actively using the port '''
+        serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         serversocket.bind(("0.0.0.0", socket_port))
         serversocket.listen(5) # become a server socket, maximum 5 connections
 
