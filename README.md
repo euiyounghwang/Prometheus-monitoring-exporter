@@ -802,7 +802,6 @@ sudo systemctl stop es_ssh_monitoring_api.service
 sudo service es_ssh_monitoring_api status/stop/start
 ```
 
-
 ## Cronjob
 - A cron job is a scheduled task in a Unix-like operating system that runs automatically at a specific time or interval, typically for repetitive system or application maintenance, like running scripts, performing backups, or sending out newsletters.
 
@@ -839,4 +838,20 @@ sudo service es_ssh_monitoring_api status/stop/start
 ### Sunday
 00 16 21 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev false
 30 05 22 09 0 /apps/rest_api/es_config_interface/scripts/alert_job_batch.sh localhost dev true
+```
+
+### Jar file rebuild 
+- Jar file
+```bash
+vi ~/.bashrc
+
+#export JAVA_HOME=/apps/storage/ELK_UPGRADE/java-17-openjdk-17.0.14.0.7-1.portable.jdk.el.x86_64
+#export PATH=$JAVA_HOME/bin:$PATH
+#echo $JAVA_HOME
+
+source ~/.bashrc
+jar -xvf ./streamprocess_omx.jar
+
+jar cf ./streamprocess_omx.jar .
+mv ./streamprocess_omx.jar ../
 ```
