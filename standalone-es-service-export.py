@@ -2961,10 +2961,12 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                 if db_info == "WMx":
                     db_transactin_time_WMx = resp.json()["running_time"]
                     ''' connection metrics with green status'''
+                    db_jobs_db_connection_wmx_active_gauge_g._metrics.clear()
                     db_jobs_db_connection_wmx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Green").set(1)
                 elif db_info == "OMx":
                     db_transactin_time_OMx = resp.json()["running_time"]
                     ''' connection metrics with green status'''
+                    db_jobs_db_connection_omx_active_gauge_g._metrics.clear()
                     db_jobs_db_connection_omx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Green").set(1)
          
             else:
