@@ -148,7 +148,9 @@ db_jobs_omx_db_active_gauge_g = Gauge("db_omx_active_metrics", 'Metrics scraped 
 ''' spark_jobs'''
 spark_custom_jobs_gauge_g = Gauge("spark_custom_jobs_metrics", 'Metrics scraped from localhost', ["env", "server_job", "spark_custom_jobs"])
 ''' db connection'''
-db_jobs_db_connection_active_gauge_g = Gauge("db_connection_active_metrics", 'Metrics scraped from localhost', ["server_job", "db"])
+# db_jobs_db_connection_active_gauge_g = Gauge("db_connection_active_metrics", 'Metrics scraped from localhost', ["server_job", "db", "db_health"])
+db_jobs_db_connection_wmx_active_gauge_g = Gauge("db_connection_wmx_active_metrics", 'Metrics scraped from localhost', ["server_job", "db", "db_health"])
+db_jobs_db_connection_omx_active_gauge_g = Gauge("db_connection_omx_active_metrics", 'Metrics scraped from localhost', ["server_job", "db", "db_health"])
 ''' export failure instance list metric'''
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
 ''' xMatters_service '''
@@ -2928,10 +2930,15 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     
                     if db_info == "WMx":
                         db_jobs_gauge_wmx_g._metrics.clear()
+                        db_jobs_db_connection_wmx_active_gauge_g._metrics.clear()
                         WMx_threads_db_active = False
+                        db_jobs_db_connection_wmx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Red").set(2)
+
                     elif db_info == "OMx":
                         db_jobs_gauge_omx_g._metrics.clear()
+                        db_jobs_db_connection_omx_active_gauge_g._metrics.clear()
                         OMx_threads_db_active = False
+                        db_jobs_db_connection_omx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Red").set(2)
 
                     ''' DB error '''
                     logging.info(f"response : {resp.json()['message']}")
@@ -2939,8 +2946,6 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
                     ''' expose failure node with a reason'''
                     saved_failure_db_dict.update({'db-jobs-{}_{}'.format(db_info,db_info) : "{} db -> ".format(db_info) + resp.json()['message']})
                     all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
-                    ''' connection metrics'''
-                    db_jobs_db_connection_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(2)
                     saved_status_dict.update({'es_pipeline' : 'Red'})
 
                     logging.info(f"saved_failure_db_dict in 404 response - {saved_failure_db_dict}, saved_status_dict - {saved_status_dict}")
@@ -2955,11 +2960,12 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
                 if db_info == "WMx":
                     db_transactin_time_WMx = resp.json()["running_time"]
+                    ''' connection metrics with green status'''
+                    db_jobs_db_connection_wmx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Green").set(1)
                 elif db_info == "OMx":
                     db_transactin_time_OMx = resp.json()["running_time"]
-
-                ''' connection metrics with green status'''
-                db_jobs_db_connection_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info).set(1)
+                    ''' connection metrics with green status'''
+                    db_jobs_db_connection_omx_active_gauge_g.labels(server_job=domain_name_as_nick_name, db=db_info, db_health="Green").set(1)
          
             else:
                 ''' This logic perform to connect to DB directly and retrieve records from processd table '''
