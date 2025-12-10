@@ -1677,6 +1677,13 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' start time for the api performance tracking'''
         start_time_fun = datetime.datetime.now(tz=gloabal_default_timezone)
 
+        ''' alert state'''
+        alert_state_instance_gauge_g._metrics.clear()
+        if global_mail_configuration.get(hostname).get('is_mailing',''):
+            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
+        else:
+            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
+
         ''' The cluster health API returns a simple status on the health of the cluster. '''
         ''' get the health of the cluseter and set value based on status/get the number of nodes in the cluster'''
         ''' The operation receives cluster health results from only one active node among several nodes. '''
@@ -1876,12 +1883,6 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' Update the status of kibana instance by using socket.connect_ex'''
         # es_nodes_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["es_url"]["GREEN_CNT"]))
         kibana_instance_gauge_g.labels(domain_name_as_nick_name).set(int(response_dict["kibana_url"]["GREEN_CNT"]))
-
-        ''' alert state'''
-        if global_mail_configuration.get(hostname).get('is_mailing',''):
-            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(1)
-        else:
-            alert_state_instance_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
 
         ''' Update the status of Redis service by using socket.connect_ex only Dev'''
         if 'redis_url' in monitoring_metrics:
