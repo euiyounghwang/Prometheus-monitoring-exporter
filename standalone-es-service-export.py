@@ -643,11 +643,6 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         try:
 
-            ''' clear spark nodes health'''
-            spark_nodes_gauge_g.clear()
-            ''' check secured spark cluster'''
-            spark_ssk_gauge_g.clear()
-
             if not node:
                 return None
             logging.info(f"get_spark_jobs - {node}")
@@ -662,6 +657,11 @@ def get_metrics_all_envs(monitoring_metrics):
             
             resp = requests.get(url=spark_url.format(master_node), timeout=5, verify=False)
             logging.info(f"get_spark_jobs - response {resp.status_code}")
+
+            ''' clear spark nodes health'''
+            spark_nodes_gauge_g.clear()
+            ''' check secured spark cluster'''
+            spark_ssk_gauge_g.clear()
             
             if not (resp.status_code == 200):
                 spark_nodes_gauge_g.labels(server_job=domain_name_as_nick_name).set(0)
