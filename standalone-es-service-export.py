@@ -869,7 +869,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' export es metrics from ES cluster with Search Guard'''
                     es_urls = "{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host)
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-                    resp = requests.get(url=es_urls, headers=get_header(), timeout=30, verify=False)
+                    resp = requests.get(url=es_urls, headers=get_header(), timeout=5, verify=False)
                     # print('\n\n\n')
                     # print(f"es_urls : {es_urls}")
                     # print('\n\n\n')
@@ -922,7 +922,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
                     ''' Call to get more information '''
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
-                    resp_info = requests.get(url="{}://{}/_cat/indices?format=json".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=30, verify=False)
+                    resp_info = requests.get(url="{}://{}/_cat/indices?format=json".format(es_cluster_call_protocal, each_es_host), headers=get_header(), timeout=5, verify=False)
                     '''
                     [
                         {
@@ -1175,6 +1175,7 @@ def get_metrics_all_envs(monitoring_metrics):
             
             # Create a connection to the server application on port 81
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(2)
             client_socket.connect((host, 1234))
             
             try:
@@ -2924,7 +2925,7 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
                 logging.info("db_http_host : {}, db_info : {}, db_url : {}, sql : {}".format(db_http_host, db_info, db_url, sql))
                 http_urls = "http://{}/db/get_db_query".format(db_http_host)
-                resp = requests.post(url=http_urls, json=request_body, timeout=600)
+                resp = requests.post(url=http_urls, json=request_body, timeout=60)
 
                 if not (resp.status_code == 200):
                     ''' clear table for db records if host not reachable'''
@@ -3188,7 +3189,7 @@ def db_jobs_backlogs_work(interval, database_object, sql, db_http_host, db_url, 
 
                 logging.info("db_http_host : {}, db_info : {}, db_url : {}, sql : {}".format(db_http_host, db_info, db_url, sql))
                 http_urls = "http://{}/db/get_db_query".format(db_http_host)
-                resp = requests.post(url=http_urls, json=request_body, timeout=600)
+                resp = requests.post(url=http_urls, json=request_body, timeout=60)
 
                 if not (resp.status_code == 200):
                     ''' clear table for db records if host not reachable'''
