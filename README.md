@@ -103,6 +103,9 @@ cd Python-3.9.0
 ./configure --libdir=/usr/lib64 
 sudo make 
 sudo make altinstall 
+which python3.9
+rm /usr/bin/python
+ln -s /usr/local/bin/python3.9 /usr/bin/python
 
 # python3 -m venv .venv --without-pip
 sudo yum install python3-pip
