@@ -36,6 +36,7 @@ export DEV_ES_HOST="dev:9200"
 # https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
 # You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate, i.e. mycert.pem, with the command:
 # openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout mykey.key -out mycert.pem
+# openssl x509 -in ./mycert.pem -text -noout
 # --
 
 #jupyter notebook
