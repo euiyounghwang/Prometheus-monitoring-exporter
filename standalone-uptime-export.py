@@ -58,7 +58,11 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
+    # labels = ['January', 'February', 'March', 'April', 'May', 'June']
+    # data = [0, 10, 15, 8, 22, 18, 25]
+    # return render_template('./chartjs-example.html', labels=labels, data=data)
     return render_template('./uptime.html', host_name=socket.gethostname().split(".")[0], linked_port=port)
+    
     # return "Hello"
 
 
@@ -189,7 +193,7 @@ if __name__ == '__main__':
     python standalone-uptime-export.py
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to get the response time fromm the service on prometheus exporter")
-    parser.add_argument('--port', dest='port', default=7091, help='Expose Port')
+    parser.add_argument('--port', dest='port', default=5001, help='Expose Port')
     parser.add_argument('--interval', dest='interval', default=30, help='Thread Interval')
     args = parser.parse_args()
     
