@@ -1,0 +1,28 @@
+[
+    {
+        "env": "Dev",
+        "service": [
+            {
+                "service_name": "ES",
+                "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201"
+            },
+            {
+                "service_name": "Kafka_Connect",
+                "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201"
+            }
+        ]
+    },
+    {
+        "env": "Dev1",
+        "service": [
+            {
+                "service_name": "ES",
+                "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201"
+            },
+            {
+                "service_name": "Kafka_Connect",
+                "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201"
+            }
+        ]
+    }
+]
