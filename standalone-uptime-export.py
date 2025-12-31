@@ -93,10 +93,11 @@ class Prometheus_Service_Export:
         self.service_json = loaded_config_json
         
     
-    def get_header(self):
+    def get_header(self, basic_auth):
         header =  {
             'Content-type': 'application/json', 
-            # 'Authorization' : 'Basic {}'.format(os.environ.get('BASIC_AUTH_SH', '')),
+            # 'Authorization' : 'Basic {}'.format(os.environ.get('BASIC_AUTH', '')),
+            'Authorization' : 'Basic {}'.format(basic_auth),
             'Connection': 'close'
         }
             
@@ -135,7 +136,7 @@ class Prometheus_Service_Export:
             for idx, service_url in enumerate(service_list):
                 try:
                     # -- make a call to cluster for checking the disk space on all nodes in the cluster
-                    resp = requests.get(url="{}".format(service_url), headers=self.get_header(), verify=False, timeout=5)
+                    resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
                                     
                     # if not (resp.status_code == 200):
                     #     return None
