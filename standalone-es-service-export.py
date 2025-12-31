@@ -96,7 +96,9 @@ es_ssl_certificates_expired_date_gauge_g = Gauge("es_ssl_certificates_expired_da
 all_envs_status_gauge_g = Gauge("all_envs_status_metric", 'Metrics scraped from localhost', ["server_job", "type"])
 # nodes_diskspace_gauge_g = Gauge("node_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "host", "name", "ip", "disk_health","disktotal", "diskused", "diskavail", "diskusedpercent"])
 nodes_diskspace_gauge_g = Gauge("node_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "host", "ip", "disk_health","disktotal", "diskused", "diskavail", "diskusedpercent"])
-nodes_free_diskspace_gauge_g = Gauge("node_free_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "name" ,"diskusedpercent"])
+nodes_diskspace_gauge_g2 = Gauge("node_disk_space_2_metric", 'Metrics scraped from localhost', ["server_job", "category", "host", "ip", "disk_health","disktotal", "diskused", "diskavail", "diskusedpercent"])
+# nodes_free_diskspace_gauge_g = Gauge("node_free_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "name" ,"diskusedpercent"])
+nodes_free_diskspace_gauge_g = Gauge("node_free_disk_space_metric", 'Metrics scraped from localhost', ["server_job", "category", "name"])
 nodes_max_disk_used_gauge_g = Gauge("node_disk_used_metric", 'Metrics scraped from localhost', ["server_job", "category"])
 es_nodes_gauge_g = Gauge("es_node_metric", 'Metrics scraped from localhost', ["server_job"])
 es_nodes_basic_info_docs_gauge_g = Gauge("es_node_basic_docs_metric", 'Metrics scraped from localhost', ["server_job"])
@@ -1076,10 +1078,12 @@ def get_metrics_all_envs(monitoring_metrics):
                     loop = 1
                     ''' expose this varible to Server Active'''
                     is_over_free_Disk_space = False
+                    nodes_diskspace_gauge_g._metrics.clear()
                     for element_dict in resp.json():
                         for k, v in element_dict.items():
                             # logging.info(f"# k - {k}, # v for ES - {v}")
-                            nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                            # nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                            nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Elastic Node", name=element_dict.get("name","")).set(element_dict.get("diskUsedPercent",""))
                             ''' disk usages is greater than 90%'''
                             # if float(element_dict.get("diskUsedPercent","-1")) >= int(os.environ["NODES_DISK_AVAILABLE_THRESHOLD"]):
 
@@ -1088,7 +1092,9 @@ def get_metrics_all_envs(monitoring_metrics):
                                 get_host_name = None
                             else:
                                 get_host_name = gloabl_configuration.get(hostname).get(element_dict.get("name"))
-                          
+
+                            # print("\n\n\get_host_name", get_host_name, "hostname", hostname, "gloabl_configuration.get(hostname)", gloabl_configuration.get(hostname), "element_dict.get(name)", element_dict.get("name"))
+                            
                             '''disk percent'''
                             disk_es_health = 'Red' if float(element_dict.get("diskUsedPercent",-1)) >= int(disk_usage_threshold_es_config_api) else 'Green'
                             if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
@@ -1252,10 +1258,12 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' expose this varible to Server Active'''
             is_over_free_Disk_space = False
             ''' expose metrics for each Kafka disk space'''
+            nodes_diskspace_gauge_g2._metrics.clear()
             for element_dict in disk_space_memory_list:
                 for k, v in element_dict.items():
                     # logging.info(f"# k - {k}, # v for ES - {v}")
-                    nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                    # nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", name=element_dict.get("name",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(element_dict.get("diskUsedPercent",""))
+                    nodes_free_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", name=element_dict.get("name","")).set(element_dict.get("diskUsedPercent",""))
                     ''' disk usages is greater than 90%'''
                     # if float(element_dict.get("diskUsedPercent","-1")) >= int(os.environ["NODES_DISK_AVAILABLE_THRESHOLD"]):
 
@@ -1269,11 +1277,11 @@ def get_metrics_all_envs(monitoring_metrics):
                     disk_kafka_health = 'Red' if float(element_dict.get("diskUsedPercent",-1)) >= int(disk_usage_threshold_es_config_api) else 'Green'
                             
                     if float(element_dict.get("diskUsedPercent","-1")) >= int(disk_usage_threshold_es_config_api):
-                        # nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
-                        nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                        # nodes_diskspace_gauge_g2.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
+                        nodes_diskspace_gauge_g2.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(0)
                     else:
-                        # nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
-                        nodes_diskspace_gauge_g.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                        # nodes_diskspace_gauge_g2.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), name=element_dict.get("name",""), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
+                        nodes_diskspace_gauge_g2.labels(server_job=domain_name_as_nick_name, category="Kafka Node", host="{}{}".format(str(global_env_name).lower(), get_host_name), ip=element_dict.get("ip",""), disk_health=disk_kafka_health, disktotal=element_dict.get("diskTotal",""), diskused=element_dict.get("diskused",""), diskavail=element_dict.get("diskAvail",""), diskusedpercent=element_dict.get("diskUsedPercent","")+"%").set(1)
 
                     if k == "diskUsedPercent":
                         logging.info(f"Kafka Disk Used : {get_float_number(v)}")
@@ -1775,8 +1783,8 @@ def get_metrics_all_envs(monitoring_metrics):
             saved_critcal_sms_alert = False
 
         ''' Clear the disk space for ES through audit alert'''
-        nodes_diskspace_gauge_g._metrics.clear()
-        nodes_free_diskspace_gauge_g._metrics.clear()
+        # nodes_diskspace_gauge_g._metrics.clear()
+        # nodes_free_diskspace_gauge_g._metrics.clear()
 
 
         ''' start time for the api performance tracking'''

@@ -169,11 +169,6 @@ class Prometheus_Service_Export:
 def work(interval, config_each_json):
     ''' main logic'''
 
-    ''' Prometehus start server '''
-    ''' *** '''
-    start_http_server(int(port))
-    ''' *** '''
-
     generated_exporter = Prometheus_Service_Export(config_each_json)
 
     while True:
@@ -204,9 +199,14 @@ if __name__ == '__main__':
         interval = args.interval
 
     logging.info("Standalone Prometheus Exporter Server Started..! [{}]".format(Util.get_datetime()))
-
+    
     try:
         T = []
+
+        ''' Prometehus start server '''
+        ''' *** '''
+        start_http_server(int(port))
+        ''' *** '''
 
         for config_each_json in Util.get_json_load("./standalone-uptime-config.json"):
             main_th = Thread(target=work, args=(interval, config_each_json))
