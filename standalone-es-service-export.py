@@ -417,7 +417,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 # logging.info("urls with port : {}".format(each_urls))
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.settimeout(2)
+                    sock.settimeout(5)
                     result = sock.connect_ex((each_urls[0],int(each_urls[1])))
                     if result == 0:
                         # print("Port is open")

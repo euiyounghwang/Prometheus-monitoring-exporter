@@ -31,6 +31,7 @@ from dotenv import load_dotenv
 import logging
 import warnings
 import sys
+from elasticsearch import Elasticsearch
 import threading
 warnings.filterwarnings("ignore")
 
@@ -128,23 +129,44 @@ class Prometheus_Service_Export:
                     .set(service_health_value)
         # lock.release()
 
-    def http_uptime(self):
+    def service_uptime(self):
         logging.info(f"service_json loading : {json.dumps(self.service_json, indent=2)}")
         for service_json in self.service_json.get("service"):
             service_list = service_json.get("service").split(",")
             health_chk = []
             for idx, service_url in enumerate(service_list):
                 try:
+                  
+                    """
                     # -- make a call to cluster for checking the disk space on all nodes in the cluster
+                    # s = requests.Session()
                     resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
-                                    
+                    
                     # if not (resp.status_code == 200):
                     #     return None
                         
                     response_time = resp.elapsed.total_seconds()
                                     
-                    logging.info(f"Request completed in {response_time:.4f} seconds")
+                    logging.info(f"[{service_url} Request completed in {response_time:.4f} seconds")
+                    """
+                    
+                    StartTime = time.perf_counter()
 
+                    logging.info(f"[{service_url} Request")
+                    
+                    es_client = Elasticsearch(hosts="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), timeout=5, verify_certs=False)
+                    
+                    EndTime = time.perf_counter()
+
+                    if es_client.ping():
+                        status_code = 200
+                    else:
+                        status_code = 500
+                   
+                    # response_time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
+                    response_time = EndTime - StartTime
+                    logging.info(f"[{service_url} Request completed in {response_time:.4f} seconds")
+                    
                     ''' response time'''
                     # lock.acquire()
                     uptime_export_usage_gauge_g.labels(
@@ -152,16 +174,24 @@ class Prometheus_Service_Export:
                         env=self.service_json.get("env"), 
                         service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1), 
                         url=service_url,
-                        status_code=str(resp.status_code)
+                        # status_code=str(resp.status_code)
+                        status_code=str(status_code)
                         )\
                     .set(response_time)
+                    # .set(round(response_time, 3))
+                    # .set(roundtrip)
                     # lock.release()
+
+                    # Manually close the connection
+                    # response.close()
 
                     health_chk.append(True)
     
                 except Exception as e:
                     logging.error(e)
                     health_chk.append(False)
+
+                time.sleep(1) # Wait a second between checks
 
             ''' Set service health check'''
             self.service_health_check(health_chk, service_json)
@@ -174,7 +204,7 @@ def work(interval, config_each_json):
 
     while True:
         try:
-            generated_exporter.http_uptime()
+            generated_exporter.service_uptime()
 
         except (KeyboardInterrupt, SystemExit):
             logging.info("#Interrupted..")
@@ -214,6 +244,7 @@ if __name__ == '__main__':
             main_th.daemon = True
             main_th.start()
             T.append(main_th)
+            
                 
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
