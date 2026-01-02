@@ -86,6 +86,8 @@ class Util:
 ''' Create exporter'''
 uptime_export_usage_gauge_g = Gauge("uptime_elapsed_response_time_metrics", 'Response time (seconds)', ["server_job", "env", "service_name", "url", "status_code"])
 uptime_service_health_gauge_g = Gauge("uptime_service_health_metrics", 'Service health check (1: Green, 2: Yellow, 3 : Red)', ["server_job", "env", "service_name"])
+cpu_gauge_g = Gauge("uptime_cpu_usage_metrics", 'CPU Usage', ["server_job", "env", "service_name"])
+jvm_gauge_g = Gauge("uptime_jvm_usage_metrics", 'JVM Usage', ["server_job", "env", "service_name"])
         
    
 class Prometheus_Service_Export:
@@ -135,66 +137,127 @@ class Prometheus_Service_Export:
             service_list = service_json.get("service").split(",")
             health_chk = []
             for idx, service_url in enumerate(service_list):
+            # for idx, service_url in range(1):    
                 try:
                   
-                    """
-                    # -- make a call to cluster for checking the disk space on all nodes in the cluster
-                    # s = requests.Session()
-                    resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
-                    
-                    # if not (resp.status_code == 200):
-                    #     return None
-                        
-                    response_time = resp.elapsed.total_seconds()
-                                    
-                    logging.info(f"[{service_url} Request completed in {response_time:.4f} seconds")
-                    """
-                    
                     StartTime = time.perf_counter()
 
-                    logging.info(f"[{service_url} Request")
-                    
-                    es_client = Elasticsearch(hosts="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), timeout=5, verify_certs=False)
-                    
-                    EndTime = time.perf_counter()
+                    if service_json.get("service_client").lower() == 'es':
+                        logging.info(f"{service_url} Request")
+                        logging.info(f"service_list : {service_list}")
+                        
+                        es_client = Elasticsearch(hosts="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), timeout=5, verify_certs=False)
 
-                    if es_client.ping():
+                        if not es_client.ping():
+                            status_code = 500
+                            health_chk.append(False)
+                            continue
+
                         status_code = 200
-                    else:
-                        status_code = 500
-                   
-                    # response_time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
-                    response_time = EndTime - StartTime
-                    logging.info(f"[{service_url} Request completed in {response_time:.4f} seconds")
+                        health_chk.append(True)
                     
-                    ''' response time'''
-                    # lock.acquire()
-                    uptime_export_usage_gauge_g.labels(
-                        server_job=socket.gethostname(), 
-                        env=self.service_json.get("env"), 
-                        service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1), 
-                        url=service_url,
-                        # status_code=str(resp.status_code)
-                        status_code=str(status_code)
-                        )\
-                    .set(response_time)
-                    # .set(round(response_time, 3))
-                    # .set(roundtrip)
-                    # lock.release()
+                        """
+                        # Execute an operation (e.g., a search query)
+                        # You can also set a request_timeout for individual requests
+                        response = es_client.search(
+                                index=os.getenv("es_index_name"),
+                                body={"query": {"match_all": {}}},
+                                request_timeout=10 # example of request-specific timeout
+                        )
 
-                    # Manually close the connection
-                    # response.close()
+                        # Get Elasticsearch's internal "took" time from the response
+                        # This measures server-side execution time
+                        server_took_time = response['took']
+                        logging.info(f"Server-side 'took' time: {server_took_time} milliseconds")
+                        """
+                            
+                        node_stats = es_client.nodes.stats()
+                        # logging.info(f"node_stats: {json.dumps(node_stats, indent=4)}")
+                        # Access specific stats, for example, total number of successful nodes
+                        successful_nodes = node_stats['_nodes']['successful']
+                        logging.info(f"Successfully retrieved stats from {successful_nodes} nodes.")
 
-                    health_chk.append(True)
-    
+                        EndTime = time.perf_counter()
+
+                        # response_time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
+                        response_time = EndTime - StartTime
+                        # logging.info(f"[{service_json.get('service_client')}][{service_url} Request completed in {response_time:.4f} seconds")
+
+                        for node_name in node_stats.get("nodes").keys():
+                            logging.info(f"node name : {node_stats.get('nodes').get(node_name).get('name')}")
+                            response_time = float((node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_time_in_millis'))  
+                                                  / (node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_total'))
+                                                  )
+                            # convert to seconds
+                            response_time = float(response_time/1000.0)
+
+                            logging.info(f"[{service_json.get('service_client')}][{service_url} Request completed in {response_time:.4f} seconds")
+
+                            ''' response time'''
+                            # lock.acquire()
+                            uptime_export_usage_gauge_g.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name')), 
+                                url=service_url,
+                                # status_code=str(resp.status_code)
+                                status_code=str(status_code)
+                                )\
+                            .set(response_time)
+
+                            cpu_gauge_g.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            ).set(node_stats.get('nodes').get(node_name).get('os').get('cpu').get('percent')) 
+
+                            jvm_gauge_g.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            ).set(node_stats.get('nodes').get(node_name).get('jvm').get('mem').get('heap_used_percent')) 
+                            
+                        break
+   
+
+                    elif service_json.get("service_client").lower() == 'http':
+
+                        # -- make a call to cluster for checking the disk space on all nodes in the cluster
+                        # s = requests.Session()
+                        resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
+                        
+                        # if not (resp.status_code == 200):
+                        #     return None
+                            
+                        response_time = resp.elapsed.total_seconds()
+                                        
+                        logging.info(f"[{service_json.get('service_client')}][{service_url} Request completed in {response_time:.4f} seconds")
+
+                        status_code = resp.status_code
+
+                        health_chk.append(True)
+
+                        ''' response time'''
+                        # lock.acquire()
+                        uptime_export_usage_gauge_g.labels(
+                            server_job=socket.gethostname(), 
+                            env=self.service_json.get("env"), 
+                            service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1), 
+                            url=service_url,
+                            # status_code=str(resp.status_code)
+                            status_code=str(status_code)
+                            )\
+                        .set(response_time)
+
                 except Exception as e:
                     logging.error(e)
                     health_chk.append(False)
 
                 time.sleep(1) # Wait a second between checks
 
-            ''' Set service health check'''
-            self.service_health_check(health_chk, service_json)
+            if not service_json.get("service_client").lower() == 'es':
+                ''' Set service health check'''
+                self.service_health_check(health_chk, service_json)
 
 
 def work(interval, config_each_json):

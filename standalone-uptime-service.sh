@@ -42,6 +42,7 @@ else
     source $VENV/Scripts/activate
 fi
 
+export es_index_name=".kibana"
 
 # See how we were called.
 case "$1" in

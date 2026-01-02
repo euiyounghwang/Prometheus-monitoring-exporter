@@ -4,11 +4,13 @@
         "service": [
             {
                 "service_name": "ES",
+                "service_client" : "es",
                 "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201",
                 "basic_auth" : "test"
             },
             {
                 "service_name": "Kafka_Connect",
+                "service_client" : "http",
                 "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201",
                 "basic_auth" : "test"
             }
@@ -19,11 +21,13 @@
         "service": [
             {
                 "service_name": "ES",
+                "service_client" : "es",
                 "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201",
                 "basic_auth" : "test"
             },
             {
                 "service_name": "Kafka_Connect",
+                "service_client" : "http",
                 "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201",
                 "basic_auth" : "test"
             }
