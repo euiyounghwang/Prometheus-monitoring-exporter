@@ -154,7 +154,7 @@ class Prometheus_Service_Export:
                             continue
 
                         status_code = 200
-                        health_chk.append(True)
+                        # health_chk.append(True)
                     
                         """
                         # Execute an operation (e.g., a search query)
@@ -209,13 +209,35 @@ class Prometheus_Service_Export:
                                 server_job=socket.gethostname(), 
                                 env=self.service_json.get("env"), 
                                 service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
-                            ).set(node_stats.get('nodes').get(node_name).get('os').get('cpu').get('percent')) 
+                            ).set(node_stats.get('nodes').get(node_name).get('process').get('cpu').get('percent')) 
+                            # .set(node_stats.get('nodes').get(node_name).get('os').get('cpu').get('percent')) 
 
                             jvm_gauge_g.labels(
                                 server_job=socket.gethostname(), 
                                 env=self.service_json.get("env"), 
                                 service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
                             ).set(node_stats.get('nodes').get(node_name).get('jvm').get('mem').get('heap_used_percent')) 
+
+                            status = es_client.cluster.health()['status']
+                            if status == 'green':
+                                print("The cluster is healthy and fully operational (all primary and replica shards are assigned).")
+                                service_health_value = 1
+                            elif status == 'yellow':
+                                print("The cluster is partially functional (all primary shards are assigned, but some replicas are not).")
+                                service_health_value = 2
+                            elif status == 'red':
+                                print("The cluster is in a critical state (one or more primary shards are unassigned). Some data may be unavailable.")
+                                service_health_value = 3
+                            else:
+                                print(f"Unknown cluster status: {status}")
+                                service_health_value = 3
+    
+                            uptime_service_health_gauge_g.labels(
+                            server_job=socket.gethostname(), 
+                            env=self.service_json.get("env"), 
+                            service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            )\
+                            .set(service_health_value)
                             
                         break
    
