@@ -3,7 +3,8 @@
 ELASTICSEARCH_EXPORT_PATH=/home/devuser/monitoring/es_exporter/elasticsearch_exporter-1.6.0.linux-386/
 #PATH=$PATH:$ELASTICSEARCH_EXPORT_PATH/bin
 SERVICE_NAME=elasticsearch-export-service
-ES_HOST=localhost:9200
+# ES_HOST=localhost:9200
+ES_HOST=es_monitoring:test@localhost:9200
 PORT=9201
 
 # See how we were called.
@@ -11,9 +12,11 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
+        nohup $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=https://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --es.ssl-skip-verify --web.listen-address :$PORT &> /dev/null &
+        #$ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=https://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --es.ssl-skip-verify --web.listen-address :$PORT
         # nohup $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=https://a:a@localhost:9200 --es.all --es.indices --es.timeout 20s --es.snapshots --es.ssl-skip-verify --web.listen-address :$PORT &> /dev/null &
         #nohup $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=http://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --web.listen-address :$PORT &> /dev/null &
-        $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=http://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --web.listen-address :$PORT
+        # $ELASTICSEARCH_EXPORT_PATH/elasticsearch_exporter --es.uri=http://$ES_HOST --es.all --es.indices --es.timeout 20s --es.snapshots --web.listen-address :$PORT
         ;;
   stop)
         # Stop daemons.
