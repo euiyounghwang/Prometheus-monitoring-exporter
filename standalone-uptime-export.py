@@ -97,6 +97,9 @@ class Prometheus_Service_Export:
         
     
     def get_header(self, basic_auth):
+        """
+        :param basic_auth: encoded basic auth value (i.e base64encoded(user:pass))
+        """
         header =  {
             'Content-type': 'application/json', 
             # 'Authorization' : 'Basic {}'.format(os.environ.get('BASIC_AUTH', '')),
@@ -131,6 +134,11 @@ class Prometheus_Service_Export:
                     .set(service_health_value)
         # lock.release()
 
+    # // set
+	# // lscpu
+	# // grep -c processor /proc/cpuinfo
+	# // free -g
+	# // df -kH /apps
     def service_uptime(self):
         logging.info(f"service_json loading : {json.dumps(self.service_json, indent=2)}")
         for service_json in self.service_json.get("service"):
