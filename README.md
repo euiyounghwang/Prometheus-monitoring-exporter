@@ -26,6 +26,11 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - Query: Prometheus Query via API (http://localhost:9090/api/v1/query?query=es_health_metric{server_job="localhost"})
   - HA : Thanos, Thanos Side car & Querier (https://bcho.tistory.com/1375) - Installation (https://github.com/thanos-io/thanos/releases)
 
+- Pusgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it
+  - Push : These jobs send their metrics (using Prometheus client libraries) to the Pushgateway via HTTP.
+  - Scrape: The Prometheus server is configured to scrape the Pushgateway like any other target, pulling the metrics from it. 
+  - Reference : https://stackoverflow.com/questions/40989737/how-to-push-metrics-with-python-and-prometheus-pushgateway
+
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html

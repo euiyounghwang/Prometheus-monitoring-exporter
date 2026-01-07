@@ -1,14 +1,25 @@
+name: prometheus-monitoring-services
+
 services:
   prometheus:
     image: prom/prometheus:latest
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+      # Mount the local prometheus.yml file into the container's config path.
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml 
+      # Optional: Persist Prometheus data on the host to retain metrics.
+      # - ./prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=2d # 90일보다 오래된 metrics는 삭제
+      - --storage.tsdb.retention.size=1GB # 10GB를 넘을 시 오래된 metrics 삭제
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/proemtheus/consoles
+      - --web.enable-admin-api
     ports:
       - '9090:9090'
     networks:
       - bridge
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
 
   # docker run -d -p 9091:9091 prom/pushgateway
   pushgateway:
@@ -32,6 +43,19 @@ services:
     depends_on:
       - prometheus
 
+  # docker run --rm -p 9100:9100 prom/node-exporter 
+  # docker compose up -d node-exporter
+  # https://github.com/prometheus/node_exporter/
+  node_exporter:
+    # http://localhost:9100/metrics
+    image: prom/node-exporter
+    container_name: node_exporter
+    depends_on:
+      - prometheus
+    restart: always
+    ports:
+      - 9100:9100
+      
   # This creates rabbit and opens the port.
   #docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 8080:15672 rabbitmq:3
   # Creates the RabbitMQ UI management and opens to port 9000   Then you can do http://localhost:9000/#/ to see rabbit working.
