@@ -29,7 +29,19 @@ services:
     restart: always
     networks:
       - bridge
-  
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    ports:
+      # Expose the Nginx port to the host machine (e.g., 8080)
+      - "8080:80"
+    volumes:
+      # Mount the Nginx config and htpasswd file into the container
+      - ./nginx_conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx_conf/.htpasswd:/etc/nginx/.htpasswd:ro
+    depends_on:
+      - pushgateway  
 
   grafana:
     image: grafana/grafana:latest

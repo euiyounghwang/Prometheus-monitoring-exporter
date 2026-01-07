@@ -1,0 +1,14 @@
+
+### Pushgateway with nginx to setup basic authentication
+
+```bash
+# Install apache2-utils if you don't have it (example for Debian/Ubuntu)
+# sudo apt install apache2-utils
+
+# Create a directory for Nginx config and the password file
+mkdir -p nginx_conf
+
+# Generate the password file. The command will prompt you for a password.
+# Replace 'pushgateway_user' with your desired username.
+htpasswd -c nginx_conf/.htpasswd pushgateway_user
+```
