@@ -83,7 +83,8 @@ es_service_jobs_each_api_performance_gauge_g = Gauge("es_service_jobs_each_api_p
 ''' es cluster search time using _cat api'''
 es_cluster_search_time_gauge_g = Gauge("es_cluster_search_time_metrics", 'Metrics scraped from localhost', ["server_job", "env", "category"])
 
-''' gauge with dict type'''
+''' lookup the name of envs'''
+lookup_env_gauge_g = Gauge("lookup_env_metrics", 'Metrics scraped from localhost', ["server_job", "env", "host", "desc"])
 
 ''' es_exporter_plugin'''
 es_exporter_cpu_usage_gauge_g = Gauge("es_exporter_cpu_metrics", 'Metrics scraped from localhost', ["server_job", "type", "name", "cluster"])
@@ -3454,6 +3455,16 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
     '''
     global api_performance_total_delay
 
+    def set_metrics_env(param_hosts, param_desc):
+        """
+        Docstring for set_metrics_env
+        
+        :param param_hosts: host list
+        :param param_desc: Description
+        """
+        for idx, host_element in enumerate(param_hosts):
+            lookup_env_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, host=host_element.split(":")[0], desc=param_desc.format(idx+1)).set(1)
+
     try:
         ''' Prometehus start server '''
         ''' *** '''
@@ -3463,6 +3474,14 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
         logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
         logging.info(f"es_http_host : {es_http_host}")
         logging.info(f"db_http_host : {db_http_host}")
+
+        ''' *****'''
+        ''' expose a metric for the name of env's'''
+        lookup_env_gauge_g._metrics.clear()
+        
+        set_metrics_env( monitoring_metrics.get("es_url").split(","), "ES Node_#{}")
+        set_metrics_env(monitoring_metrics.get("kafka_url").split(","), "DATA Transfer Node_#{}")
+        ''' *****'''
 
         StartedTime = datetime.datetime.now(tz=gloabal_default_timezone)
         while True:
