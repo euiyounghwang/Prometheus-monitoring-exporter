@@ -11,6 +11,7 @@ import logging
 import warnings
 import sys
 import threading
+import requests
 warnings.filterwarnings("ignore")
 
 # Create a global lock object
@@ -44,6 +45,49 @@ g = Gauge(
     registry=registry
 )
 
+
+def request_gateway_float(pushgateway_url, value):
+    """
+    params: pushgateway_url
+    params value: set the value for the metric
+    """
+    
+    headers = {'X-Requested-With': 'Python requests', 'Content-type': 'text/xml'}
+    url = "http://{}/metrics/job/test_job".format(pushgateway_url)
+    # url = "http://{}/metrics/job/{}/test_job/instance/instance_name".format(pushgateway_url)
+    data = "my_batch_job_duration_seconds {}\n".format(value)
+    r = requests.post(url, headers=headers, data=data)
+    print(r.reason)
+    print(r.status_code)
+
+
+def push_gateway_float(pushgateway_url, value):
+    """
+    params: pushgateway_url
+    params value: set the value for the metric
+    """
+    # Example 1: Delete all metrics for a specific job and instance
+    # This matches metrics pushed with the exact grouping key: {job="my_batch_job", instance="instance_1"}
+    # delete_from_gateway('http://localhost:9091', job='test_job', grouping_key={'instance': 'instance_1'})
+
+    # Example 2: Delete all metrics associated only with a specific job name, regardless of instance
+    # This matches metrics pushed with the grouping key: {job="my_other_job"}
+    # delete_from_gateway(pushgateway_url, job='test_job')
+
+    # Set the gauge value
+    g.set(value)
+    print(f"Job finished in {value:.2f} seconds.")
+
+    # Push the metrics to the Pushgateway
+    # Replace 'localhost:9091' with your Pushgateway address
+    # The 'job' label is essential for grouping metrics in the Pushgateway
+    push_to_gateway(
+            pushgateway_url,
+            job='test_job',
+            registry=registry
+    )
+
+
 def work(pushgateway_url):
     ''' 
     main logic (Check : http://localhost:9091/metrics)
@@ -72,26 +116,9 @@ def work(pushgateway_url):
         job_end_time = time.time()
         duration = job_end_time - job_start_time
 
-        # Example 1: Delete all metrics for a specific job and instance
-        # This matches metrics pushed with the exact grouping key: {job="my_batch_job", instance="instance_1"}
-        # delete_from_gateway('http://localhost:9091', job='test_job', grouping_key={'instance': 'instance_1'})
-
-        # Example 2: Delete all metrics associated only with a specific job name, regardless of instance
-        # This matches metrics pushed with the grouping key: {job="my_other_job"}
-        # delete_from_gateway(pushgateway_url, job='test_job')
-
-        # Set the gauge value
-        g.set(duration)
-        print(f"Job finished in {duration:.2f} seconds.")
-
-        # Push the metrics to the Pushgateway
-        # Replace 'localhost:9091' with your Pushgateway address
-        # The 'job' label is essential for grouping metrics in the Pushgateway
-        push_to_gateway(
-            pushgateway_url,
-            job='test_job',
-            registry=registry
-        )
+        # push_gateway_float(pushgateway_url, duration)
+        request_gateway_float(pushgateway_url, duration)
+      
         print("Metrics pushed to Pushgateway.")
 
     except Exception as e:
