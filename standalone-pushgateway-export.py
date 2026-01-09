@@ -52,11 +52,12 @@ def request_gateway_float(pushgateway_url, value):
     params value: set the value for the metric
     """
     
-    headers = {'X-Requested-With': 'Python requests', 'Content-type': 'text/xml'}
+    # headers = {'X-Requested-With': 'Python requests', 'Content-type': 'text/xml'}
     url = "http://{}/metrics/job/test_job".format(pushgateway_url)
     # url = "http://{}/metrics/job/{}/test_job/instance/instance_name".format(pushgateway_url)
     data = "my_batch_job_duration_seconds {}\n".format(value)
-    r = requests.post(url, headers=headers, data=data)
+    # r = requests.post(url, headers=headers, data=data)
+    r = requests.post(url, data=data)
     print(r.reason)
     print(r.status_code)
 

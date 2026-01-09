@@ -28,7 +28,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 
 - Pusgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it (http://localhost:9091/metrics)
   - Push : These jobs send their metrics (using Prometheus client libraries) to the Pushgateway via HTTP. (i.e https://<pushgateway-host>:<port>/metrics/job/<job_name>)
-    - Intermediate Storage : Pushgateway stores the metric data received via HTTP requests in memory or on disk. Even after the work is completed, the metrics will keep the metrics.
+    - Intermediate Storage : Pushgateway stores the metric data received via HTTP requests in memory. Even after the work is completed, the metrics will keep the metrics.
     ```bash
     # Insert data into Pushgateway
     echo "test_metric 1" | curl --data-binary @- http://localhost:9091/metrics/job/test_job
@@ -52,7 +52,30 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     ```
   - Scrape: The Prometheus server is configured to scrape the Pushgateway like any other target, pulling the metrics from it. 
   - Reference : https://stackoverflow.com/questions/40989737/how-to-push-metrics-with-python-and-prometheus-pushgateway
-  
+  - __Installation Commands__
+    ```bash
+    wget https://github.com/prometheus/pushgateway/releases/download/v1.6.0/pushgateway-1.11.2.linux-amd64.tar.gz
+    tar -zxvf pushgateway-1.6.0.linux-amd64.tar.gz
+
+    vi /etc/systemd/system/pushgateway.service
+    [Unit]
+    Description=Pushgateway
+    Wants=network-online.target
+    After=network-online.target
+    
+    [Service]
+    Type=simple
+    ExecStart=/prometheus/pushgateway-1.6.0.linux-amd64/pushgateway
+    
+    [Install]
+    WantedBy=multi-user.target
+
+    systemctl enable pushgateway
+    systemctl start pushgateway
+    ```
+
+- Jaeger (https://github.com/jaegertracing/jaeger) : Jaeger is software that you can use to monitor and troubleshoot problems on interconnected software components called microservices. Several microservices communicate with each other to complete a single software function. Developers use Jaeger to visualize the chain of events in these microservice interactions to isolate the problem when something goes wrong. Jaeger is also called Jaeger Tracing because it follows, or traces, the path of a request through a series of microservice interactions.
+  - Docker URL: http://localhost:16686/
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html

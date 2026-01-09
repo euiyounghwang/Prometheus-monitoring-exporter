@@ -65,9 +65,29 @@ services:
     depends_on:
       - prometheus
     restart: always
+    networks:
+      - bridge
     ports:
       - 9100:9100
-      
+
+  # docker run -d --name jaeger -p 16686:16686 -p 4317:4317 -p 4318:4318 cr.jaegertracing.io/jaegertracing/jaeger:latest
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      # OTLP gRPC receiver port
+      - '4317:4317'
+      # OTLP HTTP receiver port
+      - '4318:4318'
+      # Jaeger UI port
+      - '16686:16686'
+    restart: always
+    environment:
+      # Enable OTLP reception
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - bridge
+
   # This creates rabbit and opens the port.
   #docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 8080:15672 rabbitmq:3
   # Creates the RabbitMQ UI management and opens to port 9000   Then you can do http://localhost:9000/#/ to see rabbit working.
