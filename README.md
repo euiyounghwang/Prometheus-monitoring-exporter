@@ -26,7 +26,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - Query: Prometheus Query via API (http://localhost:9090/api/v1/query?query=es_health_metric{server_job="localhost"})
   - HA : Thanos, Thanos Side car & Querier (https://bcho.tistory.com/1375) - Installation (https://github.com/thanos-io/thanos/releases)
 
-- Pusgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it (http://localhost:9091/metrics)
+- Pushgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it (http://localhost:9091/metrics)
   - Push : These jobs send their metrics (using Prometheus client libraries) to the Pushgateway via HTTP. (i.e https://<pushgateway-host>:<port>/metrics/job/<job_name>)
     - Intermediate Storage : Pushgateway stores the metric data received via HTTP requests in memory. Even after the work is completed, the metrics will keep the metrics.
     ```bash
