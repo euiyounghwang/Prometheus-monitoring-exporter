@@ -75,7 +75,11 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     ```
 
 - Jaeger (https://github.com/jaegertracing/jaeger) : Jaeger is software that you can use to monitor and troubleshoot problems on interconnected software components called microservices. Several microservices communicate with each other to complete a single software function. Developers use Jaeger to visualize the chain of events in these microservice interactions to isolate the problem when something goes wrong. Jaeger is also called Jaeger Tracing because it follows, or traces, the path of a request through a series of microservice interactions.
-  - Docker URL: http://localhost:16686/
+  - Docker URL: http://localhost:16686/, __Jaeger Client (Spans using UDP) -> Agent (Push) -> Collector -> Storage <- Jaeger-query <- Jaeger-UI__
+  - Reference : https://twofootdog.tistory.com/67#google_vignette
+  - __Installation Commands__
+  ```bash
+  ```
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
