@@ -1,0 +1,134 @@
+name: jaeger-monitoring-services
+services:
+  # Using Apache Zookeeper to co-ordinate Apache services
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.2.1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: "2181"
+    networks:
+      - jaeger-network
+
+  # Using Apache Kafka as a temporary storage and stream processing system (span post processing)
+  kafka:
+    image: confluentinc/cp-kafka:5.2.1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_BROKER_ID: 1
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      start_period: 15s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks:
+      - jaeger-network
+
+  # Using ElasticSearch as a storage for traces and logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    environment:
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - "bootstrap.memory_lock=true"
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"
+      - "xpack.security.enrollment.enabled=false"
+    ports:
+      - "127.0.0.1:9200:9200"
+    restart: on-failure
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    networks:
+      - jaeger-network
+
+  # Jaeger Collector Service
+  jaeger-collector-es:
+    image: jaegertracing/jaeger-collector:latest
+    container_name: jaeger-collector
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    ports:
+      - "14268:14268" # gRPC
+      - "14269:14269" # TChannel
+      - "4317:4317" # OTLP gRPC (OpenTelemetry default)
+      - "4318:4318" # OTLP HTTP (OpenTelemetry default)
+    depends_on:
+      - elasticsearch
+    networks:
+      - jaeger-network
+
+  # Jaeger Collector Service
+  jaeger-collector:
+    image: jaegertracing/jaeger-collector:1.57
+    hostname: jaeger-collector
+    ports:
+      - "14269:14269"
+      - "14268:14268"
+      - "14267:14267"
+      - "9411:9411"
+    environment:
+      LOG_LEVEL: "info"
+      SPAN_STORAGE_TYPE: "kafka"
+      KAFKA_PRODUCER_BROKERS: "kafka:9092"
+      METRICS_BACKEND: "prometheus"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - jaeger-network
+
+  # Jaeger Query Service and UI
+  jaeger-query:
+    image: jaegertracing/jaeger-query:latest
+    container_name: jaeger-query
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "16687:16687" # Query port
+    depends_on:
+      - elasticsearch
+      - jaeger-collector
+    networks:
+      - jaeger-network
+
+  service-b:
+    build:
+      context: .
+      dockerfile: service-b/Dockerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4317
+      - OTEL_EXPORTER_OTLP_INSECURE=true
+    ports:
+      - '8082:8082'
+    depends_on:
+      - jaeger-collector
+    networks:
+      - jaeger-network
+      
+volumes:
+  esdata:
+
+networks:
+  jaeger-network:
+      driver: bridge

@@ -75,8 +75,10 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     ```
 
 - Jaeger (https://github.com/jaegertracing/jaeger) : Jaeger is software that you can use to monitor and troubleshoot problems on interconnected software components called microservices. Several microservices communicate with each other to complete a single software function. Developers use Jaeger to visualize the chain of events in these microservice interactions to isolate the problem when something goes wrong. Jaeger is also called Jaeger Tracing because it follows, or traces, the path of a request through a series of microservice interactions.
-  - Docker URL: http://localhost:16686/, __Jaeger Client (Spans using UDP) -> Agent (Push) -> Collector -> Storage <- Jaeger-query <- Jaeger-UI__
-  - Reference : https://twofootdog.tistory.com/67#google_vignette
+  - Docker URL: http://localhost:16686/, __Jaeger Client (Generate Trace, Span, SpanContext using OpenTelemetry SDK and sending them to the Jaeger Agent/Collector, Spans using UDP) -> Agent (Push, Agent should be run on the host for services) -> Collector -> Storage (Elasticsearch, Prometheus) <- Jaeger-query <- Jaeger-UI__
+  - __Minimal docker-compose.yml__ : See  `./jaeger-msa-docker-compose.yml `
+  - To run the Jaeger query service using Docker Compose, the most common approach is to use the all-in-one image, which includes the agent, collector, query service, and UI in a single container for testing and development
+  - Reference : https://twofootdog.tistory.com/67#google_vignette, Download (https://www.jaegertracing.io/download/)
   - __Installation Commands__
   ```bash
   ```
