@@ -86,9 +86,9 @@ services:
       # - "14268:14268" # HTTP port for spans
 
       # OTLP gRPC receiver port
-      - '4317:4317'
+      - "4317:4317"
       # OTLP HTTP receiver port
-      - '4318:4318'
+      - "4318:4318"
       # Jaeger UI port
       - '16686:16686'
     # restart: always
