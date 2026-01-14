@@ -1,0 +1,6 @@
+# config-elasticsearch.yaml 예시 (Elasticsearch 배포 후 사용)
+storage:
+  type: elasticsearch
+  elasticsearch:
+    # Elasticsearch 주소 설정
+    hosts: ["http://localhost:9200"]
