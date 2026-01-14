@@ -282,7 +282,7 @@ class Prometheus_Service_Export:
                 except Exception as e:
                     logging.error(e)
                     health_chk.append(False)
-
+                                        
                 time.sleep(1) # Wait a second between checks
 
             if not service_json.get("service_client").lower() == 'es':
@@ -297,6 +297,12 @@ def work(interval, config_each_json):
 
     while True:
         try:
+            ''' initialize '''
+            uptime_service_health_gauge_g.clear()
+            # cpu_gauge_g.clear()
+            # jvm_gauge_g.clear()
+
+            ''' Performing'''
             generated_exporter.service_uptime()
 
         except (KeyboardInterrupt, SystemExit):

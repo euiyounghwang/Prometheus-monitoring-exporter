@@ -106,6 +106,22 @@ services:
     networks:
       - bridge
 
+  hotrod:
+    image: jaegertracing/example-hotrod:latest
+    # To run the latest trunk build, find the tag at Docker Hub and use the line below
+    # https://hub.docker.com/r/jaegertracing/example-hotrod-snapshot/tags
+    #image: jaegertracing/example-hotrod-snapshot:0ab8f2fcb12ff0d10830c1ee3bb52b745522db6c
+    ports:
+      - "8080:8080"
+      - "8083:8083"
+    command: ["all"]
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+    networks:
+      - bridge
+    depends_on:
+      - jaeger
+
   # This creates rabbit and opens the port.
   #docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 8080:15672 rabbitmq:3
   # Creates the RabbitMQ UI management and opens to port 9000   Then you can do http://localhost:9000/#/ to see rabbit working.

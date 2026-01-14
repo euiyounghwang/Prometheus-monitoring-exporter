@@ -96,6 +96,22 @@ services:
     networks:
       - jaeger-network
 
+  hotrod:
+    image: jaegertracing/example-hotrod:latest
+    # To run the latest trunk build, find the tag at Docker Hub and use the line below
+    # https://hub.docker.com/r/jaegertracing/example-hotrod-snapshot/tags
+    #image: jaegertracing/example-hotrod-snapshot:0ab8f2fcb12ff0d10830c1ee3bb52b745522db6c
+    ports:
+      - "8080:8080"
+      - "8083:8083"
+    command: ["all"]
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-query:4318
+    networks:
+      - jaeger-network
+    depends_on:
+      - jaeger-query
+
   # Jaeger Query Service and UI
   jaeger-query:
     image: jaegertracing/jaeger-query:latest
@@ -106,6 +122,10 @@ services:
     ports:
       - "16686:16686" # Jaeger UI
       - "16687:16687" # Query port
+      # OTLP gRPC receiver port
+      - "4317:4317"
+      # OTLP HTTP receiver port
+      - "4318:4318"
     depends_on:
       - elasticsearch
       - jaeger-collector
