@@ -282,6 +282,9 @@ class Prometheus_Service_Export:
                 except Exception as e:
                     logging.error(e)
                     health_chk.append(False)
+                    ''' initialize '''
+                    cpu_gauge_g.clear()
+                    jvm_gauge_g.clear()
                                         
                 time.sleep(1) # Wait a second between checks
 
