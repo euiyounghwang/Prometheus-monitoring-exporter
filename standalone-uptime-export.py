@@ -193,9 +193,10 @@ class Prometheus_Service_Export:
 
                         for node_name in node_stats.get("nodes").keys():
                             logging.info(f"node name : {node_stats.get('nodes').get(node_name).get('name')}")
-                            response_time = float((node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_time_in_millis'))  
-                                                  / (node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_total'))
-                                                  )
+
+                            if node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_total') > 0:
+                                response_time = (float(node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_time_in_millis'))  
+                                                    / (node_stats.get('nodes').get(node_name).get('indices').get('search').get('query_total')))
                             # convert to seconds
                             response_time = float(response_time/1000.0)
 
@@ -285,6 +286,7 @@ class Prometheus_Service_Export:
                     ''' initialize '''
                     cpu_gauge_g.clear()
                     jvm_gauge_g.clear()
+                    pass
                                         
                 time.sleep(1) # Wait a second between checks
 
