@@ -3,13 +3,13 @@
 
 Prometheus provides client libraries based on Python, Go, Ruby and others that we can use to generate metrics with the necessary labels. 
 - Such an exporter can be included directly in the code of your application
-- it can be run as a separate service that will poll one of your services and receive data from it, which will then be converted into the Prometheus format and sent to the Prometheus server. 
+- it can be run as a separate service that will poll one of your services and receive data from it, which will then be converted into the Prometheus format and sent to the Prometheus server. (https://pinggoopark.tistory.com/entry/Prometheus-%ED%94%84%EB%A1%9C%EB%A9%94%ED%85%8C%EC%9A%B0%EC%8A%A4%EC%9D%98-%EC%9E%A5%EC%A0%90)
 
 When Prometheus scrapes your instance's HTTP endpoint, the client library sends the current state of all tracked metrics to the server.
 
 The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service.
 Metrics can be exposed through a standalone web server, or through Twisted, WSGI and the node exporter textfile collector.
-- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security)
+- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security), Node Exporter, Prometheus Blackbox Exporter (Expose the metrics for HTTP, HTTPS, DNS, TCP, ICMP)
   - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
   - openssl x509 -in ./certificate.crt -subject -noout
   - cat web.yml
@@ -668,6 +668,16 @@ sudo netstat -nlp | grep :8083
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --create --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic connect-status --replication-factor 3 --partitions 10 --config cleanup.policy=compact
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --list  --zookeeper  localhost1:2181,localhost2:2181,localhost3:2181
 /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe  --zookeeper localhost1:2181,localhost2:2181,localhost3:2181 --topic A_QUEUE
+
+curl -XGET  'localhost:8083/connectors/' | jq
+vi a.json
+curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./a.json
+curl -XGET  'localhost:8083/connectors/' | jq
+curl -XGET  'localhost:8083/connectors/epq_wmxd_jdbc' | jq
+curl -XGET  'localhost:8083/connectors/epq_wmxd_jdbc/status' | jq
+ls -alrt
+vi a1.json
+curl -XPOST -H 'Content-type:application/json'   'localhost:8083/connectors' --data @./a1.json
 
 curl -XGET  'localhost:8083/connectors/' | jq
 curl -XPOST -H 'Content-type:application/json'   'localhost1:8083/connectors' --data @./a.json
