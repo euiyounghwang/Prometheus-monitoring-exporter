@@ -9,7 +9,7 @@ When Prometheus scrapes your instance's HTTP endpoint, the client library sends 
 
 The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service.
 Metrics can be exposed through a standalone web server, or through Twisted, WSGI and the node exporter textfile collector.
-- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security), Node Exporter, Prometheus Blackbox Exporter (Expose the metrics for HTTP, HTTPS, DNS, TCP, ICMP)
+- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security), Node Exporter, Prometheus Blackbox Exporter (https://github.com/prometheus/blackbox_exporter, Expose the metrics for HTTP, HTTPS, DNS, TCP, ICMP service by adding the service url as a parameter, Grafana Dashboard: https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/)
   - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
   - openssl x509 -in ./certificate.crt -subject -noout
   - cat web.yml
@@ -19,6 +19,32 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
         key_file: /certs/private.key
     basic_auth_users:
         es_view: base64.encode(test)
+  ```
+  - __Installation Commands__
+  ```bash
+  # blackbox-exporter
+  wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.18.0/blackbox_exporter-0.18.0.linux-amd64.tar.gz
+  ./blackbox_exporter-0.18.0.linux-amd64/blackbox_exporter --config.file=./blackbox.yml
+  http://<blackbox_exporter_host>:9115
+
+  # prometheus.yml
+  scrape_configs:
+  - job_name: 'blackbox_http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx] # blackbox.yml의 모듈 이름
+      target: ['www.google.com'] # 검사할 대상
+    static_configs:
+      - targets:
+          - http://<blackbox_exporter_host>:9115/probe?module=http_2xx&target=www.google.com # 실제로는 params로 전달됨
+  - job_name: 'blackbox_tcp'
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+      target: ['localhost:9090'] # Prometheus 서버 자체의 포트 확인 등
+    static_configs:
+      - targets:
+          - http://<blackbox_exporter_host>:9115/probe?module=tcp_connect&target=localhost:9090 # 실제로는 params로 전달됨
   ```
 
   - Run : /home/prometheus/prometheus-2.35.0.linux-amd64/prometheus --config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/prometheus.yml --storage.tsdb.path=/home/prometheus/prometheus-2.35.0.linux-amd64 --web.enable-lifecycle --web.config.file=/home/prometheus/prometheus-2.35.0.linux-amd64/config/web.yml
