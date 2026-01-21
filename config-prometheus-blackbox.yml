@@ -1,0 +1,14 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ipv4
+      # Optionally, follow redirects
+      # follow_redirects: true 
+  tcp_connect:
+    prober: tcp
+    timeout: 5s
+  icmp:
+    prober: icmp
+    timeout: 5s

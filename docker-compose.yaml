@@ -55,6 +55,20 @@ services:
     depends_on:
       - prometheus
 
+  blackbox-exporter:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox_exporter
+    restart: unless-stopped
+    ports:
+      - "9115:9115"
+    volumes:
+      # Mount the local blackbox.yml to the container's config path
+      - ./config-prometheus-blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    command:
+      - '--config.file=/etc/blackbox/blackbox.yml'
+    networks:
+      - bridge
+
   # docker run --rm -p 9100:9100 prom/node-exporter 
   # docker compose up -d node-exporter
   # https://github.com/prometheus/node_exporter/

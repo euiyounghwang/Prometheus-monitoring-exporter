@@ -9,7 +9,7 @@ When Prometheus scrapes your instance's HTTP endpoint, the client library sends 
 
 The prometheus_client package supports exposing metrics from software written in Python, so that they can be scraped by a Prometheus service.
 Metrics can be exposed through a standalone web server, or through Twisted, WSGI and the node exporter textfile collector.
-- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security), Node Exporter, Prometheus Blackbox Exporter (https://github.com/prometheus/blackbox_exporter, Expose the metrics for HTTP, HTTPS, DNS, TCP, ICMP service by adding the service url as a parameter, Grafana Dashboard: https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/)
+- Prometheus SSL: (Reference: https://velog.io/@zihs0822/Prometheus-Security), Node Exporter, Prometheus Blackbox Exporter (https://github.com/prometheus/blackbox_exporter, The blackbox exporter allows blackbox probing of endpoints over HTTP, HTTPS, DNS, TCP, ICMP and gRPC. Expose the metrics for HTTP, HTTPS, DNS, TCP, ICMP service by adding the service url as a parameter, Grafana Dashboard: https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/)
   - openssl req -x509 -newkey rsa:4096 -nodes -keyout private.key -out certificate.crt 
   - openssl x509 -in ./certificate.crt -subject -noout
   - cat web.yml
@@ -22,7 +22,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```
   - __Installation Commands__
   ```bash
-  # blackbox-exporter
+  # blackbox-exporter (Reference : https://hippogrammer.tistory.com/259)
   wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.18.0/blackbox_exporter-0.18.0.linux-amd64.tar.gz
   ./blackbox_exporter-0.18.0.linux-amd64/blackbox_exporter --config.file=./blackbox.yml
   http://<blackbox_exporter_host>:9115
@@ -33,10 +33,21 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     metrics_path: /probe
     params:
       module: [http_2xx] # blackbox.yml의 모듈 이름
-      target: ['www.google.com'] # 검사할 대상
+      #target: ['www.google.com'] # 검사할 대상
     static_configs:
       - targets:
-          - http://<blackbox_exporter_host>:9115/probe?module=http_2xx&target=www.google.com # 실제로는 params로 전달됨
+          #- http://<blackbox_exporter_host>:9115/probe?module=http_2xx&target=www.google.com # 실제로는 params로 전달됨
+          - www.a.com
+          - www.b.com
+    relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: <blackbox_exporter_host>:9115
+
+
   - job_name: 'blackbox_tcp'
     metrics_path: /probe
     params:
