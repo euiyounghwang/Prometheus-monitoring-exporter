@@ -120,6 +120,11 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```bash
   ```
 
+- gRPC (Google Remote Procedure Call) is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization
+  - __Installation Commands__
+  ```bash
+  ```
+
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
   - You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate, i.e. mycert.pem, with the command:
