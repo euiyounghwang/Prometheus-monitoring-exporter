@@ -1,0 +1,40 @@
+
+syntax = "proto3";
+import "google/protobuf/struct.proto";
+
+service Greeter {
+
+  // 함수: 기본
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+  // 함수: 서버 상태 확인하기
+  rpc GetServerStatus (StatusRequest) returns (StatusResponse);
+
+  // 함수: Json Format
+  rpc GetMetricsStatus (MetricsStatusRequest) returns (MetricsStatusResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+
+message StatusRequest {
+  string id = 1;
+}
+
+message StatusResponse {
+  bool active = 1;
+}
+
+message MetricsStatusRequest {
+  string env = 1;
+}
+
+message MetricsStatusResponse {
+  google.protobuf.Struct metrics = 1;
+}

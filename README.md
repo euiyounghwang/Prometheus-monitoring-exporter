@@ -123,6 +123,17 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
 - gRPC (Google Remote Procedure Call) is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization
   - __Installation Commands__
   ```bash
+  pip install grpcio grpcio-tools
+  Generate server.py (./gRPC/gRPC_server.py)
+  python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
+  Generate client.py (./gRPC/gRPC_client.py)
+
+  python ./gRPC_server.py
+  Server started, listening on 50052
+
+  $ python ./gRPC_client.py 
+  Will try to greet world ...
+  Greeter client received: Hello, azamman!
   ```
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
