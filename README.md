@@ -128,9 +128,11 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
   Generate client.py (./gRPC/gRPC_client.py)
 
+  export PYTHONDONTWRITEBYTECODE=1
   python ./gRPC_server.py
   Server started, listening on 50052
 
+  export PYTHONDONTWRITEBYTECODE=1
   $ python ./gRPC_client.py 
   Will try to greet world ...
   Greeter client received: Hello, azamman!
