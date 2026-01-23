@@ -7,6 +7,18 @@ import service_pb2_grpc
 
 from google.protobuf.struct_pb2 import Struct
 from service_pb2 import MetricsStatusResponse
+import sys
+
+
+# 로깅 설정
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 
 class Greeter(service_pb2_grpc.GreeterServicer):
     def SayHello(self, request, context):
@@ -17,8 +29,10 @@ class Greeter(service_pb2_grpc.GreeterServicer):
         return service_pb2.StatusResponse(active=True)
     
     def GetMetricsStatus(self, request, context):
+        logging.info(f"request : {request.env}")
+        
         metadata_dict = {"token": "my-auth-token", "trace_id": "12345"}
-
+        
         # metadata_struct = Struct()
         # metadata_struct.update(metadata_dict) # Update the Struct from a Python dict
 
@@ -43,5 +57,4 @@ def serve():
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
     serve()
