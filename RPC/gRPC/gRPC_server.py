@@ -8,6 +8,9 @@ import service_pb2_grpc
 from google.protobuf.struct_pb2 import Struct
 from service_pb2 import MetricsStatusResponse
 import sys
+from concurrent import futures
+import time
+from flask import Flask
 
 
 # 로깅 설정
@@ -43,7 +46,21 @@ class Greeter(service_pb2_grpc.GreeterServicer):
         # return request
 
         return service_pb2.MetricsStatusResponse(metrics=metadata_dict)
-        
+
+
+def run_grpc_server():
+    port = '50052'
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    service_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+    server.add_insecure_port('[::]:' + port)
+    server.start()
+    try:
+        while True:
+            logging.info("Server started, listening on " + port)
+            time.sleep(60) # One day in seconds
+    except KeyboardInterrupt:
+        server.stop(0)
+
 
 def serve():
     port = '50052'
@@ -57,4 +74,18 @@ def serve():
 
 
 if __name__ == '__main__':
-    serve()
+    # serve()
+    
+    # Start gRPC server in a separate thread/process for local testing
+    # Note: For production, manage concurrency carefully
+    import threading
+    grpc_thread = threading.Thread(target=run_grpc_server)
+    grpc_thread.daemon = True # Allows the main program to exit
+    grpc_thread.start()
+
+    # Run Flask app (this will block the main thread)
+    app = Flask(__name__)
+    @app.route('/')
+    def index():
+        return "Flask app is running alongside gRPC server!"
+    app.run(host="0.0.0.0", port=8000)

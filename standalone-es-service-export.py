@@ -28,6 +28,15 @@ import base64
 import pytz
 from requests.auth import HTTPBasicAuth
 from dotenv import load_dotenv
+import grpc
+
+import RPC.gRPC.service_pb2
+import RPC.gRPC.service_pb2_grpc
+
+from google.protobuf.struct_pb2 import Struct
+from RPC.gRPC.service_pb2 import MetricsStatusResponse
+from concurrent import futures
+
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -168,6 +177,32 @@ def hello():
     return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
     # return "Hello"
 
+
+''' gRPC'''
+class Greeter(RPC.gRPC.service_pb2_grpc.GreeterServicer):
+    def SayHello(self, request, context):
+        return RPC.gRPC.service_pb2.HelloReply(message=f'Hello, {request.name}!')
+    
+    # 함수 2 구현
+    def GetServerStatus(self, request, context):
+        return RPC.gRPC.service_pb2.StatusResponse(active=True)
+    
+    def GetMetricsStatus(self, request, context):
+        logging.info(f"request : {request.env}")
+        
+        # metadata_dict = {"token": "my-auth-token", "trace_id": "12345"}
+        
+        # metadata_struct = Struct()
+        # metadata_struct.update(metadata_dict) # Update the Struct from a Python dict
+
+        # request = MetricsStatusResponse(
+        #     metrics=metadata_struct
+        # )
+
+        # return request
+
+        return RPC.gRPC.service_pb2.MetricsStatusResponse(metrics=service_status_dict)
+    
 
 class oracle_database:
 
@@ -2550,8 +2585,9 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         logging.info(f"xmatters_webhook_url : {gloabl_configuration.get('config').get('xmatters_webhook_url')}")
         logging.info(f"ES Monitoring Credentail Plan [basic {base64.b64decode(os.environ.get('BASIC_AUTH_SH')).decode('utf-8') if 'BASIC_AUTH_SH' in os.environ else ''}]: {os.environ.get('BASIC_AUTH_SH', '')}")
+        logging.info(f"ES Monitoring Applicaion gRPC_port Server : {gRPC_port}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
-        
+                
         ''' It can be displayed the log if backlog is enabled'''
         if backlog:
             logging.info(f"Backlog Threashold : {gloabl_configuration.get('config').get('backlog_threshold')}")
@@ -4224,6 +4260,23 @@ def alert_certs_work(interval):
         pass
 
 
+
+def run_grpc_server(gRPC_port):
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    RPC.gRPC.service_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+    server.add_insecure_port('[::]:' + gRPC_port)
+    # server.add_insecure_port('[::]:50051')
+    server.start()
+    #server.wait_for_termination()
+
+    try:
+        while True:
+            print("Server started, listening on " + gRPC_port)
+            time.sleep(60) # One day in seconds
+    except KeyboardInterrupt:
+        server.stop(0)
+                    
+
 if __name__ == '__main__':
     '''
     ./standalone-export-run.sh -> ./standalone-es-service-export.sh status/stop/start
@@ -4307,6 +4360,7 @@ if __name__ == '__main__':
     global global_spark_master_node
     global global_spark_cluster_https
     global gloabal_default_timezone
+    global gRPC_port
 
     gloabal_default_timezone = pytz.timezone('US/Eastern')
 
@@ -4634,7 +4688,15 @@ if __name__ == '__main__':
                     db_http_thread_Omx_Backlog.daemon = True
                     db_http_thread_Omx_Backlog.start()
                     T.append(db_http_thread_Omx_Backlog)
-                
+
+        ''' gRPC server '''
+        # gRPC_port = "50052"
+        gRPC_port = str(50000 + (int(port)-9000))
+        grpc_thread = Thread(target=run_grpc_server, args=(gRPC_port, ))
+        grpc_thread.daemon = True # Allows the main program to exit
+        grpc_thread.start()
+        T.append(grpc_thread)
+         
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''

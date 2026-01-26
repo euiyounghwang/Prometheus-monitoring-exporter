@@ -129,13 +129,34 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   Generate client.py (./gRPC/gRPC_client.py)
 
   export PYTHONDONTWRITEBYTECODE=1
-  python ./gRPC_server.py
+  python ./RPC/gRPC/gRPC_server.py or ./gRPC-server.sh start
   Server started, listening on 50052
 
   export PYTHONDONTWRITEBYTECODE=1
-  $ python ./gRPC_client.py 
+  $ python ./RPC/gRPC/gRPC_client.py or ./gRPC-client.sh start
   Will try to greet world ...
   Greeter client received: Hello, azamman!
+
+  # ES Monitoring gRPC server
+  $  python ./RPC/gRPC/gRPC_client.py --gRPC_server_host localhost
+  Will try to greet world ...
+  2026-01-26 13:28:28,691 - root - INFO - {
+    "zookeeper": "Green",
+    "spark_custom_apps_list": "a_EXP,B_EXP",
+    "kafka": "Green",
+    "kibana": "Green",
+    "es_nodes": 4.0,
+    "kafka_connect_primary_node": "Green",
+    "kafka_nodes": 3.0,
+    "spark": "Green",
+    "logstash": "Green",
+    "es": "Green",
+    "kafka_connect_nodes": 3.0,
+    "kafka_connect": "Green",
+    "spark_custom_apps": 2.0,
+    "zookeeper_nodes": 3.0
+  }
+  (.venv) 
   ```
 
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
