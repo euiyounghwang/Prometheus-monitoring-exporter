@@ -146,8 +146,8 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   Greeter client received: Hello, azamman!
 
   # ES Monitoring gRPC server
-  $  python ./RPC/gRPC/gRPC_client.py --gRPC_server_host localhost
-  Will try to greet world ...
+  $  python ./RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev_new
+  Will try to get the health of the services from the gRPC server...
   2026-01-26 13:28:28,691 - root - INFO - {
     "zookeeper": "Green",
     "spark_custom_apps_list": "a_EXP,B_EXP",

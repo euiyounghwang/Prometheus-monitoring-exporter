@@ -29,13 +29,27 @@ logging.basicConfig(
     ]
 )
 
-def run(gRPC_server_host, param_env):
-    print("Will try to greet world ...")
+def run(gRPC_server_host, param_env, gRPC_port_json):
+    """
+    Docstring for run
+    gRPC_port_json
+    {
+        "localhost" : 500001
+    }
+    :param gRPC_server_host: gRPC server hostname
+    :param param_env: the name of env
+    :param gRPC_port_json: json file
+    """
+    print("Will try to get the health of the services from the gRPC server...")
+    
+    if str(param_env).lower() not in gRPC_port_json:
+        return {}
     
     ''' Local Test'''
     # with grpc.insecure_channel("{}:50052".format(gRPC_server_host)) as channel:
     ''' ES Monitoring Test '''
-    with grpc.insecure_channel("{}:50001".format(gRPC_server_host)) as channel:
+    with grpc.insecure_channel("{}:{}".format(gRPC_server_host, gRPC_port_json.get(str(param_env).lower()))) as channel:
+    # with grpc.insecure_channel("{}:50002".format(gRPC_server_host)) as channel:
         stub = service_pb2_grpc.GreeterStub(channel)
 
         '''
@@ -64,16 +78,41 @@ def run(gRPC_server_host, param_env):
         logging.info(json.dumps(Jsons_dict, indent=2))
 
 
+def get_gRPc_config_port(file):
+    """
+    Docstring for get_gRPc_config_port
+    
+    :param file: json path
+    """
+    try:
+        with open(file, 'r') as file:
+            data = json.load(file)
+            # The 'data' variable is now a Python dictionary or list
+            # print(data)
+            # print(type(data))
+            return data
+    except FileNotFoundError:
+        print("Error: The file 'data.json' was not found.")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+
+
 if __name__ == '__main__':
     '''
-    gRPC Client
-    python ./RPC/gRPC/gRPC_client.py --gRPC_server_host localhost
+    # gRPC Client
+    # Run the command to start gRPC client service
+    python ./RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev
+    # Run the command to start gRPC client service using shell script
     ./gRPC_client.sh start
     '''
     parser = argparse.ArgumentParser(description="Script that might allow us to get the response fromm the gRPC server")
+    parser.add_argument('--file', dest='file', default="./RPC/gRPC/gRPC_config.json", help='file')
     parser.add_argument('--gRPC_server_host', dest='gRPC_server_host', default="localhost", help='gRPC_server_host')
     parser.add_argument('--env', dest='env', default="Dev", help='env')
     args = parser.parse_args()
+
+    if args.file:
+        file = args.file
 
     if args.gRPC_server_host:
         gRPC_server_host = args.gRPC_server_host
@@ -81,8 +120,10 @@ if __name__ == '__main__':
     if args.env:
         env = args.env
 
+    gRPC_port_json = get_gRPc_config_port(file)
+
     try:
-        run(gRPC_server_host, env)
+        run(gRPC_server_host, env, gRPC_port_json)
 
     except Exception as e:
         logging.error(e)
