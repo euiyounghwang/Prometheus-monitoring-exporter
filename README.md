@@ -124,8 +124,16 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - __Installation Commands__
   ```bash
   pip install grpcio grpcio-tools
+
+  # Implement the gRPC Server - Run the gRPC server in a separate thread while the main process runs the Flask app.
+  # pip install gunicorn
+  # gunicorn --bind 0.0.0.0:8000 --workers 3 gRPC_server:app
   Generate server.py (./gRPC/gRPC_server.py)
+
+  # Use the grpcio-tools package to compile the .proto file and generate necessary Python classes for the client and server stubs. The command looks something like this
   python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
+  
+  # Implement the gRPC Client
   Generate client.py (./gRPC/gRPC_client.py)
 
   export PYTHONDONTWRITEBYTECODE=1

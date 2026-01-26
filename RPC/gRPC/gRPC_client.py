@@ -16,6 +16,9 @@ import dotenv
 # Reload the variables from your .env file, overriding existing ones
 dotenv.load_dotenv(".env", override=True)
 
+''' export PYTHONDONTWRITEBYTECODE=1 '''
+sys.dont_write_bytecode = True
+
 
 # 로깅 설정
 logging.basicConfig(
