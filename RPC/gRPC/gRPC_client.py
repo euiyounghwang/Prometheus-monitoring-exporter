@@ -100,7 +100,7 @@ def get_gRPc_config_port(file):
 if __name__ == '__main__':
     '''
     # gRPC Client
-    # Run the command to start gRPC client service
+    # Run the command to start a gRPC client service
     python ./RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev
     # Run the command to start gRPC client service using shell script
     ./gRPC_client.sh start
