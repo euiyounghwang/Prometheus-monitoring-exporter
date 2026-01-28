@@ -49,8 +49,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
-        # nohup $ES_SERVICE python $SCRIPTDIR/RPC/gRPC/gRPC_client.py &> /dev/null &
-        python $SCRIPTDIR/RPC/gRPC/gRPC_client.py
+        # nohup python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev &> /dev/null &
+        python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev
         ;;
   stop)
         # Stop daemons.
