@@ -49,8 +49,13 @@ case "$1" in
   start)
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
-        # nohup python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev &> /dev/null &
-        python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev
+        
+        # gRPC
+        # nohup python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env localhost &> /dev/null &
+        # python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env localhost
+
+        # gRPC Stream
+        python $SCRIPTDIR/RPC/gRPC_Stream/gRPC_client.py
         ;;
   stop)
         # Stop daemons.

@@ -120,7 +120,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```bash
   ```
 
-- gRPC (Google Remote Procedure Call) is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization
+- gRPC (Google Remote Procedure Call) is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization.
   - Example : https://blog.naver.com/agapeuni/222281338248 (Calculator)
   - __Installation Commands__
   ```bash

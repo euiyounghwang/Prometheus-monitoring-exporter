@@ -46,6 +46,17 @@ class Greeter(service_pb2_grpc.GreeterServicer):
         # return request
 
         return service_pb2.MetricsStatusResponse(metrics=metadata_dict)
+        
+        '''
+        2026-01-30 14:05:59,687 - root - ERROR - <_InactiveRpcError of RPC that terminated with:
+        status = StatusCode.INTERNAL
+        details = "Failed to serialize response!"
+        debug_error_string = "UNKNOWN:Error received from peer  {grpc_message:"Failed to serialize response!", grpc_status:13}"
+
+        # Streaming
+        for i in range(5):
+            yield service_pb2.MetricsStatusResponse(metrics=metadata_dict)
+        '''
 
 
 def run_grpc_server():

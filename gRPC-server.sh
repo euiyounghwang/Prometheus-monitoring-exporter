@@ -50,7 +50,8 @@ case "$1" in
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
         # nohup $ES_SERVICE python $SCRIPTDIR/RPC/gRPC/gRPC_server.py &> /dev/null &
-        python $SCRIPTDIR/RPC/gRPC/gRPC_server.py
+        # python $SCRIPTDIR/RPC/gRPC/gRPC_server.py
+        python $SCRIPTDIR/RPC/gRPC_Stream/gRPC_server.py
         ;;
   stop)
         # Stop daemons.

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+service DataService {
+  // 1. Server-side streaming: 요청 1개 -> 응답 여러 개
+  rpc GetStreamData(Request) returns (stream Response);
+
+  // 2. Client-side streaming: 요청 여러 개 -> 응답 1개
+  rpc UploadStreamData(stream Request) returns (Response);
+
+  // 3. Bidirectional streaming: 요청 여러 개 -> 응답 여러 개
+  rpc Chat(stream Request) returns (stream Response);
+}
+
+message Request { string data = 1; }
+message Response { string result = 1; }
