@@ -55,7 +55,10 @@ case "$1" in
         # python $SCRIPTDIR/RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env localhost
 
         # gRPC Stream
-        python $SCRIPTDIR/RPC/gRPC_Stream/gRPC_client.py
+        # python $SCRIPTDIR/RPC/gRPC_Stream/gRPC_client.py
+
+        # gRPC client establish the connection with gRPC server using Golang
+        python $SCRIPTDIR/RPC/golang_gRPC/gRPC_client.py
         ;;
   stop)
         # Stop daemons.

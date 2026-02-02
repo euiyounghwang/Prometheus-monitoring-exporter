@@ -120,7 +120,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```bash
   ```
 
-- gRPC (Google Remote Procedure Call) is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization.
+- gRPC (Google Remote Procedure Call) is is a remote procedure call (RPC) framework from Google. It uses Protocol Buffers as a serialization format and uses HTTP2 as the transport medium. gRPC is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization.
   - Example : https://blog.naver.com/agapeuni/222281338248 (Calculator)
   - __Installation Commands__
   ```bash
@@ -166,8 +166,33 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     "zookeeper_nodes": 3.0
   }
   (.venv) 
-  ```
 
+  # We’ll learn how Go and Python programs can communicate between each other using gRPC. (https://www.ardanlabs.com/blog/2020/06/python-go-grpc.html)
+  [Golang] If you’re starting a new project, create a new module by running the following command: (https://opensearch.org/docs/latest/clients/go/)
+  - go mod init <mymodulename>
+  - go mod tidy
+  
+  # Install library
+  go get google.golang.org/grpc
+  go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+  go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+  # Compile the .proto file for Golang server
+  protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative service.proto
+
+  # Compile the .proto file for Python client
+  python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
+
+  # Run the Server using Golang
+  $ go run ./gRPC_server.go 
+  2026/02/02 14:38:48 server listening at [::]:50051
+
+  # Run the Client using Python
+  $ ./gRPC_client.sh start
+  🦄 Starting gRPC-client
+  Greeter client received: Hello azamman
+  ```
+  
 - Jupyter Notebook for TLS : You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate
   - https://jupyter-notebook.readthedocs.io/en/6.2.0/public_server.html
   - You can start the notebook to communicate via a secure protocol mode by setting the certfile option to your self-signed certificate, i.e. mycert.pem, with the command:
