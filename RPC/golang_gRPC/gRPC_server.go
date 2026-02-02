@@ -18,6 +18,11 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
+/*
+go get google.golang.org/grpc
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+*/
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
