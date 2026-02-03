@@ -63,6 +63,35 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - Query: Prometheus Query via API (http://localhost:9090/api/v1/query?query=es_health_metric{server_job="localhost"})
   - HA : Thanos, Thanos Side car & Querier (https://bcho.tistory.com/1375) - Installation (https://github.com/thanos-io/thanos/releases)
 
+- Grafana Plugin : To manually install the Grafana plugin, you must download the plugin package from a repository, extract it into your Grafana plugins directory, and restart the Grafana server
+  - Add CSV plugin (https://grafana.com/docs/grafana/latest/administration/plugin-management/, https://grafana.github.io/grafana-csv-datasource/installation/, https://deyoun.tistory.com/80)
+    - __Installation Commands__
+        ```bash
+        # Download the CSV plugins (https://github.com/grafana/grafana-csv-datasource/releases)
+
+        # Extract and Copy them in into your Grafana plugins directory
+        unzip `/home/devuser/monitoring/grafana-8.0.0/data/plugins/marcusolsson-csv-datasource-0.6.21.linux_amd64.zip` 
+
+        # Then, restart Grafana
+        ```
+
+  - Clickhouse Server (https://github.com/ClickHouse/ClickHouse/releases)
+    - __Installation Commands__
+      ```bash
+      # Download tar file : https://github.com/ClickHouse/ClickHouse/releases
+      ```
+  - Clickhouse Plugin (https://github.com/grafana/clickhouse-datasource/releases)
+    - __Installation Commands__
+      ```bash
+      # If your Grafana server has internet access, the grafana-cli tool is a simpler method: 
+      grafana-cli plugins install grafana-clickhouse-datasource
+
+      # Manually installl the plugin
+      unzip grafana-clickhouse-datasource-<version>.zip -d /var/lib/grafana/plugins
+      sudo systemctl restart grafana-server
+      sudo service grafana-server restart
+      ```
+
 - Pushgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it (http://localhost:9091/metrics)
   - Push : These jobs send their metrics (using Prometheus client libraries) to the Pushgateway via HTTP. (i.e https://<pushgateway-host>:<port>/metrics/job/<job_name>)
     - Intermediate Storage : Pushgateway stores the metric data received via HTTP requests in memory. Even after the work is completed, the metrics will keep the metrics.
@@ -120,7 +149,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```bash
   ```
 
-- gRPC (Google Remote Procedure Call) is is a remote procedure call (RPC) framework from Google. It uses Protocol Buffers as a serialization format and uses HTTP2 as the transport medium. gRPC is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization.
+- gRPC (Google Remote Procedure Call) is is a remote procedure call (RPC) framework from Google. It uses Protocol Buffers as a serialization format and uses HTTP2 as the transport medium. gRPC is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization. Protocol Buffers (protobuf) is the data format gRPC uses.
   - Example : https://blog.naver.com/agapeuni/222281338248 (Calculator)
   - __Installation Commands__
   ```bash
@@ -147,7 +176,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   Greeter client received: Hello, azamman!
 
   # ES Monitoring gRPC server
-  $  python ./RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev_new
+  $ python ./RPC/gRPC/gRPC_client.py --file ./RPC/gRPC/gRPC_config.json --gRPC_server_host localhost --env dev_new
   Will try to get the health of the services from the gRPC server...
   2026-01-26 13:28:28,691 - root - INFO - {
     "zookeeper": "Green",
@@ -167,7 +196,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   }
   (.venv) 
 
-  # We’ll learn how Go and Python programs can communicate between each other using gRPC. (https://www.ardanlabs.com/blog/2020/06/python-go-grpc.html)
+  # We’ll learn how Go and Python programs can communicate between each other using gRPC. (https://www.ardanlabs.com/blog/2020/06/python-go-grpc.html, https://dev.to/shrsv/getting-started-with-grpc-in-golang-f14)
   [Golang] If you’re starting a new project, create a new module by running the following command: (https://opensearch.org/docs/latest/clients/go/)
   - go mod init <mymodulename>
   - go mod tidy
@@ -212,8 +241,6 @@ SSL/TLS servers
 
 - API Interface : DB Interface API to get the recors from the DB(https://github.com/euiyounghwang/DB-Interface-Export), ES Configuration API to get the configuration for all env's(https://github.com/euiyounghwang/es-config-interface), Kafka Interface API to get Offsets/ISR information(https://github.com/euiyounghwang/kafka_job_interface_service)
 
-
-- Grafana : Add CSV plugin (unzip `/home/devuser/monitoring/grafana-8.0.0/data/plugins/marcusolsson-csv-datasource-0.6.21.linux_amd64.zip`) and then restart Grafana, Documentation(https://grafana.com/docs/grafana/latest/administration/plugin-management/, https://grafana.github.io/grafana-csv-datasource/installation/, https://deyoun.tistory.com/80)
 
 - Gradio : Gradio is the fastest way to demo your machine learning model with a friendly web interface so that anyone can use it. Gradio is an open-source Python package that allows you to quickly build a demo or web application for your machine learning model, API, or any arbitrary Python function. You can then share a link to your demo or web application in just a few seconds using Gradio's built-in sharing features. No JavaScript, CSS, or web hosting experience needed!
 ```bash

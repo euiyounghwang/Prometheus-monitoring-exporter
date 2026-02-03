@@ -21,6 +21,37 @@ services:
     networks:
       - bridge
 
+  # docker run -d --name clickhouse-server -p 8123:8123 -p 9000:9000 clickhouse/clickhouse-server
+  # docker run --restart always -d -p 8123:8123 -p 9000:9000 -v clickhouse:/var/lib/clickhouse -e CLICKHOUSE_DB=test --name clickhouse --ulimit nofile=262144:262144 clickhouse/clickhouse-server
+  clickhouse-server:
+    image: clickhouse/clickhouse-server:latest
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+      - "9009:9009"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - ./config/config.xml:/etc/clickhouse-server/config.d/config.xml
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - bridge
+
+  clickhouse-client:
+    image: clickhouse/clickhouse-client:latest
+    networks:
+      - bridge
+    # Use 'command: ...' to connect to the server service upon startup if needed,
+    # or run interactively with 'docker compose run clickhouse-client'
+    command: bash -c "sleep 5 && clickhouse-client --host clickhouse-server"
+    depends_on:
+      clickhouse-server:
+        condition: service_healthy # Ensure the server is ready before client connects
+
   # docker run -d -p 9091:9091 prom/pushgateway
   pushgateway:
     image: prom/pushgateway:latest
@@ -200,6 +231,8 @@ services:
 
 volumes:
   influxdb_data: {}  # Volume for InfluxDB data
+  clickhouse_data: {}
+  clickhouse_logs: {}
 
 networks:
   bridge:
