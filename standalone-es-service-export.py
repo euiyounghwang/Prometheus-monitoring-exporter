@@ -1115,6 +1115,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' expose this varible to Server Active'''
                     is_over_free_Disk_space = False
                     nodes_diskspace_gauge_g._metrics.clear()
+                    # nodes_free_diskspace_gauge_g._metrics.clear()
                     for element_dict in resp.json():
                         for k, v in element_dict.items():
                             # logging.info(f"# k - {k}, # v for ES - {v}")
@@ -1295,6 +1296,7 @@ def get_metrics_all_envs(monitoring_metrics):
             is_over_free_Disk_space = False
             ''' expose metrics for each Kafka disk space'''
             nodes_diskspace_gauge_g2._metrics.clear()
+            # nodes_free_diskspace_gauge_g._metrics.clear()
             for element_dict in disk_space_memory_list:
                 for k, v in element_dict.items():
                     # logging.info(f"# k - {k}, # v for ES - {v}")
@@ -1820,7 +1822,7 @@ def get_metrics_all_envs(monitoring_metrics):
 
         ''' Clear the disk space for ES through audit alert'''
         # nodes_diskspace_gauge_g._metrics.clear()
-        # nodes_free_diskspace_gauge_g._metrics.clear()
+        nodes_free_diskspace_gauge_g._metrics.clear()
 
 
         ''' start time for the api performance tracking'''
