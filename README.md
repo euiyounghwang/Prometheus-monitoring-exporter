@@ -63,6 +63,10 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   - Query: Prometheus Query via API (http://localhost:9090/api/v1/query?query=es_health_metric{server_job="localhost"})
   - HA : Thanos, Thanos Side car & Querier (https://bcho.tistory.com/1375) - Installation (https://github.com/thanos-io/thanos/releases)
 
+- Grafana Dashboard
+  - Grafana Dashboard via Promtheus for the Elasticsearch CPU/Memory metrics using `./standalone-uptime-service.sh` (Screenshot : `./Grafana_Dashboard/Grafana-ES-CPU-Memory-using Uptime code.png`, `./Prometheus/Prometheus_Client_Uptime_Metrics_API_Main_UI`)
+  - Grafana Dashboard via Promtheus for the health of ES/Kafka services metrics using `./standalone-export-run.sh` (Screenshot : `./screenshot/Prometheus_Export_Service_Metric.png`)
+  
 - Grafana Plugin : To manually install the Grafana plugin, you must download the plugin package from a repository, extract it into your Grafana plugins directory, and restart the Grafana server
   - Add CSV plugin (https://grafana.com/docs/grafana/latest/administration/plugin-management/, https://grafana.github.io/grafana-csv-datasource/installation/, https://deyoun.tistory.com/80)
     - __Installation Commands__
