@@ -877,7 +877,10 @@ def get_metrics_all_envs(monitoring_metrics):
                             logging.info(f"{resp.json()}")
                             return None
                         
-                        logging.info(resp.status_code, resp.json())                
+                        logging.info(resp.status_code, resp.json())
+                        ''' Insrted log'''
+                        inserted_post_log(status="ES_RESET_REPLICA", message="[ES] Reset the replica {} to INDEX [{}]".format(number_of_replicas, unassgned_indic))
+                                                
                         
                 except Exception as e:
                     logging.error(e)
