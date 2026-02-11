@@ -298,15 +298,15 @@ class Prometheus_Service_Export:
 def work(interval, config_each_json):
     ''' main logic'''
 
+    ''' initialize '''
+    uptime_service_health_gauge_g.clear()
+    # cpu_gauge_g.clear()
+    # jvm_gauge_g.clear()
+
     generated_exporter = Prometheus_Service_Export(config_each_json)
 
     while True:
         try:
-            ''' initialize '''
-            uptime_service_health_gauge_g.clear()
-            # cpu_gauge_g.clear()
-            # jvm_gauge_g.clear()
-
             ''' Performing'''
             generated_exporter.service_uptime()
 
