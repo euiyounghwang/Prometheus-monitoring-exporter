@@ -1,0 +1,11 @@
+[
+    {
+        "env": "Local",
+        "service": "http://localhost:9201,http://localhost:9201",
+        "basic_auth" : "test",
+        "delete_indices_pattern" : ".monitoring-es-6*",
+        "date_pattern" : "%Y.%m.%d",
+        "threshold_days" : 2,
+        "deleted_commands" : true
+    }
+]
