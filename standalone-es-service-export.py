@@ -951,8 +951,12 @@ def get_metrics_all_envs(monitoring_metrics):
                                 unassgned_indics_list = get_unassigned_shards_lookup(es_cluster_call_protocal, each_es_host)
                                 ''' Insrted log'''
                                 inserted_post_log(status="ES_RESET_REPLICA", message="[ES] Reset the number of replica to INDEX [{}]".format(",".join(unassgned_indics_list)))
-                                ''' PUT the number of replicas to 0 and set it back to 1'''
-                                # retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
+
+                                ''' Testing this logic'''
+                                if 'PROD' not in global_env_name:
+                                    ''' PUT the number of replicas to 0 and set it back to 1'''
+                                    retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
+                                
                                 ''' update the message for the failed a list of index name'''
                                 saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name)  : "[Elasticsearch] Reset the number of replica to INDEX ['{}']".format(",".join(unassgned_indics_list))})
                             else:
