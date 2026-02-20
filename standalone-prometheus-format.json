@@ -1,0 +1,8 @@
+{
+    "local": {
+        "es_admin": "test"
+    },
+    "local1": {
+        "es_admin": "test1"
+    }
+}

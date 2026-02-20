@@ -900,7 +900,7 @@ def get_metrics_all_envs(monitoring_metrics):
             global ssl_certificates_expired_date_es, ssl_certificates_expired_date_spark
             ssl_certificates_expired_date_es = ""
             ssl_certificates_expired_date_spark = ""
-            
+
             for each_es_host in es_url_hosts_list:
 
                 es_basic_info = {}
@@ -911,9 +911,10 @@ def get_metrics_all_envs(monitoring_metrics):
                     es_urls = "{}://{}/_cluster/health".format(es_cluster_call_protocal, each_es_host)
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
                     resp = requests.get(url=es_urls, headers=get_header(), timeout=5, verify=False)
-                    # print('\n\n\n')
+                    print('\n\n\n')
                     # print(f"es_urls : {es_urls}")
-                    # print('\n\n\n')
+                    print(f"resp.status_code : {resp.status_code}")
+                    print('\n\n\n')
 
                     if not (resp.status_code == 200):
                         ''' save failure node with a reason into saved_failure_dict'''
@@ -986,7 +987,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         ...
                     ]
                     '''
-                    # logging.info(f"resp_basic_info - {resp_info}, {resp_info.json()}")
+                    # logging.info(f"resp_internal_basic_info - {resp_info}, {resp_info.json()}")
                     total_docs, total_indices, not_system_docs, not_system_indices = 0, 0, 0, 0
                     for each_json_info in list(resp_info.json()):
                         ''' Exclude the list of indices if indices has '.' as prefix to be used system indices such as .monitoring* or .kibana*'''
@@ -1000,56 +1001,65 @@ def get_metrics_all_envs(monitoring_metrics):
                             
                     es_basic_info.update({"total_docs" : total_docs, "total_indices" : total_indices, "docs" : not_system_docs, "indices" : not_system_indices})
 
-                    ''' Get expired date for the ssl certs from the ES cluster '''
-                    es_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}".format(global_es_configuration_host, each_es_host)
-                    resp_es_ssl_certs = requests.get(url=es_configuration_urls, timeout=30, verify=False)
-                    logging.info(f"{es_configuration_urls}")
-                    ssl_es_certificates_expired_date = resp_es_ssl_certs.json()['ssl_certs_expire_date'] 
+                    # print(f"es_basic_info - {es_basic_info}")
 
-                    ''' Get expired date for the ssl certs from the Spark cluster '''
-                    spark_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}:8480".format(global_es_configuration_host, global_spark_master_node.split(":")[0])
-                    resp_spark_ssl_certs = requests.get(url=spark_configuration_urls, timeout=30, verify=False)
-                    logging.info(f"{spark_configuration_urls}")
-                    ssl_spark_certificates_expired_date = resp_spark_ssl_certs.json()['ssl_certs_expire_date'] 
+                    try:
+                        ''' clear '''
+                        es_ssl_certificates_expired_date_gauge_g._metrics.clear()
 
-                    ''' clear '''
-                    es_ssl_certificates_expired_date_gauge_g._metrics.clear()
+                        ''' certificate_diff_days_threshold : Get this value from the ES configuration API'''
+                        certificate_diff_days_threshold = gloabl_configuration.get('config').get('certificate_diff_days_threshold')
 
-                    ''' certificate_diff_days_threshold : Get this value from the ES configuration API'''
-                    certificate_diff_days_threshold = gloabl_configuration.get('config').get('certificate_diff_days_threshold')
+                        ''' Get expired date for the ssl certs from the ES cluster '''
+                        es_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}".format(global_es_configuration_host, each_es_host)
+                        resp_es_ssl_certs = requests.get(url=es_configuration_urls, timeout=5, verify=False)
+                        logging.info(f"{es_configuration_urls}")
 
-                    ''' set value'''
-                    if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        ''' diff_days'''
-                        diff_days_es = subtract_dates_yyyymmdd(ssl_es_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
-                        es_certificate_health = 'Red' if int(diff_days_es) < certificate_diff_days_threshold else 'Green'
-                        es_certificate_status = 0 if int(diff_days_es) < certificate_diff_days_threshold else 1
-                        # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(es_certificate_status)
-                        ssl_certificates_expired_date_es = ssl_es_certificates_expired_date
-                    
-                    if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
-                        ''' diff_days'''
-                        diff_days_spark = subtract_dates_yyyymmdd(ssl_spark_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
-                        spark_certificate_health = 'Red' if int(diff_days_spark) < certificate_diff_days_threshold else 'Green'
-                        spark_certificate_status = 0 if int(diff_days_spark) < certificate_diff_days_threshold else 1
-                        # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
-                        es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(spark_certificate_status)
-                        ssl_certificates_expired_date_spark = ssl_spark_certificates_expired_date
+                        if resp_es_ssl_certs.status_code == 200:
+                            ssl_es_certificates_expired_date = resp_es_ssl_certs.json()['ssl_certs_expire_date'] 
 
+                            ''' set value'''
+                            if resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
+                                ''' diff_days'''
+                                diff_days_es = subtract_dates_yyyymmdd(ssl_es_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
+                                es_certificate_health = 'Red' if int(diff_days_es) < certificate_diff_days_threshold else 'Green'
+                                es_certificate_status = 0 if int(diff_days_es) < certificate_diff_days_threshold else 1
+                                # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(resp_es_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                                es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="ES Cluster (v.8.17.0)", node=each_es_host, certificate_health=es_certificate_health, diff_days="{:,}".format(diff_days_es), expiration_date=ssl_es_certificates_expired_date).set(es_certificate_status)
+                                ssl_certificates_expired_date_es = ssl_es_certificates_expired_date
+
+                        ''' Get expired date for the ssl certs from the Spark cluster '''
+                        spark_configuration_urls = "http://{}:8004/service/get_es_service_ssl_api?es_host=http://{}:8480".format(global_es_configuration_host, global_spark_master_node.split(":")[0])
+                        resp_spark_ssl_certs = requests.get(url=spark_configuration_urls, timeout=5, verify=False)
+                        logging.info(f"{spark_configuration_urls}")
+
+                        if resp_spark_ssl_certs.status_code == 200:
+                            ssl_spark_certificates_expired_date = resp_spark_ssl_certs.json()['ssl_certs_expire_date'] 
+
+                            if resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'] > 0:
+                                ''' diff_days'''
+                                diff_days_spark = subtract_dates_yyyymmdd(ssl_spark_certificates_expired_date, datetime.date.today().strftime("%Y-%m-%d"))
+                                spark_certificate_health = 'Red' if int(diff_days_spark) < certificate_diff_days_threshold else 'Green'
+                                spark_certificate_status = 0 if int(diff_days_spark) < certificate_diff_days_threshold else 1
+                                # es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(resp_spark_ssl_certs.json()['ssl_certs_expire_yyyymmdd'])
+                                es_ssl_certificates_expired_date_gauge_g.labels(server_job=domain_name_as_nick_name, env=global_env_name, service="Spark Cluster (master node)", node="{}:8480".format(global_spark_master_node.split(":")[0]), certificate_health=spark_certificate_health, diff_days="{:,}".format(diff_days_spark), expiration_date=ssl_spark_certificates_expired_date).set(spark_certificate_status)
+                                ssl_certificates_expired_date_spark = ssl_spark_certificates_expired_date
+
+                    except Exception as e:
+                        logging.error(f"{e}")
+                        pass
+
+                    # logging.info(f"resp_next_internal_basic_info - {resp.json()}, {es_basic_info}")
                     return resp.json(), es_basic_info
-                
+
                 except Exception as e:
-                    print('\n\n\n')
-                    logging.error(e)
-                    print('\n\n\n')
+                    logging.error(f"{each_es_host} - {e}")
                     pass
                 
             return None, None
 
         except Exception as e:
             logging.error(e)
-            pass
 
 
     def get_float_number(s):
@@ -1742,7 +1752,7 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' get the health of the cluseter and set value based on status/get the number of nodes in the cluster'''
         ''' The operation receives cluster health results from only one active node among several nodes. '''
         resp_es_health, resp_es_basic_info = get_elasticsearch_health(monitoring_metrics)
-        logging.info(f"resp_es_basic_info - {resp_es_basic_info}")
+        logging.info(f"\n\n\n***resp_es_basic_info - {resp_es_basic_info}***\n\n\n")
 
         end_time_func = datetime.datetime.now(tz=gloabal_default_timezone)
         ''' export the time to api performance tracking'''
