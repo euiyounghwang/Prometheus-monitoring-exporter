@@ -127,16 +127,16 @@ if __name__ == '__main__':
     ''' pip install Flask-HTTPAuth --trusted-host pypi.org --trusted-host files.pythonhosted.org --trusted-host pypi.org --trusted-host files.pythonhosted.org '''
     ''' FastAPI HTTP-Basic Implementation - http://pykestrel.medium.com/implementing-basic-authentication-with-python-fastapi-12f9718ff0ad'''
     '''
-    # Prometheus.yml configuration for the basic auth
     scrape_configs:
-      - job_name: 'example-app'
-        metrics_path: /metrics
-        scheme: https
-        static_configs:
-        - targets: ['localhost:8080']
-        basic_auth:
-        username: prometheus
-        password: <secret> # Can be a secret or a plaintext value, though plaintext is not recommended
+  - job_name: 'example-app'
+    metrics_path: /metrics
+    scheme: https
+    static_configs:
+      - targets: ['localhost:8080']
+    basic_auth:
+      username: prometheus
+      password: <secret> # Can be a secret or a plaintext value, though plaintext is not recommended
+
     '''
 
     print(pyfiglet.figlet_format('ES Monitoring!',font= 'doom'))
