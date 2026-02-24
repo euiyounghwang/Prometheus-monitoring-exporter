@@ -79,10 +79,32 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
         # Then, restart Grafana
         ```
 
+- Clickhouse
   - Clickhouse Server (https://github.com/ClickHouse/ClickHouse/releases)
     - __Installation Commands__
       ```bash
       # Download tar file : https://github.com/ClickHouse/ClickHouse/releases
+      sudo vi /etc/clickhouse-server/config.d/listen.xml
+      sudo vi /etc/clickhouse-server/config.d/listen.xml
+      <listen_host>0.0.0.0</listen_host>
+      sudo -u clickhouse /usr/bin/clickhouse-server --config-file /etc/clickhouse-server/config.xml
+
+      sudo systemctl status clickhouse-server.service
+      sudo service clickhouse-server status
+
+      [devuser@localhost ~]$ sudo service clickhouse-server start
+      chown -R clickhouse: '/var/run/clickhouse-server/'
+      Will run sudo --preserve-env -u 'clickhouse' /usr/bin/clickhouse-server --config-file /etc/clickhouse-server/config.xml --pid-file /var/run/clickhouse-server/clickhouse-server.pid --daemon
+      Waiting for server to start
+      Waiting for server to start
+      Server started
+      # Dockerfile
+
+      # ClickHouse Server using Docker
+      docker run -d --name clickhouse-server -p 8123:8123 -p 9000:9000 --ulimit nofile=262144:262144 clickhouse/clickhouse-server
+
+      # ClickHouse Client Connection
+      docker exec -it clickhouse-server clickhouse-client
       ```
   - Clickhouse Plugin (https://github.com/grafana/clickhouse-datasource/releases)
     - __Installation Commands__
@@ -94,6 +116,28 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
       unzip grafana-clickhouse-datasource-<version>.zip -d /var/lib/grafana/plugins
       sudo systemctl restart grafana-server
       sudo service grafana-server restart
+      ```
+  - Clickhouse DB
+    - __SQL Commands__
+      ```bash
+      -- 데이터베이스 생성
+      CREATE DATABASE IF NOT EXISTS mydb;
+      USE mydb;
+
+      -- 테이블 생성 (MergeTree 엔진 필수)
+      CREATE TABLE IF NOT EXISTS test_table (
+          id UInt64,
+          name String,
+          timestamp DateTime,
+          value Float64
+      ) ENGINE = MergeTree()
+      ORDER BY (timestamp, id);
+
+      INSERT INTO test_table (id, name, timestamp, value) VALUES (1, 'item1', now(), 10.5);
+      INSERT INTO test_table (id, name, timestamp, value) VALUES (2, 'item2', now(), 20.0);
+
+      -- 대량 데이터 집계 쿼리
+      SELECT name, sum(value) FROM test_table GROUP BY name;
       ```
 
 - Pushgateway: The Prometheus Pushgateway (https://github.com/prometheus/pushgateway) is an intermediary service that allows short-lived or batch jobs, which can't be scraped directly by Prometheus, to send (push) their metrics to it (http://localhost:9091/metrics)
@@ -713,7 +757,7 @@ python ./standalone-es-service-export.py --interface http --db_http_host localho
 ### Service Maintance
 - Kafka Service
 ```bash
- /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe --zookeeper localhost.am.co.gxo.com:2181,localhost.am.co.gxo.com:2181,localhost.am.co.gxo.com:2181 --topic ELASTIC_PIPELINE_QUEUE
+ /apps/kafka_2.11-0.11.0.0/bin/kafka-topics.sh --describe --zookeeper localhost.am.co.gxo.com:2181,localhost.am.co.:.com:2181,localhost.am.co.gxo.com:2181 --topic ELASTIC_PIPELINE_QUEUE
 
 ./test_jdbc.json
 {
