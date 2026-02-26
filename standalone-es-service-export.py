@@ -4349,7 +4349,9 @@ if __name__ == '__main__':
     parser.add_argument('--backlog_omx_enable', dest="backlog_omx_enable", default="False", help='If true, it will get backlog from DB\'s.')
     # parser.add_argument('--kafka_sql', dest='kafka_sql', default="select * from test", help='kafka_sql')
     ''' request DB interface restpi insteady of connecting db dircectly'''
-    parser.add_argument('--db_http_host', dest='db_http_host', default="http://localhost:8002", help='db restapi url')
+    parser.add_argument('--db_http_host', dest='db_http_host', default="localhost:8002", help='db restapi url')
+    ''' db_dt_node acesss if db api is running on dt node'''
+    parser.add_argument('--db_dt_node', dest='db_dt_node', default="localhost:8002", help='db_dt_node')
     ''' xMatters is running'''
     parser.add_argument('--xMatters', dest='xMatters', default="False", help='xMatters API Use?')
     parser.add_argument('--certs_alert', dest='certs_alert', default="False", help='certs_alert')
@@ -4500,6 +4502,9 @@ if __name__ == '__main__':
     ''' request DB interface restpi insteady of connecting db dircectly'''
     if args.db_http_host:
         db_http_host = args.db_http_host
+
+    if args.db_dt_node:
+        db_dt_node = args.db_dt_node
     ''' ----------------------------------------------------------------------------------------------------------------'''
 
     ''' point out to same host'''
@@ -4662,6 +4667,8 @@ if __name__ == '__main__':
             # db_http_thread.start()
             # T.append(db_http_thread)
 
+            db_api_host = db_dt_node if db_dt_node else db_http_host
+
             # -- Interval for checking the data pipelines
             if global_env_name == 'DEV':
                 # print('\n\n\n\n\n\n')
@@ -4675,21 +4682,21 @@ if __name__ == '__main__':
             db_wmx_omx_list = str(db_url).split(",")
 
             ''' last argument is for multiple db connection'''
-            db_http_thread_Wmx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_http_host, db_wmx_omx_list[0], 'WMx', multiple_db))
+            db_http_thread_Wmx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_api_host, db_wmx_omx_list[0], 'WMx', multiple_db))
             db_http_thread_Wmx.daemon = True
             db_http_thread_Wmx.start()
             T.append(db_http_thread_Wmx)
 
             ''' Update Kafka Offset '''
             """
-            db_http_thread_Wmx_Offset = Thread(target=db_jobs_kafka_offset_tb, args=(300, None, kafka_sql, db_http_host, db_wmx_omx_list[0]))
+            db_http_thread_Wmx_Offset = Thread(target=db_jobs_kafka_offset_tb, args=(300, None, kafka_sql, db_api_host, db_wmx_omx_list[0]))
             db_http_thread_Wmx_Offset.daemon = True
             db_http_thread_Wmx_Offset.start()
             T.append(db_http_thread_Wmx_Offset)
             """
 
             if multiple_db:
-                db_http_thread_Omx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_http_host, db_wmx_omx_list[1], 'OMx', multiple_db))
+                db_http_thread_Omx = Thread(target=db_jobs_work, args=(db_jobs_interval, None, sql, db_api_host, db_wmx_omx_list[1], 'OMx', multiple_db))
                 db_http_thread_Omx.daemon = True
                 db_http_thread_Omx.start()
                 T.append(db_http_thread_Omx)
@@ -4697,13 +4704,13 @@ if __name__ == '__main__':
             
             ''' Get backlogs.. only for checking WMx backlog'''
             if backlog:
-                db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[0], 'WMx'))
+                db_http_thread_Wmx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_api_host, db_wmx_omx_list[0], 'WMx'))
                 db_http_thread_Wmx_Backlog.daemon = True
                 db_http_thread_Wmx_Backlog.start()
                 T.append(db_http_thread_Wmx_Backlog)
 
                 if backlog_omx_enable:
-                    db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_http_host, db_wmx_omx_list[1], 'OMx'))
+                    db_http_thread_Omx_Backlog = Thread(target=db_jobs_backlogs_work, args=(300, None, sql_backlog, db_api_host, db_wmx_omx_list[1], 'OMx'))
                     db_http_thread_Omx_Backlog.daemon = True
                     db_http_thread_Omx_Backlog.start()
                     T.append(db_http_thread_Omx_Backlog)
