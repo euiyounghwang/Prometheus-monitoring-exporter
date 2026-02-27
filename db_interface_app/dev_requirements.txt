@@ -1,0 +1,5 @@
+JayDeBeApi==1.2.3
+jpype1==1.6.0
+packaging==26.0
+psycopg2-binary==2.9.11
+pytz==2025.2

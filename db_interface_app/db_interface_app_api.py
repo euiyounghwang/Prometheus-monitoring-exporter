@@ -12,9 +12,11 @@ import logging
 import threading
 from threading import Thread
 import pytz
+from flask import Flask, render_template, jsonify, request
+import dotenv
 import warnings
 warnings.filterwarnings("ignore")
-
+from pathlib import Path
 
 """
 JayDeBeApi      1.2.3
@@ -35,6 +37,11 @@ logging.basicConfig(
     ]
 )
 
+
+''' pip install python-dotenv'''
+# load_dotenv() # will search for .env file in local folder and load variables 
+# Reload the variables from your .env file, overriding existing ones
+dotenv.load_dotenv(dotenv_path=f"{os.path.abspath(os.getcwd())}/.env", override=True)
 
 
 class Util:
@@ -117,7 +124,6 @@ class oracle_database:
         Init JPYPE StartJVM
         '''
         try:
-
             if jpype.isJVMStarted():
                 return
         
@@ -135,10 +141,12 @@ class oracle_database:
         finally:
             jpype.java.lang.Thread.detach()
             jpype.java.lang.Thread.attachAsDaemon()
-
+ 
 
     def set_init_JVM_shutdown(self):
-        jpype.shutdownJVM() 
+        # jpype.shutdownJVM() 
+        if jpype.isJVMStarted():
+            jpype.shutdownJVM() 
    
 
     def set_db_connection(self):
@@ -162,7 +170,8 @@ class oracle_database:
     def set_db_disconnection(self):
         ''' DB Disconnect '''
         self.db_conn.close()
-        print("Disconnected to Oracle database successfully!") 
+        logging.info("Disconnected to Oracle database successfully!") 
+        print("\n\n")
 
     
     def get_db_connection(self):
@@ -221,29 +230,56 @@ def oracle(db_url, sql):
         # df = pd.DataFrame(results, columns=tuple(zip(*cursor.description))[0])
         # print(df.head())
 
+        return db_rows_list
+
     except Exception as e:
         print(e)
-        pass
+        # pass
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("# Interrupted..")
 
     finally:
         database_object.set_db_disconnection()
         # database_object.set_init_JVM_shutdown()
 
 
+app = Flask(__name__)
 
-def work(db_url, sql, interval):
-    ''' main logic'''
-    while True:
-        try:
-            
-            print(f"# Performing..")
-            oracle(db_url, sql)
+@app.route('/')
+def desc():
+    # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
+    return {
+        "app" : "db_interface_app_api.py",
+        "started_time" : datetime.datetime.now()
+    }
 
-        except Exception as e:
-            logging.error(e)
-            pass
-        
-        time.sleep(interval)
+
+@app.route('/db_interface', methods=['GET'])
+def db_interface_get():
+    try:
+        logging.info(f"GET Methods...")
+        # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
+        return oracle(os.getenv("DB_URL"), os.getenv("SQL")), 200
+    except Exception as e:
+        logging.error(e)
+        # return jsonify(error=404, message=str(e)), 404
+        return {"error" : str(e)}, 404
+
+
+@app.route('/db_interface', methods=['POST'])
+def db_interface():
+    try:
+        logging.info(f"POST Methods...")
+        # Access JSON data using request.get_json()
+        data = request.get_json(force=True)
+        # if request.method == 'POST':
+        # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
+        return oracle(data.get('DB_URL'), data.get('SQL')), 200
+    
+    except Exception as e:
+        # return jsonify(error=404, message=str(e)), 404
+        logging.error(e)
+        return {"error" : str(e)}, 404
 
 
 if __name__ == "__main__":
@@ -252,20 +288,11 @@ if __name__ == "__main__":
     python ./test_db_connection.py --db oracle --url jdbc:oracle:thin:test/test@localhost:12343/test --sql "SELECT * FROM SELECT DBMS_LOB.SUBSTR(JSON_OBJECT, DBMS_LOB.GETLENGTH(JSON_OBJECT)) * FROM test"
     '''
     parser = argparse.ArgumentParser(description="Running db test script")
-    parser.add_argument('-d', '--db', dest='db', default="postgres", help='choose one of db')
-    # parser.add_argument('-u', '--url', dest='url', default="postgresql://postgres:1234@localhost:5432/postgres", help='db url')
-    parser.add_argument('-u', '--url', dest='url', default="jdbc:oracle:thin:test/test@localhost:12343/test", help='db url')
-    parser.add_argument('-s', '--sql', dest='sql', default="select * from test", help='sql')
+    parser.add_argument('-p', '--port', dest='port', default=8002, help='port')
     args = parser.parse_args()
     
-    if args.db:
-        db_type = args.db
-
-    if args.url:
-        db_url = args.url
-    
-    if args.sql:
-        sql = args.sql
+    if args.port:
+        port = args.port
 
     # if db_type == 'postgres':
     #     postgres(db_url, sql)
@@ -279,21 +306,13 @@ if __name__ == "__main__":
     try:
         T = []
 
-        oracle(db_url, sql)
-        
-        # main_th = Thread(target=work, args=(db_url, sql, 60))
-        # main_th.daemon = True
-        # main_th.start()
-        # T.append(main_th)
-
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
-        # app.run(host="0.0.0.0", port=int(port)-4000)
-        # from waitress import serve
-        # _flask_port = port+1
-        # serve(app, host="0.0.0.0", port=_flask_port)
-        # logging.info(f"# Flask App's Port : {_flask_port}")
+        # app.run(host="0.0.0.0", port=int(port))
+        from waitress import serve
+        serve(app, host="0.0.0.0", port=port)
+        logging.info(f"# Flask App's Port : {port}")
 
         # wait for all threads to terminate
         for t in T:
@@ -304,5 +323,7 @@ if __name__ == "__main__":
         logging.info("# Interrupted..")
 
     finally:
+        # jpype.attachAsDaemon()
         logging.info("Standalone Prometheus Exporter Server exited..!")
+        # sys.exit()
     
