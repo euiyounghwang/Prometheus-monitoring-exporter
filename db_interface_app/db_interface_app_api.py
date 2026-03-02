@@ -13,6 +13,12 @@ import threading
 from threading import Thread
 import pytz
 from flask import Flask, render_template, jsonify, request
+
+import grpc
+import service_pb2
+import service_pb2_grpc
+from concurrent import futures
+
 import dotenv
 import warnings
 warnings.filterwarnings("ignore")
@@ -239,8 +245,9 @@ def oracle(db_url, sql):
         logging.info("# Interrupted..")
 
     finally:
-        database_object.set_db_disconnection()
-        # database_object.set_init_JVM_shutdown()
+        if database_object:
+            database_object.set_db_disconnection()
+            # database_object.set_init_JVM_shutdown()
 
 
 app = Flask(__name__)
@@ -282,17 +289,68 @@ def db_interface():
         return {"error" : str(e)}, 404
 
 
+
+class DBInterfacer(service_pb2_grpc.DBInterfacerServicer):
+    def SayHello(self, request, context):
+        return service_pb2.HelloReply(message=f'Hello, {request.name}!')
+    
+    def GetMetricsStatus(self, request, context):
+        logging.info(f"request : {request.db_url}, {request.sql}")
+
+        db_records = oracle(request.db_url, request.sql)
+        
+        # return service_pb2.DBSQLResponse(records=db_records)
+       
+        ''' In gRPC, the standard way to return a list of items is to define a message in your .proto file that contains a repeated field of the desired message type. '''
+        ''' In your Python gRPC server implementation, you populate the repeated field with the data you want to return. '''
+        # Create the response object
+        response = service_pb2.DBSQLResponse()
+
+        # Add Element messages to the repeated field
+        for each_record in db_records:
+            record = response.records.add()
+            record.PROCESSNAME = each_record['PROCESSNAME']
+            record.STATUS = each_record['STATUS']
+            record.ADDTS = each_record['ADDTS']
+            record.COUNT = each_record['COUNT']
+            record.DBID = each_record['DBID']
+        
+        return response
+            
+        
+
+def run_grpc_server(port):
+    # port = '50052'
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    service_pb2_grpc.add_DBInterfacerServicer_to_server(DBInterfacer(), server)
+    server.add_insecure_port('[::]:' + port)
+    server.start()
+    try:
+        while True:
+            # logging.info("Server started, listening on " + port)
+            time.sleep(60) # One day in seconds
+    except KeyboardInterrupt:
+        server.stop(0)
+
+
 if __name__ == "__main__":
     ''' 
+    export PYTHONDONTWRITEBYTECODE=1
+    pip install grpcio grpcio-tools
     python ./test_db_connection.py --db postgres --url postgresql://postgres:1234@localhost:5432/postgres --sql "SELECT * FROM postgres.user"
     python ./test_db_connection.py --db oracle --url jdbc:oracle:thin:test/test@localhost:12343/test --sql "SELECT * FROM SELECT DBMS_LOB.SUBSTR(JSON_OBJECT, DBMS_LOB.GETLENGTH(JSON_OBJECT)) * FROM test"
     '''
     parser = argparse.ArgumentParser(description="Running db test script")
     parser.add_argument('-p', '--port', dest='port', default=8002, help='port')
+    ''' server mode has http, gRPC to support the client'''
+    parser.add_argument('-s', '--server_mode', dest='server_mode', default='http', help='server_mode')
     args = parser.parse_args()
     
     if args.port:
         port = args.port
+
+    if args.server_mode:
+        server_mode = args.server_mode
 
     # if db_type == 'postgres':
     #     postgres(db_url, sql)
@@ -306,14 +364,26 @@ if __name__ == "__main__":
     try:
         T = []
 
-        ''' Expose this app to acesss index.html (./templates/index.html)'''
-        ''' Flask at first run: Do not use the development server in a production environment '''
-        ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
-        # app.run(host="0.0.0.0", port=int(port))
-        from waitress import serve
-        serve(app, host="0.0.0.0", port=port)
-        logging.info(f"# Flask App's Port : {port}")
-
+        if server_mode == 'http':
+            ''' Expose this app to acesss index.html (./templates/index.html)'''
+            ''' Flask at first run: Do not use the development server in a production environment '''
+            ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
+            # app.run(host="0.0.0.0", port=int(port))
+            from waitress import serve
+            serve(app, host="0.0.0.0", port=port)
+            logging.info(f"# Flask App's Port : {port}")
+        
+        elif server_mode == 'grpc':
+            ''' gRPC (Google Remote Procedure Call) is is a remote procedure call (RPC) framework from Google that can run in any environment. It uses Protocol Buffers as a serialization format and uses HTTP2 as the transport medium '''
+            ''' 
+            # Use the grpcio-tools package to compile the .proto file and generate necessary Python classes for the client and server stubs. The command looks something like this
+            python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. service.proto
+            '''
+            grpc_thread = threading.Thread(target=run_grpc_server, args=(str(port),))
+            grpc_thread.daemon = True # Allows the main program to exit
+            grpc_thread.start()
+            T.append(grpc_thread)
+    
         # wait for all threads to terminate
         for t in T:
             while t.is_alive():

@@ -226,8 +226,9 @@ def oracle(db_url, sql):
         pass
 
     finally:
-        database_object.set_db_disconnection()
-        # database_object.set_init_JVM_shutdown()
+        if database_object:
+            database_object.set_db_disconnection()
+            # database_object.set_init_JVM_shutdown()
 
 
 
@@ -248,6 +249,7 @@ def work(db_url, sql, interval):
 
 if __name__ == "__main__":
     ''' 
+    export PYTHONDONTWRITEBYTECODE=1
     python ./test_db_connection.py --db postgres --url postgresql://postgres:1234@localhost:5432/postgres --sql "SELECT * FROM postgres.user"
     python ./test_db_connection.py --db oracle --url jdbc:oracle:thin:test/test@localhost:12343/test --sql "SELECT * FROM SELECT DBMS_LOB.SUBSTR(JSON_OBJECT, DBMS_LOB.GETLENGTH(JSON_OBJECT)) * FROM test"
     '''

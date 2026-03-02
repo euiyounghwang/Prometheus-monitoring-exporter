@@ -1,0 +1,52 @@
+
+syntax = "proto3";
+import "google/protobuf/struct.proto";
+
+service DBInterfacer {
+
+  // 함수: 기본
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+  // 함수: Json Format
+  rpc GetMetricsStatus (DBSQLRequest) returns (DBSQLResponse);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+
+
+message DBSQLRequest {
+  string db_url = 1;
+  string sql = 2;
+}
+
+message Element {
+  // int32 a = 1;
+  // int32 b = 2;
+  string PROCESSNAME = 1;
+  string STATUS = 2;
+  string ADDTS = 3;
+  int32 COUNT = 4;
+  string DBID = 5;
+}
+
+message DBSQLResponse {
+  // Json
+  // google.protobuf.Struct records = 1;
+  // List
+  repeated Element records = 1;
+}
+
+message MetricsStatusRequest {
+  string env = 1;
+}
+
+message MetricsStatusResponse {
+  // Json
+  google.protobuf.Struct metrics = 1;
+}
