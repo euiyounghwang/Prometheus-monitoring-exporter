@@ -17,6 +17,7 @@ from flask import Flask, render_template, jsonify, request
 import grpc
 import service_pb2
 import service_pb2_grpc
+from google.protobuf.json_format import MessageToJson
 from concurrent import futures
 
 import dotenv
@@ -314,10 +315,20 @@ class DBInterfacer(service_pb2_grpc.DBInterfacerServicer):
             record.ADDTS = each_record['ADDTS']
             record.COUNT = each_record['COUNT']
             record.DBID = each_record['DBID']
+
+        # For debugging or logging, convert the full protobuf message to JSON
+        # logging.info(f"Response data in JSON: {MessageToJson(response)}")
         
         return response
             
-        
+
+def run_socket_server(port):
+    try:
+        print(f"socket server..")
+    except KeyboardInterrupt:
+        # server.stop(0)
+        pass
+
 
 def run_grpc_server(port):
     # port = '50052'
@@ -325,6 +336,7 @@ def run_grpc_server(port):
     service_pb2_grpc.add_DBInterfacerServicer_to_server(DBInterfacer(), server)
     server.add_insecure_port('[::]:' + port)
     server.start()
+    # server.wait_for_termination()
     try:
         while True:
             # logging.info("Server started, listening on " + port)
@@ -343,13 +355,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Running db test script")
     parser.add_argument('-p', '--port', dest='port', default=8002, help='port')
     ''' server mode has http, gRPC to support the client'''
-    parser.add_argument('-s', '--server_mode', dest='server_mode', default='http', help='server_mode')
+    parser.add_argument('-s', '--server_mode', dest='server_mode', default='http', help='server_mode (http, gRPC, socket)')
     args = parser.parse_args()
     
     if args.port:
         port = args.port
 
     if args.server_mode:
+        logging.info(f"gRPC Mode [port:{port}]")
         server_mode = args.server_mode
 
     # if db_type == 'postgres':
@@ -383,6 +396,12 @@ if __name__ == "__main__":
             grpc_thread.daemon = True # Allows the main program to exit
             grpc_thread.start()
             T.append(grpc_thread)
+
+        elif server_mode == 'socket':
+            socket_thread = threading.Thread(target=run_socket_server, args=(port,))
+            socket_thread.daemon = True # Allows the main program to exit
+            socket_thread.start()
+            T.append(socket_thread)
     
         # wait for all threads to terminate
         for t in T:

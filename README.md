@@ -242,6 +242,27 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
     "spark_custom_apps": 2.0,
     "zookeeper_nodes": 3.0
   }
+
+  # ES Monitoring DB Interface with gRPC mode
+  # Server
+  $ python ./db_interface_app/db_interface_app_api.py --server_mode grpc
+  # Client
+  # python ./db_interface_app/db_gRPC_client.py
+  {
+    "records": [
+      {
+        "PROCESSNAME": "ES_PIPELINE_UPLOAD_TEST_WM",
+        "STATUS": "C",
+        "ADDTS": "2026-03-02 17:27:31",
+        "COUNT": 1,
+        "DBID": "LOCALHOST"
+    }
+  }
+  # ES Monitoring DB Interface with http mode
+  $ python ./db_interface_app/db_interface_app_api.py --server_mode http
+
+  # ES Monitoring DB Interface with socket mode
+  $ python ./db_interface_app/db_interface_app_api.py --server_mode socket
   (.venv) 
 
   # We’ll learn how Go and Python programs can communicate between each other using gRPC. (https://www.ardanlabs.com/blog/2020/06/python-go-grpc.html, https://dev.to/shrsv/getting-started-with-grpc-in-golang-f14)

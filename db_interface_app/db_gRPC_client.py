@@ -3,6 +3,7 @@ import service_pb2
 import service_pb2_grpc
 from google.protobuf.json_format import MessageToJson, Parse
 import os
+import json
 import dotenv
 
 ''' pip install python-dotenv'''
@@ -11,7 +12,7 @@ import dotenv
 dotenv.load_dotenv(dotenv_path=f"{os.path.abspath(os.getcwd())}/.env", override=True)
 
 def run():
-    with grpc.insecure_channel(f"{os.getenv('HOST')}:8002") as channel:
+    with grpc.insecure_channel(f"{os.getenv('HOST', 'localhost')}:8002") as channel:
         stub = service_pb2_grpc.DBInterfacerStub(channel)
         
         print(os.getenv("DB_URL"))
@@ -21,9 +22,14 @@ def run():
         responses = stub.GetMetricsStatus(service_pb2.DBSQLRequest(db_url=os.getenv("DB_URL"),sql=os.getenv("SQL")))
         Jsons = MessageToJson(responses)
         print(Jsons)
-        # for response in responses:
-        #     print(f"Received: {response}")
-
+        # print(Jsons, type(Jsons))
+        '''
+        for item in json.loads(Jsons).get("records"):
+            # print(item.get("PROCESSNAME"))
+            for k, v in item.items():
+                print(f"Received: {k}, {v}")
+        '''
+        
 if __name__ == '__main__':
     ''' export PYTHONDONTWRITEBYTECODE=1 '''
     ''' gRPC client to recevie the recores from DB'''
