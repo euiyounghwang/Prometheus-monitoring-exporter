@@ -230,8 +230,6 @@ def oracle(db_url, sql):
         # - main sql
         result_json_value = database_object.excute_oracle_query(sql)
         db_rows_list = json.loads(str(result_json_value).replace("'",'"'))
-        
-        print(f"# DB Results : {json.dumps(db_rows_list, indent=2)}")
 
         EndTime = datetime.datetime.now()
         Delay_Time = str((EndTime - StartTime).seconds) + '.' + str((EndTime - StartTime).microseconds).zfill(6)[:2]
@@ -240,7 +238,15 @@ def oracle(db_url, sql):
         # df = pd.DataFrame(results, columns=tuple(zip(*cursor.description))[0])
         # print(df.head())
 
-        return db_rows_list
+        response = {
+            "running_time" : float(Delay_Time),
+            "request_dbid" : str(db_url.rsplit('/', 1)[-1]).upper(),
+            "results" : db_rows_list
+        }
+
+        print(f"# DB Results : {json.dumps(response, indent=2)}")
+
+        return response
 
     except Exception as e:
         print(e)
@@ -270,14 +276,14 @@ def db_interface_get():
     try:
         logging.info(f"GET Methods...")
         # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
-        return oracle(os.getenv("DB_URL"), os.getenv("SQL")), 200
+        return oracle(os.getenv("db_url"), os.getenv("sql")), 200
     except Exception as e:
         logging.error(e)
         # return jsonify(error=404, message=str(e)), 404
         return {"error" : str(e)}, 404
 
 
-@app.route('/db_interface', methods=['POST'])
+@app.route('/db/get_db_query', methods=['POST'])
 def db_interface():
     try:
         logging.info(f"POST Methods...")
@@ -285,7 +291,7 @@ def db_interface():
         data = request.get_json(force=True)
         # if request.method == 'POST':
         # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
-        return oracle(data.get('DB_URL'), data.get('SQL')), 200
+        return oracle(data.get('db_url'), data.get('sql')), 200
     
     except Exception as e:
         # return jsonify(error=404, message=str(e)), 404
