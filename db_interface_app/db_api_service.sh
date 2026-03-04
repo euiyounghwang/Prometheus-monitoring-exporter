@@ -43,15 +43,18 @@ else
     source $ES_SERVICE_ALL_EXPORT_PATH/$VENV/Scripts/activate
 fi
 
+
+export PYTHONDONTWRITEBYTECODE=1
+
 # See how we were called.
 case "$1" in
   start)
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
-        # nohup python $ES_SERVICE_ALL_EXPORT_PATH//db_interface_app_api.py &> /dev/null &
-        python $ES_SERVICE_ALL_EXPORT_PATH//db_interface_app_api.py
-        # python $ES_SERVICE_ALL_EXPORT_PATH//db_interface_app_api.py --server_mode grpc
-        # python $ES_SERVICE_ALL_EXPORT_PATH//db_interface_app_api.py --server_mode socket
+        # nohup python $ES_SERVICE_ALL_EXPORT_PATH/db_interface_app_api.py &> /dev/null &
+        python $ES_SERVICE_ALL_EXPORT_PATH/db_interface_app_api.py
+        # python $ES_SERVICE_ALL_EXPORT_PATH/db_interface_app_api.py --server_mode grpc
+        # python $ES_SERVICE_ALL_EXPORT_PATH/db_interface_app_api.py --server_mode socket
         ;;
   stop)
         # Stop daemons.
