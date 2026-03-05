@@ -296,7 +296,7 @@ def db_interface():
     except Exception as e:
         # return jsonify(error=404, message=str(e)), 404
         logging.error(e)
-        return {"error" : str(e)}, 404
+        return {"message" : str(e)}, 404
 
 
 
@@ -454,7 +454,7 @@ class DBInterfacer(service_pb2_grpc.DBInterfacerServicer):
         response = service_pb2.DBSQLResponse()
 
         # Add Element messages to the repeated field
-        for each_record in db_records:
+        for each_record in db_records.get("results"):
             record = response.records.add()
             record.PROCESSNAME = each_record['PROCESSNAME']
             record.STATUS = each_record['STATUS']
