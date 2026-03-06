@@ -500,8 +500,16 @@ if __name__ == "__main__":
         port = args.port
 
     if args.server_mode:
-        logging.info(f"gRPC Mode [port:{port}]")
         server_mode = args.server_mode
+        if server_mode == "grpc":
+            logging.info(f"gRPC Mode [port:{port}]")
+        elif server_mode == "socket":
+            logging.info(f"socket Mode [port:{port}]")
+        else:
+            logging.info(f"etc Mode [port:{port}]")
+
+    else:
+        logging.info(f"http Mode [port:{port}]")
 
     # if db_type == 'postgres':
     #     postgres(db_url, sql)
