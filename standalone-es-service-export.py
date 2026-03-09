@@ -994,7 +994,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     ''' Get the number of replicas if value is zero'''
                     es_client = get_es_instance("{}://{}".format(es_cluster_call_protocal, each_es_host))
                     the_number_of_replicas_zero_indices_infos = get_indices_replica_zero(es_client)
-                    ''' Added to dics for the log if any ES indices have zero replicas'''
+                    ''' Added to dics for the log if any ES indices have zero replica'''
                     if the_number_of_replicas_zero_indices_infos:
                         saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name) : "[Elasticsearch] {} Indices have not replicated the replica shards..".format(",".join(the_number_of_replicas_zero_indices_infos))})
 
