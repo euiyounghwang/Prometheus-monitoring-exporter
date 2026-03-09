@@ -1,5 +1,6 @@
 import os
 import requests
+from elasticsearch import Elasticsearch
 import time
 from flask import Flask, render_template
 from prometheus_client import start_http_server, Enum, Histogram, Counter, Summary, Gauge, CollectorRegistry
@@ -769,6 +770,10 @@ def get_metrics_all_envs(monitoring_metrics):
         }
             
         return header
+
+    def get_es_instance(host):
+        es_client = Elasticsearch(hosts="{}".format(host), headers=get_header(), timeout=5,  verify_certs=False)
+        return es_client
     
     def get_elasticsearch_health(monitoring_metrics):
         ''' get cluster health with basic infomration such as the number of docs'''
@@ -886,6 +891,23 @@ def get_metrics_all_envs(monitoring_metrics):
                     logging.error(e)
                     pass
 
+        
+        def get_indices_replica_zero(es_client):
+            """
+            params es_client: es instance
+            """
+            es_indices = es_client.indices.get("*")
+            # print(f"get_indices_replica_zero func[es_indices] : {es_indices.keys()}")
+            please_set_the_number_of_replicas = []
+            for each_indice in es_indices.keys():
+                # print(f"Replica : {es_indices.get(each_indice).get('settings').get('index').get('number_of_replicas')}")
+                if each_indice.startswith("wx_") or each_indice.startswith("om_"):
+                    # print(f"get_indices_replica_zero func[es_indices filtered] : {each_indice}")
+                    the_number_of_replicas = int(es_indices.get(each_indice).get('settings').get('index').get('number_of_replicas'))
+                    if the_number_of_replicas < 1:
+                        please_set_the_number_of_replicas.append(each_indice)
+
+            return please_set_the_number_of_replicas
 
         try:
             es_url_hosts = monitoring_metrics.get("es_url", "")
@@ -954,9 +976,12 @@ def get_metrics_all_envs(monitoring_metrics):
                                 inserted_post_log(status="ES_RESET_REPLICA", message="[ES] Reset the number of replica to INDEX [{}]".format(",".join(unassgned_indics_list)))
 
                                 ''' Testing this logic'''
-                                if 'PROD' not in global_env_name:
-                                    ''' PUT the number of replicas to 0 and set it back to 1'''
-                                    retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
+                                # if 'PROD' not in global_env_name:
+                                #     ''' PUT the number of replicas to 0 and set it back to 1'''
+                                #     retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
+                                
+                                ''' PUT the number of replicas to 0 and set it back to 1'''
+                                retry_set_unassigned_shard(es_cluster_call_protocal, each_es_host, unassgned_indics_list)
                                 
                                 ''' update the message for the failed a list of index name'''
                                 saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name)  : "[Elasticsearch] Reset the number of replica to INDEX ['{}']".format(",".join(unassgned_indics_list))})
@@ -965,6 +990,13 @@ def get_metrics_all_envs(monitoring_metrics):
                         else:
                             global_es_shards_tasks_end_occurs_unassgined = False
 
+
+                    ''' Get the number of replicas if value is zero'''
+                    es_client = get_es_instance("{}://{}".format(es_cluster_call_protocal, each_es_host))
+                    the_number_of_replicas_zero_indices_infos = get_indices_replica_zero(es_client)
+                    ''' Added to dics for the log if any ES indices have zero replicas'''
+                    if the_number_of_replicas_zero_indices_infos:
+                        saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name) : "[Elasticsearch] {} Indices have not replicated the replica shards..".format(",".join(the_number_of_replicas_zero_indices_infos))})
 
                     ''' Call to get more information '''
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
