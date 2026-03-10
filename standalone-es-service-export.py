@@ -996,7 +996,7 @@ def get_metrics_all_envs(monitoring_metrics):
                     the_number_of_replicas_zero_indices_infos = get_indices_replica_zero(es_client)
                     ''' Added to dics for the log if any ES indices have zero replica'''
                     if the_number_of_replicas_zero_indices_infos:
-                        saved_failure_dict.update({"{}_2".format(domain_name_as_nick_name) : "[Elasticsearch] {} Indices have not replicated the replica shards..".format(",".join(the_number_of_replicas_zero_indices_infos))})
+                        saved_failure_dict.update({"{}_zero_replica".format(domain_name_as_nick_name) : "[Elasticsearch, 0 Replica list] {} Indices have not replicated the replica shards..".format(",".join(the_number_of_replicas_zero_indices_infos))})
 
                     ''' Call to get more information '''
                     ''' There should be an option to disable certificate verification during SSL connection. It will simplify developing and debugging process. '''
