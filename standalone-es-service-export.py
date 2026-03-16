@@ -455,6 +455,7 @@ def get_metrics_all_envs(monitoring_metrics):
                 try:
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     sock.settimeout(10)
+                    # sock.settimeout(2)
                     result = sock.connect_ex((each_urls[0],int(each_urls[1])))
                     if result == 0:
                         # print("Port is open")
@@ -469,6 +470,7 @@ def get_metrics_all_envs(monitoring_metrics):
                         # if 'redis' not in str(k) and 'configuration' not in str(k) and 'loki_custom_promtail_agent_url' not in str(k) and 'log_aggregation_agent_url' not in str(k):
                         if str(k) not in exclude_port_detect:
                             saved_failure_dict.update({each_urls[0] + "_" + str(k).upper() + "_" + str(idx+1): "[Node #{}-{}] ".format(idx+1, str(k).upper()) + each_host + " Port closed"})
+                    # sock.shutdown(socket.SHUT_RDWR)
                     sock.close()
                 except Exception as e:
                     print("Port is not open")
