@@ -52,14 +52,14 @@ case "$1" in
         # nohup $ES_SERVICE python $SCRIPTDIR/RPC/gRPC/gRPC_server.py &> /dev/null &
         
         # gRPC server
-        # python $SCRIPTDIR/RPC/gRPC/gRPC_server.py
+        python $SCRIPTDIR/RPC/gRPC/gRPC_server.py
         
         # gRPC Stream
         # python $SCRIPTDIR/RPC/gRPC_Stream/gRPC_server.py
 
         # gRPC server using Golang
-        cd $SCRIPTDIR/RPC/golang_gRPC
-        go run ./gRPC_server.go
+        # cd $SCRIPTDIR/RPC/golang_gRPC
+        # go run ./gRPC_server.go
         ;;
   stop)
         # Stop daemons.
