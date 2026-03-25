@@ -197,6 +197,21 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```bash
   ```
 
+- Opentelemetry: OpenTelemetry is an open source observability framework for cloud native software. It provides a single set of APIs, libraries, agents, and collector services to capture distributed traces and metrics from your application.
+  - Install the Collector on Linux - https://opentelemetry.io/docs/collector/install/binary/linux/
+  - The OpenTelemetry Collector uses port 8888 by default to expose its own internal metrics in the Prometheus format. This port is used for monitoring the collector's performance and resource consumption, not for receiving general telemetry data from other services.
+    - Other Default Ports
+      - 4317: Default port for the OpenTelemetry Protocol (OTLP) gRPC receiver.
+      - 4318: Default port for the OTLP HTTP receiver.
+      - 8889: Often used as an alternative or supplementary port for user-defined Prometheus exporters within the collector configuration. 
+  - __Installation Commands__
+  ```bash
+  ./otelcol --config=./opentelemetry_collector_config.yaml
+
+  2026-03-25T15:55:02.536-0400    info    service@v0.148.0/service.go:241 Starting otelcol...     {"resource": {"service.instance.id": "7dab7860-f9ae-4e47-b1b4-f709e0cdba84", "service.name": "otelcol", "service.version": "0.148.0"}, "Version": "0.148.0", "NumCPU": 2}
+
+  ```
+
 - gRPC (Google Remote Procedure Call) is is a remote procedure call (RPC) framework from Google. It uses Protocol Buffers as a serialization format and uses HTTP2 as the transport medium. gRPC is designed for quick, efficient communication between services, with support for streaming data. gRPC is a high-performance, open-source framework for building efficient, connected systems, allowing services to communicate transparently as if they were local functions, even across different languages and platforms, using HTTP/2 for transport and Protocol Buffers (Protobuf) for serialization. Protocol Buffers (protobuf) is the data format gRPC uses.
   - Example : https://blog.naver.com/agapeuni/222281338248 (Calculator)
   - __Installation Commands__
