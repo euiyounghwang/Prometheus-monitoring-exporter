@@ -99,7 +99,7 @@ if __name__ == '__main__':
     ''' pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-grpc opentelemetry-exporter-otlp-proto-http --trusted-host pypi.org --trusted-host files.pythonhosted.org'''
     '''  pip install "urllib3<2" when occuring the issue for OpenSSL'''
     
-    parser = argparse.ArgumentParser(description="Running this service allows us to check and delete old ES indices using this script")
+    parser = argparse.ArgumentParser(description="Running this service allows us to send and expose the metrics using this script with otel gRPC")
     parser.add_argument('-otel_host', '--otel_host', dest='otel_host', default="localhost", help='otel_host')
     args = parser.parse_args()
     
