@@ -1,27 +1,55 @@
 # Run : ./otelcol --config=./opentelemetry_collector_config.yaml
 # The OpenTelemetry Collector uses port 8888 by default to expose its own internal metrics in the Prometheus format. This port is used for monitoring the collector's performance and resource consumption, not for receiving general telemetry data from other services.
 # http://localhost:8899/metrics
+
+extensions:
+  health_check:
+  pprof:
+    endpoint: 0.0.0.0:1777
+  zpages:
+    endpoint: 0.0.0.0:55679
+
 receivers:
+  otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http: 
+          endpoint: 0.0.0.0:4318
+
   # Prometheus 형식으로 메트릭 수집 (Pull 방식)
   prometheus:
     config:
       scrape_configs:
-        - job_name: 'otel-collector'
+        #- job_name: 'otel-collector'
+        #  scrape_interval: 10s
+        #  static_configs:
+        #    - targets: ['0.0.0.0:8889']
+        #- job_name: 'otel-collector-custom-es-metrics'
+        #  scrape_interval: 10s
+        #  static_configs:
+        #    - targets: ['0.0.0.0:5001']
+        - job_name: 'otel-collector-dev-exporter-metrics'
           scrape_interval: 10s
           static_configs:
-            - targets: ['0.0.0.0:8889']
+            - targets: ['0.0.0.0:9002']
 
 processors:
   batch: # 데이터를 묶어서 전송 (효율화)
 
 exporters:
+  debug:
   # Prometheus로 다시 전달하거나, 다른 곳으로 전송
   prometheus:
     endpoint: "0.0.0.0:8889"
   # 또는 Prometheus Remote Write 사용
   # prometheusremotewrite:
   #   endpoint: "http://prometheus:9090/api/v1/write"
-
+  # otlp:
+  #   endpoint: 0.0.0.0:4317
+  #   tls:
+  #     insecure: true
+  
 service:
   telemetry:
     metrics:
@@ -32,7 +60,12 @@ service:
                 host: "0.0.0.0"
                 port: 8899
   pipelines:
+    traces:
+      receivers: [otlp] # <-- Must include 'otlp'
+      # exporters: [debug] # Or whatever exporter you are using
+      exporters: [debug] # Or whatever exporter you are using
     metrics:
-      receivers: [prometheus]
+      receivers: [otlp, prometheus]
       processors: [batch]
+      # exporters: [otlp, prometheus] # 또는 prometheusremotewrite
       exporters: [prometheus] # 또는 prometheusremotewrite
