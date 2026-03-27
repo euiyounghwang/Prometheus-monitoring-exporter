@@ -35,3 +35,5 @@ standalone-tools-export-run-dev.sh
 RPC/gRPC/gRPC_config.json
 db_interface_app/.env
 otelcol
+Vagrant/.vagrant/
+Vagrant/.vagrant/machines/minikube/docker/id
