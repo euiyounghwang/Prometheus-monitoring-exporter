@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# referebce : https://github.com/baiyongzhen/opentelemetry-collector-on-kubernetes
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  if (/cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM) != nil
+    config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=777,fmode=777"]
+  else
+    config.vm.synced_folder ".", "/vagrant"
+  end
+  
+  # Custom configuration for docker
+  config.vm.provider "docker" do |docker, override|
+    # docker doesnt use boxes
+    override.vm.box = nil
+
+    # this is where your Dockerfile lives
+    docker.build_dir = "."
+
+    # Make sure it sets up ssh with the Dockerfile
+    # Vagrant is pretty dependent on ssh
+    override.ssh.insert_key = true
+    docker.has_ssh = true
+
+    # Configure Docker to allow access to more resources
+    docker.privileged = true
+  end
+
+  config.vm.define :minikube do |host|
+    host.vm.box = "bento/ubuntu-18.04"
+    host.vm.hostname = "minikube"
+    # host.vm.network :private_network, ip: "192.168.56.161"
+    host.vm.provision :shell, path: "./debian_bootstrap.sh"
+    # boot timeout
+    host.vm.boot_timeout = 300
+
+    # Set system settings
+    host.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "4096"]
+        vb.customize ["modifyvm", :id, "--cpus", "2"]
+        vb.customize ['modifyvm', :id, '--cableconnected1', 'on']
+    end
+  end
+
+end

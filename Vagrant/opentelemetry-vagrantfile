@@ -13,6 +13,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   else
     config.vm.synced_folder ".", "/vagrant"
   end
+  
+  # Custom configuration for docker
+  config.vm.provider "docker" do |docker, override|
+    # docker doesnt use boxes
+    override.vm.box = nil
+
+    # this is where your Dockerfile lives
+    docker.build_dir = "."
+
+    # Make sure it sets up ssh with the Dockerfile
+    # Vagrant is pretty dependent on ssh
+    override.ssh.insert_key = true
+    docker.has_ssh = true
+
+    # Configure Docker to allow access to more resources
+    docker.privileged = true
+  end
 
   config.vm.define :minikube do |host|
     host.vm.box = "bento/ubuntu-18.04"
