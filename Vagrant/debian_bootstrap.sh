@@ -2,6 +2,25 @@
 
 set -e
 
+# unable to locate package docker-model-plugin
+# The SSH command responded with a non-zero exit status. Vagrant
+# assumes that this means the command failed. The output for this command
+# should be in the log above. Please read the output to determine what
+# went wrong.
+# --
+# Install prerequisites
+sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
+
+# Add Docker GPG key
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+# Add the repository to your apt sources (replace 'ubuntu' and '$(lsb_release -cs)' with your specific distro/version if needed)
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+# Update the package list again after adding the new repository
+sudo apt update
+# --
+
 # Install Docker
 curl -fsSL get.docker.com -o get-docker.sh
 sh get-docker.sh
