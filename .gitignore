@@ -34,4 +34,4 @@ ssh_config.json
 standalone-tools-export-run-dev.sh
 RPC/gRPC/gRPC_config.json
 db_interface_app/.env
-
+otelcol
