@@ -28,4 +28,24 @@ scrape_configs:
     # - targets: ['host.docker.internal:9091']
     - targets: ['pushgateway:9091']
    
+
+- job_name: 'blackbox_http'
+  metrics_path: "/probe"
+  params:
+    module: [http_2xx]
+    #target: [localhost:8004]
+  static_configs:
+  - targets:
+    #- localhost:9115/probe?module=http_2xx&target=localhost:8004
+    #- localhost:9115
+    - localhost:8004
+    - localhost:8082
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: localhost:2222
+
     

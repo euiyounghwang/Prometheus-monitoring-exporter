@@ -8,8 +8,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "Starting $SERVICE_NAME";
-        #nohup $SERVICE_EXPORT_PATH/blackbox_exporter --config.file=./blackbox.yml &> /dev/null &
-        $SERVICE_EXPORT_PATH/blackbox_exporter --config.file=$SERVICE_EXPORT_PATH/blackbox.yml
+        #nohup $SERVICE_EXPORT_PATH/blackbox_exporter --config.file=./blackbox.yml --web.listen-address=":9099" &> /dev/null &
+        $SERVICE_EXPORT_PATH/blackbox_exporter --config.file=$SERVICE_EXPORT_PATH/blackbox.yml --web.listen-address=":9099"
         ;;
   stop)
         # Stop daemons.
