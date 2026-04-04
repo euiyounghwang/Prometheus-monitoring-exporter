@@ -198,6 +198,7 @@ Metrics can be exposed through a standalone web server, or through Twisted, WSGI
   ```
 
 - Opentelemetry: OpenTelemetry is an open source observability framework for cloud native software. It provides a single set of APIs, libraries, agents, and collector services to capture distributed traces and metrics from your application.
+  - The OpenTelemetry Protocol (OTLP) is a stable, vendor-agnostic, general-purpose telemetry data delivery protocol within the OpenTelemetry project. It specifies how to encode, transport, and deliver traces, metrics, and logs between instrumentation sources and backend systems, supporting both gRPC and HTTP transports.
   - Install the Collector on Linux - https://opentelemetry.io/docs/collector/install/binary/linux/
   - The OpenTelemetry Collector uses port 8888 by default to expose its own internal metrics in the Prometheus format. This port is used for monitoring the collector's performance and resource consumption, not for receiving general telemetry data from other services.
     - Other Default Ports
