@@ -105,7 +105,7 @@ class opentelemetry_client:
             # By default, OTLP uses gRPC on port 4317 or HTTP on port 4318
             # The endpoint parameter specifies the collector URL
             '''
-            exporter = OTLPMetricExporter(endpoint="http://{}:4318/v1/metrics".format(self.otel_host))
+            exporter = OTLPMetricExporter(endpoint="http://{}:14318/v1/metrics".format(self.otel_host))
             
             # 2. MetricReader 및 MeterProvider 설정
             # Configure the Metric Reader
