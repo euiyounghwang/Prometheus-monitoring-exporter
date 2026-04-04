@@ -177,6 +177,7 @@ if __name__ == '__main__':
     ''' pip install opentelemetry-api opentelemetry-sdk opentelemetry-exporter-otlp-proto-grpc opentelemetry-exporter-otlp-proto-http --trusted-host pypi.org --trusted-host files.pythonhosted.org'''
     '''  pip install "urllib3<2" when occuring the issue for OpenSSL'''
     
+    # I'm currently exporting metrics from my application via OTLP to an OpenTelemetry collector. On the OpenTelemetry collector I am using the Prometheus exporter to expose a /metrics endpoint on the collector.
     # Ensure your OpenTelemetry Collector is running and configured to receive OTLP gRPC metrics. The default endpoint for gRPC reception is 0.0.0.0:4317.
 
     parser = argparse.ArgumentParser(description="Running this service allows us to send and expose the metrics using this script with otel gRPC")
