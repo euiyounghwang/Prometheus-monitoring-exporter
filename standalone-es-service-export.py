@@ -1679,7 +1679,7 @@ def get_metrics_all_envs(monitoring_metrics):
             
             for each_es_host in es_url_list:
                 try:
-                    resp = requests.get(url=f"{es_cluster_call_protocal}://{each_es_host}/_searchguard/health", headers=None, verify=False, timeout=600)
+                    resp = requests.get(url=f"{es_cluster_call_protocal}://{each_es_host}/_searchguard/health", headers=get_header(), verify=False, timeout=600)
                             
                     if not (resp.status_code == 200):
                         return -1
