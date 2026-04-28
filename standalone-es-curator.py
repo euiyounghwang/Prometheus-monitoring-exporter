@@ -14,6 +14,7 @@ import warnings
 import socket
 from elasticsearch import Elasticsearch
 import pytz
+import sys
 import time
 from flask import Flask, render_template
 from datetime import datetime, timedelta
