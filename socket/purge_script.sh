@@ -26,8 +26,8 @@ case "$1" in
         else
           # Start daemon.
           echo "🦄 Starting $SERVICE_NAME";
-          # nohup python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2 &> /dev/null &
-          python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2
+          nohup python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2 &> /dev/null &
+          # python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2
         fi
         ;;
   stop)
