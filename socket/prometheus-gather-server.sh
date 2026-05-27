@@ -4,12 +4,31 @@ SERVICE_NAME=es-service-kafka-gather-service
 
 SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
+process_name='/home/biadmin/monitoring/metrics_socket/server.py'
+
+# Cronjob
+# -----
+# Disk Service
+# Go to DT nodes and sudo su
+# */10 * * * * su - biadmin -c "/home/biadmin/monitoring/metrics_socket/prometheus-gather-server.sh start"
+# ----
+
+
 # See how we were called.
 case "$1" in
   start)
-        # Start daemon.
-        echo "Starting $SERVICE_NAME";
-        nohup python $SCRIPTDIR/server.py &> /dev/null &
+        PID=$(ps -ef | grep $process_name | grep -v grep)
+        test=$?
+        if [ $test -eq 0 ]
+        then
+          PID=$(ps -ef | grep $process_name | grep -v grep | tr -s ' ' | cut -d " " -f2)
+          echo $SERVICE_NAME is Running as $PID
+          #kill -9 $PID
+        else
+          # Start daemon.
+          echo "Starting $SERVICE_NAME";
+          nohup python $SCRIPTDIR/server.py &> /dev/null &
+        fi
         ;;
   stop)
         # Stop daemons.

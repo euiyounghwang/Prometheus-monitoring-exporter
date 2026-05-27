@@ -4,13 +4,24 @@ SERVICE_NAME=es-service-purge-script-service
 
 SCRIPTDIR="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
+process_name='/home/biadmin/monitoring/metrics_socket/purge_script.py'
+
 # See how we were called.
 case "$1" in
   start)
-        # Start daemon.
-        echo "🦄 Starting $SERVICE_NAME";
-        # nohup python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2 &> /dev/null &
-        python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2
+        PID=$(ps -ef | grep $process_name | grep -v grep)
+        test=$?
+        if [ $test -eq 0 ]
+        then
+          PID=$(ps -ef | grep $process_name | grep -v grep | tr -s ' ' | cut -d " " -f2)
+          echo $SERVICE_NAME is Running as $PID
+          #kill -9 $PID
+        else
+          # Start daemon.
+          echo "🦄 Starting $SERVICE_NAME";
+          # nohup python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2 &> /dev/null &
+          python $SCRIPTDIR/purge_script.py --server_port 8001 --spark_log /apps/var/spark/logs --kafka_log /apps/kafka/latest/logs --interval 3600 --delete_interval 2
+        fi
         ;;
   stop)
         # Stop daemons.
