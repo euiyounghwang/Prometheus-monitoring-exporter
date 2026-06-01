@@ -86,8 +86,15 @@ class Util:
 ''' Create exporter'''
 uptime_export_usage_gauge_g = Gauge("uptime_elapsed_response_time_metrics", 'Response time (seconds)', ["server_job", "env", "service_name", "url", "status_code"])
 uptime_service_health_gauge_g = Gauge("uptime_service_health_metrics", 'Service health check (1: Green, 2: Yellow, 3 : Red)', ["server_job", "env", "service_name"])
-cpu_gauge_g = Gauge("uptime_cpu_usage_metrics", 'CPU Usage', ["server_job", "env", "service_name"])
-jvm_gauge_g = Gauge("uptime_jvm_usage_metrics", 'JVM Usage', ["server_job", "env", "service_name"])
+cpu_gauge_g = Gauge("uptime_cpu_usage_metrics", 'Elasticsearch CPU Usage', ["server_job", "env", "service_name"])
+jvm_gauge_g = Gauge("uptime_jvm_usage_metrics", 'Elasticsearch JVM Usage', ["server_job", "env", "service_name"])
+
+# Nodes CPU/Memory/Resource Metrics
+cpu_cores_logical_metrics = Gauge("cpu_cores_logical_metrics", 'CPU Cores Logical', ["server_job", "env", "service_name"])
+cpu_cores_physical_metrics = Gauge("cpu_cores_physical_metrics", 'CPU Cores Physical', ["server_job", "env", "service_name"])
+cpu_usage_percent_metrics = Gauge("cpu_usage_percent_metrics", 'CPU Usage Percent', ["server_job", "env", "service_name"])
+ram_usage_percent_metrics = Gauge("ram_usage_percent_metrics", 'RAM Usage Percent', ["server_job", "env", "service_name"])
+total_memory_metrics = Gauge("total_memory_metrics", 'Total RAM (GB)', ["server_job", "env", "service_name"])
         
    
 class Prometheus_Service_Export:
@@ -279,6 +286,75 @@ class Prometheus_Service_Export:
                             status_code=str(status_code)
                             )\
                         .set(response_time)
+
+                    elif service_json.get("service_client").lower() == 'json':
+
+                        # -- make a call to cluster for checking the disk space on all nodes in the cluster
+                        # s = requests.Session()
+                        resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
+                        
+                        # if not (resp.status_code == 200):
+                        #     return None
+                            
+                        response_time = resp.elapsed.total_seconds()
+                                        
+                        logging.info(f"[{service_json.get('service_client')}][{service_url} Request completed in {response_time:.4f} seconds")
+                        logging.info(f"JSON Request : {resp.json()}")
+
+                        if service_json.get('service_name') == 'Data Transfer Nodes Resource':
+                            '''
+                            {
+                                "app": "server_metrics.py",
+                                "metrics": [
+                                    {
+                                        "message": "server_metrics.py",
+                                        "tracking": {
+                                            "cpu_cores_logical": 12,
+                                            "cpu_cores_physical": 10,
+                                            "cpu_usage_percent": 28.8,
+                                            "ram_usage_percent": 81.7,
+                                            "total_memory": "31.64 GB"
+                                        }
+                                    }
+                                ],
+                                "started_time": "Mon, 01 Jun 2026 12:08:33 GMT"
+                                }
+                            '''
+                            logging.info("Resource Collecting..")
+                            cpu_cores_logical_metrics.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1)
+                            )\
+                            .set(resp.json().get("metrics")[0].get("tracking").get("cpu_cores_logical"))
+
+                            cpu_cores_physical_metrics.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1)
+                            )\
+                            .set(resp.json().get("metrics")[0].get("tracking").get("cpu_cores_physical"))
+
+                            cpu_usage_percent_metrics.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1)
+                            )\
+                            .set(resp.json().get("metrics")[0].get("tracking").get("cpu_usage_percent"))
+
+                            ram_usage_percent_metrics.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1)
+                            )\
+                            .set(resp.json().get("metrics")[0].get("tracking").get("ram_usage_percent"))
+
+                            total_memory_metrics.labels(
+                                server_job=socket.gethostname(), 
+                                env=self.service_json.get("env"), 
+                                service_name="{}_{}_#{}".format(self.service_json.get("env"), service_json.get("service_name"), idx+1)
+                            )\
+                            .set(resp.json().get("metrics")[0].get("tracking").get("total_memory_gb"))
 
                 except Exception as e:
                     logging.error(e)

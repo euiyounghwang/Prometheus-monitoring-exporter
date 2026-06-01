@@ -101,7 +101,7 @@ def get_cpu_memory():
         print(f"Total System Memory: {total_memory_gb:.2f} GB")
         print(f"Current Memory Usage: {memory_usage_percent}%")
 
-    tracking_dict.update({"cpu_cores_logical" : cpu_cores_logical, "cpu_cores_physical" : cpu_cores_physical, "total_memory" : str(round(total_memory_gb, 2)) + " GB", "cpu_usage_percent" : cpu_pct, "ram_usage_percent" : memory.percent})
+    tracking_dict.update({"cpu_cores_logical" : cpu_cores_logical, "cpu_cores_physical" : cpu_cores_physical, "total_memory_gb" : float(str(round(total_memory_gb, 2))), "cpu_usage_percent" : cpu_pct, "ram_usage_percent" : memory.percent})
 
 def work():
 

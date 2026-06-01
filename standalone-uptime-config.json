@@ -13,6 +13,12 @@
                 "service_client" : "http",
                 "service": "http://localhost:9201,http://localhost:9202,http://localhost:9201",
                 "basic_auth" : "test"
+            },
+            {
+                "service_name": "Data Transfer Nodes Resource",
+                "service_client" : "json",
+                "service": "http://localhost:1111,http://localhost:1112",
+                "basic_auth" : "test"
             }
         ]
     },
