@@ -21,7 +21,6 @@ logging.basicConfig(
 
 logger = logging.getLogger("Server_Metrics")
 
-
 app = Flask(__name__)
 
 tracking_dict = {
@@ -129,8 +128,19 @@ def work():
 if __name__ == '__main__':
     """
     Running this service allows us to check the CPU/Memory Info's
-    python ./standalone-es-curator.py
+    python ./server_metrics.py
+
+    ********* Installation for local env's *******
+    sudo su -l <user>
+    cd monitoring/metrics_socket
+    python -V
+    python -m venv .venv
+    pip install -r ./dev_requirements_metrics.txt
+    ./server_metrics.sh start
+    *******************************
+
     """
+
     global gloabal_default_timezone
 
     gloabal_default_timezone = pytz.timezone('US/Eastern')

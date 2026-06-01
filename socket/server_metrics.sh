@@ -25,6 +25,10 @@ fi
 # Disk Service
 # Go to DT nodes and sudo su
 # */10 * * * * su - biadmin -c "/home/biadmin/monitoring/metrics_socket/server_metrics.sh start"
+# Purge Service
+# */10 * * * * su - biadmin -c "/home/biadmin/monitoring/metrics_socket/purge_script.sh start"
+# Resource Service
+# */10 * * * * su - biadmin -c "/home/biadmin/monitoring/metrics_socket/server_metrics.sh start"
 # ----
 
 
