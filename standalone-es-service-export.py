@@ -4435,6 +4435,10 @@ if __name__ == '__main__':
     # -- GET host name running the ES Monitoring Apps
     domain_name_as_nick_name_running_host = socket.gethostname()
 
+    ''' Remove whole domain name i.e) x.y.z.com -> x'''
+    # domain_name_as_nick_name = domain_name_as_nick_name.split(".")[0]
+    # domain_name_as_nick_name_running_host = domain_name_as_nick_name_running_host.split(".")[0]
+
     if args.spark_cluster_https:
         spark_cluster_https = args.spark_cluster_https
      
