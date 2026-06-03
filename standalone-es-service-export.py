@@ -758,7 +758,8 @@ def get_metrics_all_envs(monitoring_metrics):
         
         ''' save failure node with a reason into saved_failure_dict'''
         # saved_failure_dict.update({domain_name_as_nick_name : "Logstash is not running.."})
-        saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+        # saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+        saved_failure_dict.update({"{}".format(domain_name_as_nick_name) : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
         return 0
     
 
@@ -2468,7 +2469,8 @@ def get_metrics_all_envs(monitoring_metrics):
             # all_env_status_memory_list = get_all_envs_status(all_env_status_memory_list, int(response_dict["logstash_url"]["GREEN_CNT"]), types='logstash')
             logstash_status = 'Green' if int(response_dict["logstash_url"]["GREEN_CNT"]) > 0 else 'Red'
             if int(response_dict["logstash_url"]["GREEN_CNT"]) < 1:
-                saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+                # saved_failure_dict.update({"Logstash-process" : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
+                saved_failure_dict.update({"{}".format(domain_name_as_nick_name) : "[Node #1-LOGSTASH_URL] Logstash is not running..".format()})
                 logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(0)
             else:
                 logstash_instance_gauge_g.labels(domain_name_as_nick_name).set(1)
