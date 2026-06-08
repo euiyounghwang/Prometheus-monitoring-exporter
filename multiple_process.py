@@ -3,20 +3,33 @@ import time
 import multiprocessing
 import pandas as pd
 import numpy as np
+from threading import Thread
 import warnings
 
 warnings.filterwarnings("ignore")
 
 
 def square_number(n):
+    ''' 
+    array value : 10000000
+    array value : 11000000
+    array value : 12000000
+    array value : 13000000
+    '''
     start_time = time.time()
     
+    print(f"array value : {n}")
+
     # time.sleep(1) # 무거운 연산을 시뮬레이션
-    data = sum(i * i for i in range(n))
+    # data = sum(i * i for i in range(n))
+    data = 0
+    for element in n:
+        print(f"-- {element} --")
+        data += sum(i * i for i in range(element))
     
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Single process - Elapsed Time: {elapsed_time} seconds")
+    print(f"square_number process - Elapsed Time: {elapsed_time} seconds")
 
     # return n * n
 
@@ -25,18 +38,25 @@ def square_number(n):
     return data
 
 
+# numbers = [10_000_000, 11_000_000, 12_000_000, 13_000_000]
+numbers = [[10_000_000, 3], [11_000_000], [12_000_000], [13_000_000]]
+
 def multiple_process():
     ''' 
     Total available logical cores: 12
+   
     Single process - Elapsed Time: 3.288329839706421 seconds
     Single process - Elapsed Time: 3.495461940765381 seconds
     Single process - Elapsed Time: 3.860304832458496 seconds
     Single process - Elapsed Time: 4.124040603637695 seconds
     [333333283333335000000, 443666606166668500000, 575999928000002000000, 732333248833335500000]
     Tasks completed
+
+    Array-based : [333333283333335000005, 443666606166668500000, 575999928000002000000, 732333248833335500000]
     '''
-    numbers = [10_000_000, 11_000_000, 12_000_000, 13_000_000]
-    
+    print(f"\n--multiple_process_run - start")
+    start_time = time.time()
+
     # ProcessPoolExecutor를 사용하여 병렬 처리
     with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         # map 함수는 입력 순서대로 결과를 반환
@@ -58,6 +78,35 @@ def multiple_process():
         p.join()
     '''
     print("Tasks completed.")
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"multiple_process_run - Elapsed Time: {elapsed_time} seconds")
+
+
+def threads_run():
+    
+    def work(args):
+        for i in [square_number(args)]:
+            print(i)
+
+    print(f"\n--threads_run - start")
+    start_time = time.time()
+
+    T = []
+    th1 = Thread(target=work, args=([10_000_000, 3, 11_000_000, 12_000_000, 13_000_000], ))
+    th1.daemon = True
+    th1.start()
+    T.append(th1)
+
+    for t in T:
+        while t.is_alive():
+            t.join(0.5)
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"threads_run - Elapsed Time: {elapsed_time} seconds")
+
 
 
 def split_data_frame():
@@ -124,3 +173,6 @@ if __name__ == '__main__': # Windows 환경에서는 필수
 
     ''' Multiple Prcesss Test'''
     multiple_process()
+
+    ''' Threads'''
+    threads_run()
