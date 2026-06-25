@@ -41,6 +41,9 @@ export ES_EXPORTER_HOST="localhost"
 export ES_MONITORING_APPS_EXPORTER_RUN_HOST="localhost:1001"
 export ES_MONITORING_APPS_EXPORTER_URL_HOST="localhost:9001"
 export SPARK_APP_CEHCK="StreamProcessEXP"
+export ES_DISK_PORT=9100
+# --
+
 export BASIC_AUTH_SH="basic_auth_encoded"
 export PROMETHEUS_USERNAME="test"
 export PROMETHEUS_PASSWORD="test"

@@ -1267,11 +1267,15 @@ def get_metrics_all_envs(monitoring_metrics):
             ''' gather metrics from Kafka each node'''
 
             global disk_space_list
+
+            disk_agent_port = int(os.getenv("ES_DISK_PORT")) if os.getenv("ES_DISK_PORT") is not None else 1234
             
             # Create a connection to the server application on port 81
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Add this line BEFORE calling bind()
+            client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             client_socket.settimeout(2)
-            client_socket.connect((host, 1234))
+            client_socket.connect((host, disk_agent_port))
             
             try:
                 data = str.encode(path)
