@@ -293,8 +293,8 @@ class Prometheus_Service_Export:
                         # s = requests.Session()
                         resp = requests.get(url="{}".format(service_url), headers=self.get_header(service_json.get("basic_auth")), verify=False, timeout=5)
                         
-                        # if not (resp.status_code == 200):
-                        #     return None
+                        if not (resp.status_code == 200):
+                            continue
                             
                         response_time = resp.elapsed.total_seconds()
                                         
@@ -360,8 +360,8 @@ class Prometheus_Service_Export:
                     logging.error(e)
                     health_chk.append(False)
                     ''' initialize '''
-                    cpu_gauge_g.clear()
-                    jvm_gauge_g.clear()
+                    # cpu_gauge_g.clear()
+                    # jvm_gauge_g.clear()
                     pass
                                         
                 time.sleep(1) # Wait a second between checks
