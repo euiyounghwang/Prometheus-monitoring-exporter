@@ -161,7 +161,7 @@ if __name__ == '__main__':
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
         from waitress import serve
-        _port = 1111
+        _port = 9102
         serve(app, host="0.0.0.0", port=_port)
         logger.info(f"# Flask App's Port : {_port}")
 

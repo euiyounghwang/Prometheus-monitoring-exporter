@@ -88,6 +88,10 @@ uptime_export_usage_gauge_g = Gauge("uptime_elapsed_response_time_metrics", 'Res
 uptime_service_health_gauge_g = Gauge("uptime_service_health_metrics", 'Service health check (1: Green, 2: Yellow, 3 : Red)', ["server_job", "env", "service_name"])
 cpu_gauge_g = Gauge("uptime_cpu_usage_metrics", 'Elasticsearch CPU Usage', ["server_job", "env", "service_name"])
 jvm_gauge_g = Gauge("uptime_jvm_usage_metrics", 'Elasticsearch JVM Usage', ["server_job", "env", "service_name"])
+gc_count_young_gauge_g = Gauge("uptime_gc_count_young_usage_metrics", 'Elasticsearch GC Count Young', ["server_job", "env", "service_name"])
+gc_count_old_gauge_g = Gauge("uptime_gc_count_old_usage_metrics", 'Elasticsearch GC Count Old', ["server_job", "env", "service_name"])
+gc_time_young_gauge_g = Gauge("uptime_gc_time_young_usage_metrics", 'Elasticsearch GC Time Young', ["server_job", "env", "service_name"])
+gc_time_old_gauge_g = Gauge("uptime_gc_time_old_usage_metrics", 'Elasticsearch GC Time Old', ["server_job", "env", "service_name"])
 
 # Nodes CPU/Memory/Resource Metrics
 cpu_cores_logical_metrics = Gauge("cpu_cores_logical_metrics", 'CPU Cores Logical', ["server_job", "env", "service_name"])
@@ -101,7 +105,7 @@ class Prometheus_Service_Export:
 
     def __init__(self, loaded_config_json):
         self.service_json = loaded_config_json
-        
+                
     
     def get_header(self, basic_auth):
         """
@@ -146,8 +150,10 @@ class Prometheus_Service_Export:
 	# // grep -c processor /proc/cpuinfo
 	# // free -g
 	# // df -kH /apps
-    def service_uptime(self):
+    def service_uptime(self, interval):
         logging.info(f"service_json loading : {json.dumps(self.service_json, indent=2)}")
+        ''' es gc'''
+        gc_young_count, gc_old_count, gc_young_time, gc_old_time = 0, 0, 0, 0
         for service_json in self.service_json.get("service"):
             service_list = service_json.get("service").split(",")
             health_chk = []
@@ -233,6 +239,45 @@ class Prometheus_Service_Export:
                                 env=self.service_json.get("env"), 
                                 service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
                             ).set(node_stats.get('nodes').get(node_name).get('jvm').get('mem').get('heap_used_percent')) 
+
+                            ''' gc count for elasticsearch nodes'''
+                            # young_delta  = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('young').get('collection_count') - gc_young_count
+                            # young_delta = young_delta if young_delta > 0 else 0
+                            # gc_young_count = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('young').get('collection_count')
+                            # gc_count_young_gauge_g.labels(
+                            #     server_job=socket.gethostname(), 
+                            #     env=self.service_json.get("env"), 
+                            #     service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            # ).set(float(young_delta/float(interval))) 
+
+                            # old_delta  = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('old').get('collection_count') - gc_old_count
+                            # old_delta = old_delta if old_delta > 0 else 0
+                            # gc_old_count = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('old').get('collection_count')
+                            # gc_count_young_gauge_g.labels(
+                            #     server_job=socket.gethostname(), 
+                            #     env=self.service_json.get("env"), 
+                            #     service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            # ).set(float(old_delta/float(interval))) 
+
+                            ''' gc time for elasticsearch nodes'''
+                            # young_time_delta  = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('young').get('collection_time_in_millis') - gc_young_time
+                            # young_time_delta  = young_time_delta if young_time_delta > 0 else 0
+                            # gc_young_time = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('young').get('collection_time_in_millis')
+                            # gc_time_young_gauge_g.labels(
+                            #     server_job=socket.gethostname(), 
+                            #     env=self.service_json.get("env"), 
+                            #     service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            # ).set(float(young_time_delta/float(interval*3600*1000))) 
+
+                            # old_time_delta  = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('old').get('collection_time_in_millis') - gc_old_time
+                            # old_time_delta  = old_time_delta  if old_time_delta  > 0 else 0
+                            # gc_old_time = node_stats.get('nodes').get(node_name).get('jvm').get('gc').get('collectors').get('old').get('collection_time_in_millis')
+                            # gc_time_old_gauge_g.labels(
+                            #     server_job=socket.gethostname(), 
+                            #     env=self.service_json.get("env"), 
+                            #     service_name="{}_{}".format(self.service_json.get("env"), node_stats.get('nodes').get(node_name).get('name'))
+                            # ).set(float(old_time_delta/float(interval*3600*1000))) 
+
 
                             status = es_client.cluster.health()['status']
                             if status == 'green':
@@ -384,7 +429,7 @@ def work(interval, config_each_json):
     while True:
         try:
             ''' Performing'''
-            generated_exporter.service_uptime()
+            generated_exporter.service_uptime(interval)
 
         except (KeyboardInterrupt, SystemExit):
             logging.info("#Interrupted..")
