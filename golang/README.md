@@ -1,6 +1,6 @@
 <i> 
 
-## Golang Setup
+## Golang Setup 
 
 GoNB offers a pre-built docker, that includes JupyterLab and GoNB. To use it, go to a directory that you want to make available to the Jupyter notebook (your home directory, or a directory where to store the notebook files). It will be mounted on the host/ subdirectory in JupyterLab.
 
