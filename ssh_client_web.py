@@ -46,9 +46,20 @@ app = Flask(__name__)
 
 @app.route("/ssh/<string:env>/<string:service>/<string:cmd>", methods=["GET"])
 def service(env, service, cmd):
-    '''
-    Sample Request:  http://localhost:8000/ssh/new-qa13/kibana/start
-    '''
+    """ 
+    Execute the services via ssh
+    Sample Request:  http://localhost:8000/ssh/new-dev/spark_cluster/start
+    
+    Args:
+        env(string): The name of env
+        service(string) : The name of service
+        cmd (string) : The name of command
+    
+    Returns:
+        json: message
+    
+    Return Sample {"message":"Succeed to execute 'start' commands. The Spark_cluster is already started.","result":"Service Spark_cluster PID as 17513","status":200}
+    """
     try:
         logging.info(f"ENV : {env}, Service : {service}, CMD = {cmd}")
         
