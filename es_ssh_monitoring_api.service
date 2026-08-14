@@ -1,0 +1,13 @@
+# /etc/systemd/system/es_ssh_monitoring_api.service
+[Unit]
+Description=ES SSH Service
+
+[Service]
+User=devuser
+Group=devuser
+Type=simple
+ExecStart=/bin/bash /home/devuser/monitoring/custom_export/ssh_client_web.sh start
+ExecStop= /usr/bin/killall/es_ssh_monitoring_api
+
+[Install]
+WantedBy=default.target
