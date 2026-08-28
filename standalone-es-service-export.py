@@ -4387,6 +4387,7 @@ if __name__ == '__main__':
     parser.add_argument('--sql_backlog', dest='sql_backlog', default="select * from test", help='sql_backlog')
     parser.add_argument('--backlog', dest="backlog", default="False", help='If true, it will get backlog from DB\'s.')
     parser.add_argument('--backlog_omx_enable', dest="backlog_omx_enable", default="False", help='If true, it will get backlog from DB\'s.')
+    parser.add_argument('--grpc_mode', dest="grpc_mode", default="False", help='If true, it will be started grpc_mode\'s.')
     # parser.add_argument('--kafka_sql', dest='kafka_sql', default="select * from test", help='kafka_sql')
     ''' request DB interface restpi insteady of connecting db dircectly'''
     parser.add_argument('--db_http_host', dest='db_http_host', default="localhost:8002", help='db restapi url')
@@ -4531,6 +4532,9 @@ if __name__ == '__main__':
     if args.backlog_omx_enable:
         backlog_omx_enable = args.backlog_omx_enable
 
+    if args.grpc_mode:
+        grpc_mode = args.grpc_mode
+
     if args.xMatters:
         xMatters = args.xMatters
 
@@ -4637,6 +4641,7 @@ if __name__ == '__main__':
     backlog = True if str(backlog).upper() == "TRUE" else False
     backlog_omx_enable = True if str(backlog_omx_enable).upper() == "TRUE" else False
     xMatters_enable = True if str(xMatters).upper() == "TRUE" else False
+    grpc_mode = True if str(grpc_mode).upper() == "TRUE" else False    
     certs_alert = True if str(certs_alert).upper() == "TRUE" else False
    
     ''' global '''
@@ -4759,14 +4764,15 @@ if __name__ == '__main__':
                     db_http_thread_Omx_Backlog.start()
                     T.append(db_http_thread_Omx_Backlog)
 
-        ''' gRPC server '''
-        # gRPC_port = "50052"
-        gRPC_port = str(50000 + (int(port)-9000))
-        grpc_thread = Thread(target=run_grpc_server, args=(gRPC_port, ))
-        grpc_thread.daemon = True # Allows the main program to exit
-        grpc_thread.start()
-        T.append(grpc_thread)
-         
+        if grpc_mode:
+            ''' gRPC server '''
+            # gRPC_port = "50052"
+            gRPC_port = str(50000 + (int(port)-9000))
+            grpc_thread = Thread(target=run_grpc_server, args=(gRPC_port, ))
+            grpc_thread.daemon = True # Allows the main program to exit
+            grpc_thread.start()
+            T.append(grpc_thread)
+            
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
         ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
