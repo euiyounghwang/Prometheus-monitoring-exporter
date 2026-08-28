@@ -1,0 +1,20 @@
+{
+    "3" : {
+        "Wednesday" : {
+            "1930" :{
+                "desc" : "3rd Wednesday 20:00 to 01:00 EST",
+                "env" : "dev",
+                "alert" : false
+            }
+        }
+    },
+    "4" : {
+        "Thursday" : {
+            "0130" :{
+                "desc" : "3rd Wednesday 20:00 to 01:00 EST",
+                "env" : "dev",
+                "alert" : true
+            }
+        }
+    }
+}
