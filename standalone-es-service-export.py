@@ -2644,7 +2644,8 @@ def get_metrics_all_envs(monitoring_metrics):
         logging.info(f"grafana_dashboard_url : {gloabl_configuration.get('config').get('grafana_dashboard_url')}")
         logging.info(f"xmatters_webhook_url : {gloabl_configuration.get('config').get('xmatters_webhook_url')}")
         logging.info(f"ES Monitoring Credentail Plan [basic {base64.b64decode(os.environ.get('BASIC_AUTH_SH')).decode('utf-8') if 'BASIC_AUTH_SH' in os.environ else ''}]: {os.environ.get('BASIC_AUTH_SH', '')}")
-        logging.info(f"ES Monitoring Applicaion gRPC_port Server : {gRPC_port}")
+        if grpc_mode:
+            logging.info(f"ES Monitoring Applicaion gRPC_port Server : {gRPC_port}")
         logging.info(f"ES Monitoring Applicaion Exporter Service : http://{domain_name_as_nick_name_running_host}:{port}")
                 
         ''' It can be displayed the log if backlog is enabled'''
@@ -4473,6 +4474,7 @@ if __name__ == '__main__':
 
     global redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url, airflow_url
     global xMatters_enable
+    global grpc_mode
     
     ''' Redis port checking'''
     redis_url = args.redis_url if args.redis_url else None
