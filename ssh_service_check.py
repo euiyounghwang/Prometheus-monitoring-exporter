@@ -67,4 +67,4 @@ if __name__ == '__main__':
     except Exception as e:
         logging.error(f"An error occurred: {e}")
     finally:
-        logging.info("** Job is being performed..")
+        logging.info(f"** [{env}] Job is being performed..")
