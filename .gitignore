@@ -37,3 +37,4 @@ db_interface_app/.env
 otelcol
 Vagrant/.vagrant/
 Vagrant/.vagrant/machines/minikube/docker/id
+standalone-es-cronjob-config.json

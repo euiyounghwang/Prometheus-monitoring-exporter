@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 from flask import Flask, render_template
 import argparse
 import logging
+import requests
 import os
+import json
 import sys
 import warnings
 
@@ -85,7 +87,32 @@ def hello():
 #     while True:
 #         schedule.run_pending()
 #         time.sleep(1)
-        
+
+def request_alert(api_host, env, alert, desc):
+    ''' alert via api'''
+    try:
+        payload = {
+            "env": env.lower(),
+            "alert": str(alert).lower(),
+            "message": "Batch script for the alert"
+        }
+
+        logger.info("-- request_alert --")
+        logger.info(f"payload ; {json.dumps(payload, indent=2)}")
+        http_urls = "http://{}:8004/config/update_alert_config".format(api_host)
+        resp = requests.post(url=http_urls, json=payload, timeout=600)
+                    
+        if not (resp.status_code == 200):
+            ''' clear table for db records if host not reachable'''
+            ''' API error '''
+            logging.info(f"response : {resp.json()['message']}")
+                        
+        logging.info(f"resp.json() - {json.dumps(resp.json(), indent=2)}")
+   
+    except Exception as e:
+        logger.error(f"work func : {e}")
+        pass
+
 
 def work():
   ''' Main'''
@@ -101,6 +128,12 @@ def work():
       # today = datetime.datetime.today().strftime("%Y-%m-%d")
       # print(today)
 
+      ''' Get json file for the schedule'''
+      logger.info("** Get json file for the schedule ** ")
+      loaded_json = Util.get_json_load("./standalone-es-cronjob-config.json")
+    #   logging.info(f"{json.dumps(loaded_json, indent=2)}")
+
+      ''' Check today's weekday and day of the week'''
       # 오늘 날짜와 시간 가져오기
       now = datetime.datetime.today()
 
@@ -108,12 +141,23 @@ def work():
       # d = datetime.date(2026, 8, 3)
       d = datetime.date(now.year, now.month, now.day)
       logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.weekday()}, {now.strftime('%A')}")
+      print('\n')
+
+      hhmm_triggered_config = loaded_json.get(str(now.weekday())).get(now.strftime('%A'))
+
+      logging.info(f"Today's scheduled - {json.dumps(hhmm_triggered_config, indent=2)}")
+      logging.info(f"Current Hours:Minutes : {now.hour}{now.minute}")
+
+      ''' Send test alert'''
+    #   request_alert("localhost", hhmm_triggered_config.get("test").get("env"), hhmm_triggered_config.get("test").get("alert"), hhmm_triggered_config.get("test").get("desc"))
 
       print("\n")
 
+      break
+
     # except (KeyboardInterrupt, SystemExit) as e:           
     except Exception as e:
-      # logger.error(f"work func : {e}")
+      logger.error(f"work func : {e}")
       pass
     
     time.sleep(60)
@@ -152,9 +196,9 @@ if __name__ == "__main__":
       ''' Flask at first run: Do not use the development server in a production environment '''
       ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
       # app.run(host="0.0.0.0", port=int(port)-4000)
-      from waitress import serve
-      serve(app, host="0.0.0.0", port=_port)
-      logger.info(f"# Flask App's Port : {_port}")
+    #   from waitress import serve
+    #   serve(app, host="0.0.0.0", port=_port)
+    #   logger.info(f"# Flask App's Port : {_port}")
       
       for t in T:
         while t.is_alive():
