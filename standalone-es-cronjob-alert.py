@@ -130,6 +130,28 @@ def work():
 
       ''' Get json file for the schedule'''
       logger.info("** Get json file for the schedule ** ")
+      '''
+      {
+        "2" : {
+            "Wednesday" : {
+                "test" :{
+                    "desc" : "Week 3rd Wednesday",
+                    "env" : "dev_new",
+                    "alert" : false
+                }
+            }
+        },
+        "3" : {
+            "Wednesday" : {
+                "1930" :{
+                    "desc" : "Week 3rd Wednesday",
+                    "env" : "dev_new",
+                    "alert" : false
+                }
+            }
+        }
+      }
+      '''
       loaded_json = Util.get_json_load("./standalone-es-cronjob-config.json")
     #   logging.info(f"{json.dumps(loaded_json, indent=2)}")
 
