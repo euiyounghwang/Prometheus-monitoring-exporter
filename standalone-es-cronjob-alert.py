@@ -68,12 +68,12 @@ app = Flask(__name__)
 def hello():
     # return render_template('./index.html', host_name=socket.gethostname().split(".")[0], linked_port=port, service_host=env_name)
     return {
-        "app" : "standalone-es-curator.py",
+        "app" : "standalone-es-cronjob-alert",
         "started_time" : datetime.datetime.now(),
         "tools": [
             {
                "message" : "standalone-es-cronjob.py",
-                "tracking" : tracking_dict
+               "tracking" : tracking_dict
             }
         ]
     }
@@ -91,98 +91,120 @@ def hello():
 def request_alert(api_host, env, alert, desc):
     ''' alert via api'''
     try:
-        payload = {
-            "env": env.lower(),
-            "alert": str(alert).lower(),
-            "message": "Batch script for the alert"
-        }
+        multiple_alert = []
+        for each_env in env.split(","):
+            # print("each_env", env)
+            payload = {
+                "env": each_env.lower(),
+                "alert": str(alert).lower(),
+                "message": "Batch script (\"standalone-es-cronjob-alert.sh\") for the alert"
+            }
 
-        logger.info("-- request_alert --")
-        logger.info(f"payload ; {json.dumps(payload, indent=2)}")
-        http_urls = "http://{}:8004/config/update_alert_config".format(api_host)
-        resp = requests.post(url=http_urls, json=payload, timeout=600)
-                    
-        if not (resp.status_code == 200):
-            ''' clear table for db records if host not reachable'''
-            ''' API error '''
-            logging.info(f"response : {resp.json()['message']}")
+            logger.info("-- request_alert --")
+            logger.info(f"-- api_host : {api_host}, -- desc : {desc}--")
+            logger.info(f"payload ; {json.dumps(payload, indent=2)}")
+            http_urls = "http://{}:8004/config/update_alert_config".format(api_host)
+            print(http_urls)
+            resp = requests.post(url=http_urls, json=payload, timeout=600)
                         
-        logging.info(f"resp.json() - {json.dumps(resp.json(), indent=2)}")
-   
+            if not (resp.status_code == 200):
+                ''' clear table for db records if host not reachable'''
+                ''' API error '''
+                logger.info(f"response : {resp.json()['message']}")
+                            
+            logger.info(f"resp.json() - {json.dumps(resp.json(), indent=2)}")
+
+            multiple_alert.append(payload)
+            
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tracking_dict.update({"alert" : multiple_alert, "sent_date" : current_time})
+
     except Exception as e:
         logger.error(f"work func : {e}")
         pass
 
 
 def work():
-  ''' Main'''
+    ''' Main'''
+    while True:
+        try:
+            print("\n")
+            logger.info("** work func ** ")
 
-  while True:
-    try:
-      print("\n")
-      logger.info("** work func ** ")
+            _api_host = os.environ.get('API_HOST', 'localhost2')
+            logger.info(f"{_api_host}")
+            # 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+            # today = datetime.datetime.today().strftime("%Y-%m-%d")
+            # print(today)
 
-      _api_host = os.environ.get('API_HOST', 'localhost2')
-      logger.info(f"{_api_host}")
-      # 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
-      # today = datetime.datetime.today().strftime("%Y-%m-%d")
-      # print(today)
-
-      ''' Get json file for the schedule'''
-      logger.info("** Get json file for the schedule ** ")
-      '''
-      {
-        "2" : {
-            "Wednesday" : {
-                "test" :{
-                    "desc" : "Week 3rd Wednesday",
-                    "env" : "dev_new",
-                    "alert" : false
+            ''' Get json file for the schedule'''
+            logger.info("** Get json file for the schedule ** ")
+            '''
+            {
+                "2" : {
+                    "Wednesday" : {
+                        "test" :{
+                            "desc" : "Week 3rd Wednesday",
+                            "env" : "dev_new",
+                            "alert" : false
+                        }
+                    }
+                },
+                "3" : {
+                    "Wednesday" : {
+                        "1930" :{
+                            "desc" : "Week 3rd Wednesday",
+                            "env" : "dev_new",
+                            "alert" : false
+                        }
+                    }
                 }
             }
-        },
-        "3" : {
-            "Wednesday" : {
-                "1930" :{
-                    "desc" : "Week 3rd Wednesday",
-                    "env" : "dev_new",
-                    "alert" : false
-                }
-            }
-        }
-      }
-      '''
-      loaded_json = Util.get_json_load("./standalone-es-cronjob-config.json")
-    #   logging.info(f"{json.dumps(loaded_json, indent=2)}")
+            '''
+            loaded_json = Util.get_json_load("./standalone-es-cronjob-config.json")
+            #   logging.info(f"{json.dumps(loaded_json, indent=2)}")
 
-      ''' Check today's weekday and day of the week'''
-      # 오늘 날짜와 시간 가져오기
-      now = datetime.datetime.today()
+            ''' Check today's weekday and day of the week'''
+            # 오늘 날짜와 시간 가져오기
+            now = datetime.datetime.today()
 
-      # 예시: 2026년 8월 28일
-      # d = datetime.date(2026, 8, 3)
-      d = datetime.date(now.year, now.month, now.day)
-      logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.weekday()}, {now.strftime('%A')}")
-      print('\n')
+            # 예시: 2026년 8월 28일
+            # d = datetime.date(2026, 8, 3)
+            d = datetime.date(now.year, now.month, now.day)
+            logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.weekday()}, {now.strftime('%A')}")
+            print('\n')
 
-      hhmm_triggered_config = loaded_json.get(str(now.weekday())).get(now.strftime('%A'))
+            hhmm_triggered_config = loaded_json.get(str(now.weekday())).get(now.strftime('%A'))
 
-      logging.info(f"Today's scheduled - {json.dumps(hhmm_triggered_config, indent=2)}")
-      logging.info(f"Current Hours:Minutes : {now.hour}{now.minute}")
+            logging.info(f"Today's scheduled - {json.dumps(hhmm_triggered_config, indent=2)}")
+            logging.info(f"Current Hours:Minutes : {now.hour:02d}{now.minute:02d}")
 
-      ''' Send test alert'''
-    #   request_alert("localhost", hhmm_triggered_config.get("test").get("env"), hhmm_triggered_config.get("test").get("alert"), hhmm_triggered_config.get("test").get("desc"))
+            ''' Send test alert'''
+            # print(_api_host, type(_api_host))
+            # request_alert(_api_host, hhmm_triggered_config.get("test").get("env"), hhmm_triggered_config.get("test").get("alert"), hhmm_triggered_config.get("test").get("desc"))
+            
+            current_hour_minutes = f"{now.hour:02d}{now.minute:02d}"
+            logger.info(f"current_hour_minutes : {current_hour_minutes}")
+            if current_hour_minutes in hhmm_triggered_config.keys():
+                logger.info(f"current_hour_minutes matched in keys")
+                request_alert(_api_host, 
+                            hhmm_triggered_config.get(current_hour_minutes).get("env"), 
+                            hhmm_triggered_config.get(current_hour_minutes).get("alert"), 
+                            hhmm_triggered_config.get(current_hour_minutes).get("desc")
+                )
+            else:
+                logger.info(f"current_hour_minutes not matched in keys [{hhmm_triggered_config.keys()}]")
 
-      print("\n")
+            print("\n")
 
-      break
+        # break
 
-    # except (KeyboardInterrupt, SystemExit) as e:           
-    except Exception as e:
-      logger.error(f"work func : {e}")
-      pass
+        # except (KeyboardInterrupt, SystemExit) as e:           
+        except Exception as e:
+            logger.error(f"work func : {e}")
+            pass
     
-    time.sleep(60)
+        time.sleep(60)
        
 
 
@@ -218,9 +240,9 @@ if __name__ == "__main__":
       ''' Flask at first run: Do not use the development server in a production environment '''
       ''' For deploying an application to production, one option is to use Waitress, a production WSGI server. '''
       # app.run(host="0.0.0.0", port=int(port)-4000)
-    #   from waitress import serve
-    #   serve(app, host="0.0.0.0", port=_port)
-    #   logger.info(f"# Flask App's Port : {_port}")
+      from waitress import serve
+      serve(app, host="0.0.0.0", port=_port)
+      logger.info(f"# Flask App's Port : {_port}")
       
       for t in T:
         while t.is_alive():

@@ -43,6 +43,7 @@ else
 fi
 
 # -- Export Variable
+export PYTHONDONTWRITEBYTECODE=1
 export API_HOST="localhost"
 # --
 
