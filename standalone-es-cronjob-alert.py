@@ -189,13 +189,19 @@ def work():
             current_yymmdd = f"{now.year:04d}-{now.month:02d}-{now.day:02d}"
             current_hour_minutes = f"{now.hour:02d}{now.minute:02d}"
             logger.info(f"current_yymmdd : {current_yymmdd}, current_hour_minutes : {current_hour_minutes}")
+            # logger.info(f"{os.environ.get('ALERT_SEND')}")
             if current_hour_minutes in hhmm_triggered_config.keys():
                 logger.info(f"current_hour_minutes matched in keys")
-                request_alert(_api_host, 
-                            hhmm_triggered_config.get(current_hour_minutes).get("env"), 
-                            hhmm_triggered_config.get(current_hour_minutes).get("alert"), 
-                            hhmm_triggered_config.get(current_hour_minutes).get("desc")
-                )
+                ''' Request and update the alerts for some env's'''
+                if int(os.environ.get("ALERT_SEND")) > 0:
+                    logger.info(f"SEND for {hhmm_triggered_config.get(current_hour_minutes).get('env')}")
+                    request_alert(_api_host, 
+                                hhmm_triggered_config.get(current_hour_minutes).get("env"), 
+                                hhmm_triggered_config.get(current_hour_minutes).get("alert"), 
+                                hhmm_triggered_config.get(current_hour_minutes).get("desc")
+                    )
+                else:
+                    logger.info(f"NOT SEND..")
             else:
                 logger.info(f"current_hour_minutes not matched in keys [{hhmm_triggered_config.keys()}]")
 

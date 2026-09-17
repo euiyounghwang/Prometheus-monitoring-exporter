@@ -45,6 +45,8 @@ fi
 # -- Export Variable
 export PYTHONDONTWRITEBYTECODE=1
 export API_HOST="localhost"
+# -- 0: NOT SEND, 1: SEND
+export ALERT_SEND=0
 # --
 
 # See how we were called.
