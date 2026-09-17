@@ -26,7 +26,7 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger("Tools-Alert-Script")
+logger = logging.getLogger("ES-Cronjob-Alert-Script")
 
 ''' Tracking thread_alert_message '''
 tracking_dict = {
@@ -166,25 +166,29 @@ def work():
 
             ''' Check today's weekday and day of the week'''
             # 오늘 날짜와 시간 가져오기
-            now = datetime.datetime.today()
+            # now = datetime.datetime.today()
+            now = datetime.datetime.now(gloabal_default_timezone)
 
             # 예시: 2026년 8월 28일
             # d = datetime.date(2026, 8, 3)
             d = datetime.date(now.year, now.month, now.day)
-            logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.weekday()}, {now.strftime('%A')}")
+            # logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.weekday()}, {now.strftime('%A')}")
+            logger.info(f"{d.month}월 {get_week_of_month(d)}주차입니다. {now.strftime('%A')}")
             print('\n')
 
-            hhmm_triggered_config = loaded_json.get(str(now.weekday())).get(now.strftime('%A'))
+            # hhmm_triggered_config = loaded_json.get(str(now.weekday())).get(now.strftime('%A'))
+            hhmm_triggered_config = loaded_json.get(str(get_week_of_month(d))).get(now.strftime('%A'))
 
-            logging.info(f"Today's scheduled - {json.dumps(hhmm_triggered_config, indent=2)}")
-            logging.info(f"Current Hours:Minutes : {now.hour:02d}{now.minute:02d}")
+            logger.info(f"Today's scheduled - {json.dumps(hhmm_triggered_config, indent=2)}")
+            # logger.info(f"Current Hours:Minutes : {now.hour:02d}{now.minute:02d}")
 
             ''' Send test alert'''
             # print(_api_host, type(_api_host))
             # request_alert(_api_host, hhmm_triggered_config.get("test").get("env"), hhmm_triggered_config.get("test").get("alert"), hhmm_triggered_config.get("test").get("desc"))
             
+            current_yymmdd = f"{now.year:04d}-{now.month:02d}-{now.day:02d}"
             current_hour_minutes = f"{now.hour:02d}{now.minute:02d}"
-            logger.info(f"current_hour_minutes : {current_hour_minutes}")
+            logger.info(f"current_yymmdd : {current_yymmdd}, current_hour_minutes : {current_hour_minutes}")
             if current_hour_minutes in hhmm_triggered_config.keys():
                 logger.info(f"current_hour_minutes matched in keys")
                 request_alert(_api_host, 
