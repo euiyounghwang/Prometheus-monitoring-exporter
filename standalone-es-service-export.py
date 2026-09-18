@@ -420,6 +420,7 @@ max_disk_used, max_es_disk_used, max_kafka_disk_used = 0, 0, 0
 each_es_instance_cpu_history, each_es_instance_jvm_history = {}, {}
 
 ssl_certificates_expired_date = ""
+global_spark_apps_statistics = ""
 
 
 def get_metrics_all_envs(monitoring_metrics):
@@ -2162,6 +2163,10 @@ def get_metrics_all_envs(monitoring_metrics):
         custom_apps = [each_apps_json.get("name") for each_apps_json in response_spark_jobs]
         service_status_dict.update({"spark_custom_apps_list" : ",".join(custom_apps) if custom_apps else ""})
 
+        ''' spark apps is saved'''
+        global global_spark_apps_statistics
+        global_spark_apps_statistics = custom_apps
+
         ''' extract master node from spark hosts'''
         master_spark = monitoring_metrics.get("kafka_url").split(",")[0]
         master_spark = master_spark.split(':')[0]
@@ -3522,6 +3527,26 @@ def get_mail_configuration(db_http_host):
         pass
 
 
+def spark_apps_statistics_jobs(interval):
+    ''' spark apps statistics'''
+    try:
+        while True:
+            if global_spark_apps_statistics:
+                print('\n\n --')
+                print(f"\n\n -- Get Spark Apps IDs {global_spark_apps_statistics}")
+                print('\n\n --')
+            else:
+                print('\n\n --')
+                print('\n\n -- Not Get Spark Apps IDs')
+                print('\n\n --')
+
+            time.sleep(interval)
+
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("#Interrupted..")
+    except Exception as e:
+        logging.error(e)
+
 
 def running_time(end_time, start_time):
     ''' Calculate running time'''
@@ -4185,7 +4210,7 @@ def alert_certs_work(interval):
             hostname = domain_name_as_nick_name.split(".")[0]
 
             print(f"domain_name_as_nick_name : {hostname}, certi_alert_value : {global_mail_configuration.get(hostname).get('is_certificate_mailing')}")
-            # print(f"domain_name_as_nick_name : {hostname}")
+            print(f"ES_CONFIGURATION_HOST : {os.getenv('ES_CONFIGURATION_HOST')}")
             
 
             try:
@@ -4403,6 +4428,8 @@ if __name__ == '__main__':
     parser.add_argument('--purge_script', dest='purge_script', default="localhost:8001,localhost1:8001,localhost1:8001", help='purge_script')
     ''' ----------------------------------------------------------------------------------------------------------------'''
     parser.add_argument('--port', dest='port', default=9115, help='Expose Port')
+    ''' export spark health for apps'''
+    parser.add_argument('--spark_apps_statistics', dest='spark_apps_statistics', default="False", help='Spark apps Monitoring')
     parser.add_argument('--interval', dest='interval', default=30, help='Interval')
     args = parser.parse_args()
 
@@ -4424,7 +4451,7 @@ if __name__ == '__main__':
     global global_spark_cluster_https
     global gloabal_default_timezone
     global gRPC_port
-
+    
     gloabal_default_timezone = pytz.timezone('US/Eastern')
 
     if args.env_name:
@@ -4506,7 +4533,6 @@ if __name__ == '__main__':
     ''' loki_agent for text logs '''
     log_aggregation_agent_url = args.log_aggregation_agent_url if args.log_aggregation_agent_url else None
 
-    
     ''' ----------------------------------------------------------------------------------------------------------------'''
     ''' set DB or http interface api'''
     if args.interface:
@@ -4542,6 +4568,9 @@ if __name__ == '__main__':
 
     if args.certs_alert:
         certs_alert = args.certs_alert
+
+    if args.spark_apps_statistics:
+        spark_apps_statistics = args.spark_apps_statistics
 
     # if args.kafka_sql:
     #     kafka_sql = args.kafka_sql
@@ -4645,7 +4674,8 @@ if __name__ == '__main__':
     xMatters_enable = True if str(xMatters).upper() == "TRUE" else False
     grpc_mode = True if str(grpc_mode).upper() == "TRUE" else False    
     certs_alert = True if str(certs_alert).upper() == "TRUE" else False
-   
+    spark_apps_statistics = True if str(spark_apps_statistics).upper() == "TRUE" else False
+       
     ''' global '''
     global_spark_cluster_https = spark_cluster_https
 
@@ -4688,7 +4718,7 @@ if __name__ == '__main__':
         T.append(mail_th)
 
         if certs_alert:
-            certs_alert_thread = Thread(target=alert_certs_work, args=(10,))
+            certs_alert_thread = Thread(target=alert_certs_work, args=(300,))
             certs_alert_thread.daemon = True
             certs_alert_thread.start()
             T.append(certs_alert_thread)
@@ -4774,6 +4804,14 @@ if __name__ == '__main__':
             grpc_thread.daemon = True # Allows the main program to exit
             grpc_thread.start()
             T.append(grpc_thread)
+
+        ''' spark apps statistics'''
+        if spark_apps_statistics:
+            spark_apps_thread = Thread(target=spark_apps_statistics_jobs, args=(30, ))
+            spark_apps_thread.daemon = True
+            spark_apps_thread.start()
+            T.append(spark_apps_thread)
+            
             
         ''' Expose this app to acesss index.html (./templates/index.html)'''
         ''' Flask at first run: Do not use the development server in a production environment '''
