@@ -48,6 +48,9 @@ export BASIC_AUTH_SH="basic_auth_encoded"
 export PROMETHEUS_USERNAME="test"
 export PROMETHEUS_PASSWORD="test"
 export CERTIFICATE_TEST_HOST="localhost"
+# --app_id, statistics/or batches
+export SPARK_APPS_METRICS_1="https://localhost:4440/api/v1/applications/{}/streaming/{}"
+export SPARK_APPS_METRICS_2="https://localhost:4441/api/v1/applications/{}/streaming/{}"
 
 
 export ZOOKEEPER_URLS="localhost:2181,localhost:2181,localhost:2181"

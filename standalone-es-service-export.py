@@ -36,6 +36,7 @@ import RPC.gRPC.service_pb2_grpc
 
 from google.protobuf.struct_pb2 import Struct
 from RPC.gRPC.service_pb2 import MetricsStatusResponse
+from zoneinfo import ZoneInfo
 from concurrent import futures
 
 import warnings
@@ -168,6 +169,54 @@ db_jobs_db_connection_omx_active_gauge_g = Gauge("db_connection_omx_active_metri
 es_service_jobs_failure_gauge_g = Gauge("es_service_jobs_failure_running_metrics", 'Metrics scraped from localhost', ["server_job", "host", "reason"])
 ''' xMatters_service '''
 xMatters_service_gauge_g = Gauge("xMatters_service_health_metric", 'Metrics scraped from localhost', ["server_job"])
+
+''' spark jobs metrics (Average Delay)'''
+# https://localhost:4440/api/v1/applications/app-20260918164833-0005/streaming/statistics
+'''
+{
+  "startTime" : "2026-09-18T20:48:39.202GMT",
+  "batchDuration" : 10000,
+  "numReceivers" : 0,
+  "numActiveReceivers" : 0,
+  "numInactiveReceivers" : 0,
+  "numTotalCompletedBatches" : 50964,
+  "numRetainedCompletedBatches" : 2000,
+  "numActiveBatches" : 0,
+  "numProcessedRecords" : 104947,
+  "numReceivedRecords" : 104947,
+  "avgInputRate" : 0.22704999999999528,
+  "avgSchedulingDelay" : 0,
+  "avgProcessingTime" : 1205,
+  "avgTotalDelay" : 1205
+}
+'''
+spark_jobs_performance_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+spark_jobs_performance_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+spark_jobs_performance_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+spark_jobs_performance_average_delay_metrics_gauge_g = Gauge("spark_jobs_performance_average_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# https://localhost:4440/api/v1/applications/app-20260918164833-0005/streaming/batches
+'''
+[ {
+  "batchId" : 1790255400000,
+  "batchTime" : "2026-09-24T13:10:00.000GMT",
+  "status" : "COMPLETED",
+  "batchDuration" : 10000,
+  "inputSize" : 2,
+  "schedulingDelay" : 0,
+  "processingTime" : 1309,
+  "totalDelay" : 1309,
+  "numActiveOutputOps" : 0,
+  "numCompletedOutputOps" : 1,
+  "numFailedOutputOps" : 0,
+  "numTotalOutputOps" : 1
+}, 
+'''
+# spark_jobs_performance_batch_metrics_gauge_g = Gauge("spark_jobs_performance_batch_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name", "batchId", "batchTime", "status", "batchDuration", "inputSize", "schedulingDelay", "processingTime", "totalDelay", "numActiveOutputOps", "numCompletedOutputOps", "numFailedOutputOps", "numTotalOutputOps"])
+spark_jobs_performance_batch_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_batch_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_batch_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_batch_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_batch_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_batch_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_batch_average_delay_metrics_gauge_g = Gauge("spark_jobs_performance_batch_average_delay_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+
 
 
 app = Flask(__name__)
@@ -421,6 +470,7 @@ each_es_instance_cpu_history, each_es_instance_jvm_history = {}, {}
 
 ssl_certificates_expired_date = ""
 global_spark_apps_statistics = ""
+spark_apps_statistics = ""
 
 
 def get_metrics_all_envs(monitoring_metrics):
@@ -685,6 +735,9 @@ def get_metrics_all_envs(monitoring_metrics):
         ''' first node of --kafka_url argument is a master node to get the number of jobs using http://localhost:8080/json '''
         try:
 
+            global spark_apps_id_jobs
+            spark_apps_id_jobs = {}
+
             if not node:
                 return None
             logging.info(f"get_spark_jobs - {node}")
@@ -733,6 +786,8 @@ def get_metrics_all_envs(monitoring_metrics):
                 #     saved_failure_dict.update({"{}:8080".format(master_node) : "Spark cluster - No Spark Custom Apps".format(master_node)})   
                 return resp_working_job
                 '''
+                if spark_apps_statistics:
+                    spark_apps_id_jobs = {each_spark_apps.get("id") : each_spark_apps.get("name") for each_spark_apps in resp_working_job}
             else:
                 logging.info(f"get_active_jobs [No] {resp_working_job}") 
                 saved_failure_dict.update({"{}:8080_#1".format(master_node) : "Spark cluster - {}, no active jobs. Please run 'Spark Custom Apps'".format(spark_url)})
@@ -2163,7 +2218,7 @@ def get_metrics_all_envs(monitoring_metrics):
         custom_apps = [each_apps_json.get("name") for each_apps_json in response_spark_jobs]
         service_status_dict.update({"spark_custom_apps_list" : ",".join(custom_apps) if custom_apps else ""})
 
-        ''' spark apps is saved'''
+        # ''' spark apps is saved'''
         global global_spark_apps_statistics
         global_spark_apps_statistics = custom_apps
 
@@ -3529,12 +3584,108 @@ def get_mail_configuration(db_http_host):
 
 def spark_apps_statistics_jobs(interval):
     ''' spark apps statistics'''
+    '''
+    
+    export SPARK_APPS_METRICS_1="https://localhost:4440/api/v1/applications/{}/streaming/statistics"
+    export SPARK_APPS_METRICS_2="https://localhost:4441/api/v1/applications/{}/streaming/statistics"
+
+    [ 
+        {
+        "batchId" : 1790255400000,
+        "batchTime" : "2026-09-24T13:10:00.000GMT",
+        "status" : "COMPLETED",
+        "batchDuration" : 10000,
+        "inputSize" : 2,
+        "schedulingDelay" : 0,
+        "processingTime" : 1309,
+        "totalDelay" : 1309,
+        "numActiveOutputOps" : 0,
+        "numCompletedOutputOps" : 1,
+        "numFailedOutputOps" : 0,
+        "numTotalOutputOps" : 1
+        }, 
+    ]
+    spark_jobs_performance_batch_metrics_gauge_g = Gauge("spark_jobs_performance_batch_metrics", 'Metrics scraped from localhost', 
+    ["server_job", "start_time", "id", "name", "batchId", "batchTime", "status", "batchDuration", "inputSize", "schedulingDelay", "processingTime", "totalDelay", "numActiveOutputOps", "numCompletedOutputOps", "numFailedOutputOps", "numTotalOutputOps"])
+
+    '''
     try:
         while True:
             if global_spark_apps_statistics:
                 print('\n\n --')
-                print(f"\n\n -- Get Spark Apps IDs {global_spark_apps_statistics}")
+                '''
+                Get Spark Apps IDs ['StreamProcess_WMX_EXP', 'StreamProcess_OMX_EXP'], 
+                spark_apps_id_jobs : {'app-20260918164833-0005': 'StreamProcess_WMX_EXP', 'app-20260918164841-0006': 'StreamProcess_OMX_EXP'}
+                '''
+                print(f"\n\n -- Get Spark Apps IDs {global_spark_apps_statistics}, spark_apps_id_jobs : {spark_apps_id_jobs}")
                 print('\n\n --')
+
+                try:
+                    ''' Get Spark apps metrics'''
+                    spark_jobs_performance_input_rate_metrics_gauge_g.clear()
+                    spark_jobs_performance_scheduling_delay_metrics_gauge_g.clear()
+                    spark_jobs_performance_processing_time_metrics_gauge_g.clear()
+                    spark_jobs_performance_average_delay_metrics_gauge_g.clear()
+
+                    # spark_jobs_performance_batch_input_rate_metrics_gauge_g.clear()
+                    # spark_jobs_performance_batch_scheduling_delay_metrics_gauge_g.clear()
+                    # spark_jobs_performance_batch_processing_time_metrics_gauge_g.clear()
+                    # spark_jobs_performance_batch_average_delay_metrics_gauge_g.clear()
+                    
+                    idx=1
+
+                    ''' Making a call for the basic statistics'''
+                    for k, v in spark_apps_id_jobs.items():
+                        spark_metrics_url = os.environ["SPARK_APPS_METRICS_{}".format(idx)].format(k, "statistics")
+                        print(f"spark_metrics_url : {spark_metrics_url}")
+                        resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
+                        ''' basic statistics'''
+                        ''' -------------------'''
+                        spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
+                        spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
+                        spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
+                        spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgTotalDelay"))
+                        ''' -------------------'''
+                        idx +=1
+                        if not (resp.status_code == 200):
+                            continue
+
+                        logging.info(f"response.json - {resp.json()}")
+
+                    idx=1
+                    ''' Making a call for the batch statistics'''
+                    for k, v in spark_apps_id_jobs.items():
+                        spark_metrics_url = os.environ["SPARK_APPS_METRICS_{}".format(idx)].format(k, "batches")
+                        print(f"spark_metrics_url : {spark_metrics_url}")
+                        resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
+                        idx +=1
+                        if not (resp.status_code == 200):
+                            continue
+
+                        ''' -------------------'''
+                        _Max_num = 1
+                        sorted_list = sorted(resp.json()[:_Max_num], key=lambda x: x['batchTime'])
+                        print(f"sorted_list (app id: {k}) : {sorted_list}")
+                        for each_json in sorted_list:
+
+                            gmt_time = datetime.datetime.strptime(each_json.get("batchTime"),"%Y-%m-%dT%H:%M:%S.%fGMT").replace(tzinfo=ZoneInfo("GMT"))
+
+                            # 3. 미국 동부 시간(America/New_York)으로 변환
+                            est_time = gmt_time.astimezone(ZoneInfo("America/New_York"))
+
+                            # print("변환 후 (동부):", est_time.strftime("%Y-%m-%d %H:%M:%S %Z"))
+
+                            spark_jobs_performance_batch_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("inputSize"))
+                            spark_jobs_performance_batch_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("schedulingDelay"))
+                            spark_jobs_performance_batch_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("processingTime"))
+                            spark_jobs_performance_batch_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("totalDelay"))
+                            
+                        ''' -------------------'''
+                        # logging.info(f"response.json - {resp.json()}")
+                
+                except Exception as e:
+                    logging.error(e)
+                    pass
             else:
                 print('\n\n --')
                 print('\n\n -- Not Get Spark Apps IDs')
@@ -3589,7 +3740,8 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
     try:
         ''' Prometehus start server '''
         ''' *** '''
-        start_http_server(int(port))
+        # 1. 서버 시작 (서버 객체와 스레드를 리턴받음)
+        server, thread = start_http_server(int(port))
         ''' *** '''
         
         logging.info(f"\n\nStandalone Prometheus Exporter Server started..")
@@ -3682,8 +3834,17 @@ def work(es_http_host, db_http_host, port, interval, monitoring_metrics):
 
     except (KeyboardInterrupt, SystemExit):
         logging.info("#Interrupted..")
+    # except (KeyboardInterrupt):
+    #         logging.info("#Interrupted..")
     except Exception as e:
         logging.error(e)
+
+    finally:
+        # 2. 에러 예방을 위해 순서대로 정상 종료 프로세스 수행
+        server.shutdown()      # 스레드 루프 중지
+        server.server_close()  # 소켓 바인딩 해제 (포트 릴리즈)
+        thread.join()          # 백그라운드 스레드 대기 종료
+        logging.info("# Server stopped completely.")
        
 
 ''' Alert'''
@@ -4502,6 +4663,7 @@ if __name__ == '__main__':
     global redis_url, configuration_job_url, es_configuration_api_url, log_db_url, alert_monitoring_url, loki_url, loki_api_url, loki_custom_promtail_agent_url, log_aggregation_agent_url, airflow_url
     global xMatters_enable
     global grpc_mode
+    # global spark_apps_statistics
     
     ''' Redis port checking'''
     redis_url = args.redis_url if args.redis_url else None
@@ -4807,7 +4969,7 @@ if __name__ == '__main__':
 
         ''' spark apps statistics'''
         if spark_apps_statistics:
-            spark_apps_thread = Thread(target=spark_apps_statistics_jobs, args=(30, ))
+            spark_apps_thread = Thread(target=spark_apps_statistics_jobs, args=(60, ))
             spark_apps_thread.daemon = True
             spark_apps_thread.start()
             T.append(spark_apps_thread)
