@@ -3632,56 +3632,58 @@ def spark_apps_statistics_jobs(interval):
                     # spark_jobs_performance_batch_processing_time_metrics_gauge_g.clear()
                     # spark_jobs_performance_batch_average_delay_metrics_gauge_g.clear()
                     
-                    idx=1
-
                     ''' Making a call for the basic statistics'''
                     for k, v in spark_apps_id_jobs.items():
-                        spark_metrics_url = os.environ["SPARK_APPS_METRICS_{}".format(idx)].format(k, "statistics")
-                        print(f"spark_metrics_url : {spark_metrics_url}")
-                        resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
-                        ''' basic statistics'''
-                        ''' -------------------'''
-                        spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
-                        spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
-                        spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
-                        spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgTotalDelay"))
-                        ''' -------------------'''
-                        idx +=1
-                        if not (resp.status_code == 200):
-                            continue
+                        for each_port in os.environ["SPARK_APPS_METRICS_PORT"].split(","):
+                            spark_metrics_url = os.environ["SPARK_APPS_METRICS"].format(each_port, k, "statistics")
+                        
+                            print(f"spark_metrics_url : {spark_metrics_url}")
+                            resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
 
-                        logging.info(f"response.json - {resp.json()}")
+                            if not (resp.status_code == 200):
+                                continue
 
-                    idx=1
+                            ''' basic statistics'''
+                            ''' -------------------'''
+                            spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
+                            spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
+                            spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
+                            spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgTotalDelay"))
+                            ''' -------------------'''
+                            
+                            logging.info(f"response.json - {resp.json()}")
+
                     ''' Making a call for the batch statistics'''
                     for k, v in spark_apps_id_jobs.items():
-                        spark_metrics_url = os.environ["SPARK_APPS_METRICS_{}".format(idx)].format(k, "batches")
-                        print(f"spark_metrics_url : {spark_metrics_url}")
-                        resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
-                        idx +=1
-                        if not (resp.status_code == 200):
-                            continue
+                        for each_port in os.environ["SPARK_APPS_METRICS_PORT"].split(","):
+                            spark_metrics_url = os.environ["SPARK_APPS_METRICS"].format(each_port, k, "batches")
+                    
+                            print(f"spark_metrics_url : {spark_metrics_url}")
+                            resp = requests.get(url=spark_metrics_url, timeout=5, verify=False)
+                    
+                            if not (resp.status_code == 200):
+                                continue
 
-                        ''' -------------------'''
-                        _Max_num = 1
-                        sorted_list = sorted(resp.json()[:_Max_num], key=lambda x: x['batchTime'])
-                        print(f"sorted_list (app id: {k}) : {sorted_list}")
-                        for each_json in sorted_list:
+                            ''' -------------------'''
+                            _Max_num = 1
+                            sorted_list = sorted(resp.json()[:_Max_num], key=lambda x: x['batchTime'])
+                            print(f"sorted_list (app id: {k}) : {sorted_list}")
+                            for each_json in sorted_list:
 
-                            gmt_time = datetime.datetime.strptime(each_json.get("batchTime"),"%Y-%m-%dT%H:%M:%S.%fGMT").replace(tzinfo=ZoneInfo("GMT"))
+                                gmt_time = datetime.datetime.strptime(each_json.get("batchTime"),"%Y-%m-%dT%H:%M:%S.%fGMT").replace(tzinfo=ZoneInfo("GMT"))
 
-                            # 3. 미국 동부 시간(America/New_York)으로 변환
-                            est_time = gmt_time.astimezone(ZoneInfo("America/New_York"))
+                                # 3. 미국 동부 시간(America/New_York)으로 변환
+                                est_time = gmt_time.astimezone(ZoneInfo("America/New_York"))
 
-                            # print("변환 후 (동부):", est_time.strftime("%Y-%m-%d %H:%M:%S %Z"))
+                                # print("변환 후 (동부):", est_time.strftime("%Y-%m-%d %H:%M:%S %Z"))
 
-                            spark_jobs_performance_batch_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("inputSize"))
-                            spark_jobs_performance_batch_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("schedulingDelay"))
-                            spark_jobs_performance_batch_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("processingTime"))
-                            spark_jobs_performance_batch_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("totalDelay"))
-                            
-                        ''' -------------------'''
-                        # logging.info(f"response.json - {resp.json()}")
+                                spark_jobs_performance_batch_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("inputSize"))
+                                spark_jobs_performance_batch_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("schedulingDelay"))
+                                spark_jobs_performance_batch_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("processingTime"))
+                                spark_jobs_performance_batch_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(each_json.get("totalDelay"))
+                                
+                            ''' -------------------'''
+                            # logging.info(f"response.json - {resp.json()}")
                 
                 except Exception as e:
                     logging.error(e)
