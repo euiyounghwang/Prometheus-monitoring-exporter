@@ -190,6 +190,7 @@ xMatters_service_gauge_g = Gauge("xMatters_service_health_metric", 'Metrics scra
   "avgTotalDelay" : 1205
 }
 '''
+spark_jobs_performance_numactivebatch_metrics_gauge_g = Gauge("spark_jobs_performance_numactivebatch_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
 spark_jobs_performance_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
 spark_jobs_performance_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
 spark_jobs_performance_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
@@ -3622,6 +3623,7 @@ def spark_apps_statistics_jobs(interval):
 
                 try:
                     ''' Get Spark apps metrics'''
+                    spark_jobs_performance_numactivebatch_metrics_gauge_g.clear()
                     spark_jobs_performance_input_rate_metrics_gauge_g.clear()
                     spark_jobs_performance_scheduling_delay_metrics_gauge_g.clear()
                     spark_jobs_performance_processing_time_metrics_gauge_g.clear()
@@ -3645,6 +3647,7 @@ def spark_apps_statistics_jobs(interval):
 
                             ''' basic statistics'''
                             ''' -------------------'''
+                            spark_jobs_performance_numactivebatch_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("numActiveBatches"))
                             spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
                             spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
                             spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
@@ -3654,6 +3657,8 @@ def spark_apps_statistics_jobs(interval):
                             logging.info(f"response.json - {resp.json()}")
 
                     ''' Making a call for the batch statistics'''
+                    """
+                    # ------------------- Disable for statistics -----------------------
                     for k, v in spark_apps_id_jobs.items():
                         for each_port in os.environ["SPARK_APPS_METRICS_PORT"].split(","):
                             spark_metrics_url = os.environ["SPARK_APPS_METRICS"].format(each_port, k, "batches")
@@ -3684,7 +3689,7 @@ def spark_apps_statistics_jobs(interval):
                                 
                             ''' -------------------'''
                             # logging.info(f"response.json - {resp.json()}")
-                
+                    """
                 except Exception as e:
                     logging.error(e)
                     pass
@@ -4971,7 +4976,7 @@ if __name__ == '__main__':
 
         ''' spark apps statistics'''
         if spark_apps_statistics:
-            spark_apps_thread = Thread(target=spark_apps_statistics_jobs, args=(60, ))
+            spark_apps_thread = Thread(target=spark_apps_statistics_jobs, args=(300, ))
             spark_apps_thread.daemon = True
             spark_apps_thread.start()
             T.append(spark_apps_thread)
