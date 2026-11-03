@@ -51,8 +51,8 @@ case "$1" in
   start)
         # Start daemon.
         echo "🦄 Starting $SERVICE_NAME";
-        # nohup $SCRIPTDIR/standalone-relay-api.py &> /dev/null &
-        python $SCRIPTDIR/standalone-relay-api.py
+        # nohup $SCRIPTDIR/standalone-relay-api.py --port 3002 &> /dev/null &
+        python $SCRIPTDIR/standalone-relay-api.py --port 3002
         ;;
   stop)
         # Stop daemons.
