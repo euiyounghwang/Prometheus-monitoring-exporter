@@ -1,5 +1,5 @@
 #!/bin/sh
-ES_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/custom_export
+ES_SERVICE_ALL_EXPORT_PATH=/home/devuser/monitoring/relay_api
 PATH=$PATH:$ES_SERVICE_ALL_EXPORT_PATH/bin
 SERVICE_NAME=es-relay-api-service
 
@@ -42,6 +42,8 @@ else
     source $VENV/Scripts/activate
 fi
 
+process_name='/home/biadmin/monitoring/relay_api/standalone-relay-api.py'
+
 # -- Export Variable
 export PYTHONDONTWRITEBYTECODE=1
 # --
@@ -49,10 +51,19 @@ export PYTHONDONTWRITEBYTECODE=1
 # See how we were called.
 case "$1" in
   start)
-        # Start daemon.
-        echo "🦄 Starting $SERVICE_NAME";
-        # nohup $SCRIPTDIR/standalone-relay-api.py --port 3002 &> /dev/null &
-        python $SCRIPTDIR/standalone-relay-api.py --port 3002
+        PID=$(ps -ef | grep $process_name | grep -v grep)
+        test=$?
+        if [ $test -eq 0 ]
+        then
+          PID=$(ps -ef | grep $process_name | grep -v grep | tr -s ' ' | cut -d " " -f2)
+          echo $SERVICE_NAME is Running as $PID
+          #kill -9 $PID
+        else
+          # Start daemon.
+          echo "🦄 Starting $SERVICE_NAME";
+          # nohup python $SCRIPTDIR/standalone-relay-api.py --port 3002 &> /dev/null &
+          python $SCRIPTDIR/standalone-relay-api.py --port 3002
+        fi
         ;;
   stop)
         # Stop daemons.
