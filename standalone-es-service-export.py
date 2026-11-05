@@ -190,11 +190,19 @@ xMatters_service_gauge_g = Gauge("xMatters_service_health_metric", 'Metrics scra
   "avgTotalDelay" : 1205
 }
 '''
-spark_jobs_performance_numactivebatch_metrics_gauge_g = Gauge("spark_jobs_performance_numactivebatch_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
-spark_jobs_performance_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
-spark_jobs_performance_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
-spark_jobs_performance_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
-spark_jobs_performance_average_delay_metrics_gauge_g = Gauge("spark_jobs_performance_average_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# spark_jobs_performance_numactivebatch_metrics_gauge_g = Gauge("spark_jobs_performance_numactivebatch_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# spark_jobs_performance_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# spark_jobs_performance_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# spark_jobs_performance_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+# spark_jobs_performance_average_delay_metrics_gauge_g = Gauge("spark_jobs_performance_average_delay_metrics", 'Metrics scraped from localhost', ["server_job", "start_time", "id", "name"])
+
+spark_jobs_performance_numactivebatch_metrics_gauge_g = Gauge("spark_jobs_performance_numactivebatch_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_input_rate_metrics_gauge_g = Gauge("spark_jobs_performance_input_rate_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_scheduling_delay_metrics_gauge_g = Gauge("spark_jobs_performance_scheduling_delay_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_processing_time_metrics_gauge_g = Gauge("spark_jobs_performance_processing_time_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+spark_jobs_performance_average_delay_metrics_gauge_g = Gauge("spark_jobs_performance_average_delay_metrics", 'Metrics scraped from localhost', ["server_job", "name"])
+
+
 # https://localhost:4440/api/v1/applications/app-20260918164833-0005/streaming/batches
 '''
 [ {
@@ -3647,11 +3655,17 @@ def spark_apps_statistics_jobs(interval):
 
                             ''' basic statistics'''
                             ''' -------------------'''
-                            spark_jobs_performance_numactivebatch_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("numActiveBatches"))
-                            spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
-                            spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
-                            spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
-                            spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgTotalDelay"))
+                            # spark_jobs_performance_numactivebatch_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("numActiveBatches"))
+                            # spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgInputRate"))
+                            # spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgSchedulingDelay"))
+                            # spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgProcessingTime"))
+                            # spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, start_time=resp.json().get("startTime"), id=k, name=v).set(resp.json().get("avgTotalDelay"))
+
+                            spark_jobs_performance_numactivebatch_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(resp.json().get("numActiveBatches"))
+                            spark_jobs_performance_input_rate_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(resp.json().get("avgInputRate"))
+                            spark_jobs_performance_scheduling_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(resp.json().get("avgSchedulingDelay"))
+                            spark_jobs_performance_processing_time_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(resp.json().get("avgProcessingTime"))
+                            spark_jobs_performance_average_delay_metrics_gauge_g.labels(server_job=domain_name_as_nick_name, name=v).set(resp.json().get("avgTotalDelay"))
                             ''' -------------------'''
                             
                             logging.info(f"response.json - {resp.json()}")
