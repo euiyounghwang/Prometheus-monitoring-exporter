@@ -48,6 +48,11 @@ process_name='/home/biadmin/monitoring/relay_api/standalone-relay-api.py'
 export PYTHONDONTWRITEBYTECODE=1
 # --
 
+# -- Cronjob
+# Monitoring API Service
+# */30 * * * * su - biadmin -c "/home/devuser/monitoring/relay_api/standalone-relay-api.sh start"
+# --
+
 # See how we were called.
 case "$1" in
   start)
