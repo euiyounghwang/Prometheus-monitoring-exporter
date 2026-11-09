@@ -29,17 +29,18 @@ VENV=".venv"
 #     source $ES_REDIS_CONFIGURATION_WRITE_PATH/$VENV/Scripts/activate
 # fi
 
+SHORT_HOST=$(hostname -s)
 
 # -- Export Variable
-export GRAFANA_DASHBOARD_URL="http://localhost:3000/d/adm08055cf3lsa/es-team-dashboard?orgId=1'&'from=now-5m'&'to=now'&'refresh=5s"
+#export GRAFANA_DASHBOARD_URL="http://localhost:3000/d/adm08055cf3lsa/es-team-dashboard?orgId=1'&'from=now-5m'&'to=now'&'refresh=5s"
 export SMTP_HOST="localhost"
 export SMTP_PORT=212
 export MAIL_SENDER="mymail"
-export ES_CONFIGURATION_URL="http://localhost:8004/docs"
-export ES_CONFIGURATION_HOST="localhost"
-export ES_EXPORTER_HOST="localhost"
-export ES_MONITORING_APPS_EXPORTER_RUN_HOST="localhost:1001"
-export ES_MONITORING_APPS_EXPORTER_URL_HOST="localhost:9001"
+export ES_CONFIGURATION_URL="http://$SHORT_HOST:8004/docs"
+export ES_CONFIGURATION_HOST="$SHORT_HOST"
+export ES_EXPORTER_HOST="$SHORT_HOST:9600"
+export ES_MONITORING_APPS_EXPORTER_RUN_HOST="$SHORT_HOST:1001"
+export ES_MONITORING_APPS_EXPORTER_URL_HOST="$SHORT_HOST:9001"
 export SPARK_APP_CEHCK="StreamProcessEXP"
 export ES_DISK_PORT=9100
 # --
