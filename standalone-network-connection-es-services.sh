@@ -42,8 +42,12 @@ else
     source $VENV/Scripts/activate
 fi
 
+# --
+SHORT_HOST=$(hostname -s)
+# --
 # -- Export Variable
 export PYTHONDONTWRITEBYTECODE=1
+export API_URL="http://${SHORT_HOST:-localhost}:8004/config/get_gloabl_config"
 # --
 
 # See how we were called.

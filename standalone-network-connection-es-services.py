@@ -107,12 +107,32 @@ def get_access_api(env, s_name, info, service_url) -> str:
         es_service_infra_chk.get("Access").append(False)
         return e
 
+def get_rest_api(service_url) -> str:
+    try:
+        response = requests.get(url=service_url, headers=None, verify=False, timeout=10)
+        if response.status_code == 200:
+           return response.json()
+        
+
+    except Exception as e:
+        logger.error(f"get_access_api : {e}")
+        es_service_infra_chk.get("Access").append(False)
+        return {"error" : e, "config": ""}
+
+
 
 def work() -> None:
 
     try:
         logger.info(f"Port checking")
 
+        ''' Get a list of ES services Info across all env's'''
+        logger.info(f"API URL : {os.getenv('API_URL')}")
+        resp = get_rest_api(os.getenv('API_URL'))
+        print(f"response.json() : {resp.get('config')}")
+
+        ''' Set k, v into es_service_infra_chk using resp json values'''
+        
         for k in es_service_infra.keys():
             for s_name in es_service_infra.get(k).keys():
                 for es_nodes_json in es_service_infra.get(k).get(s_name):
