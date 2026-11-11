@@ -34,43 +34,43 @@ logger = logging.getLogger("Service-Port-Validation-Script")
 es_service_infra = {
     "test": {
         "elasticsearch": [
-            {"ES_Data_Nodes #1": "localhost:9200"},
-            {"ES_Data_Nodes #2": "localhost:9201"},
-            {"ES_Data_Nodes #3": "localhost:9202"}
+            {"ES_Data_Nodes_#1": "localhost:9200"},
+            {"ES_Data_Nodes_#2": "localhost:9201"},
+            {"ES_Data_Nodes_#3": "localhost:9202"}
         ],
         "logstash": [
-            {"ES_Data_Nodes #2": "localhost:5043,5044,5045,5046,5047,5048"}
+            {"ES_Data_Nodes_#2": "localhost:5043,5044,5045,5046,5047,5048"}
         ],
         "kibana": [
-            {"ES_Data_Nodes #3": "http://localhost:5601"}
+            {"ES_Data_Nodes_#3": "http://localhost:5601"}
         ],
         "kafka": [
-            {"Data_Transfer_Nodes #1": "localhost:9092"},
-            {"Data_Transfer_Nodes #2": "localhost:9092"},
-            {"Data_Transfer_Nodes #3": "localhost:9092"}
+            {"Data_Transfer_Nodes_#1": "localhost:9092"},
+            {"Data_Transfer_Nodes_#2": "localhost:9092"},
+            {"Data_Transfer_Nodes_#3": "localhost:9092"}
         ],
         "zookeeper": [
-            {"Data_Transfer_Nodes #1": "localhost:2181"},
-            {"Data_Transfer_Nodes #2": "localhost:2181"},
-            {"Data_Transfer_Nodes #3": "localhost:2181"}
+            {"Data_Transfer_Nodes_#1": "localhost:2181"},
+            {"Data_Transfer_Nodes_#2": "localhost:2181"},
+            {"Data_Transfer_Nodes_#3": "localhost:2181"}
         ],
         "kafka_connect": [
-            {"Data_Transfer_Nodes #1": "http://localhost:8083"},
-            {"Data_Transfer_Nodes #2": "http://localhost:8083"},
-            {"Data_Transfer_Nodes #3": "http://localhost:8083"}
+            {"Data_Transfer_Nodes_#1": "http://localhost:8083"},
+            {"Data_Transfer_Nodes_#2": "http://localhost:8083"},
+            {"Data_Transfer_Nodes_#3": "http://localhost:8083"}
         ],
         "spark_cluster": [
-            {"Data_Transfer_Nodes #1": "http://localhost:8480"}
+            {"Data_Transfer_Nodes_#1": "http://localhost:8480"}
         ]
     },
     "test1": {
         "elasticsearch": [
-            {"ES_Data_Nodes #1": "localhost:9200"},
-            {"ES_Data_Nodes #2": "localhost:9201"},
-            {"ES_Data_Nodes #3": "localhost:9202"}
+            {"ES_Data_Nodes_#1": "localhost:9200"},
+            {"ES_Data_Nodes_#2": "localhost:9201"},
+            {"ES_Data_Nodes_#3": "localhost:9202"}
         ],
          "logstash": [
-            {"ES_Data_Nodes #2": "localhost:5043,5044,5045,5046,5047,5048"}
+            {"ES_Data_Nodes_#2": "localhost:5043,5044,5045,5046,5047,5048"}
         ]
     }
 }
