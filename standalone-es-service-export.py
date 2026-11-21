@@ -2885,6 +2885,7 @@ WMx_threads_db_Kafka_offset_active = True
 
 ''' Threshold'''
 DATA_PIPELINE_THRESHOLD = 0.58
+# DATA_PIPELINE_THRESHOLD = 1.2
 KAFKA_OFFSET_EDITTS_UPDATED_THRESHOLD = 0.1
 
 ''' Backlog '''
@@ -3233,7 +3234,9 @@ def db_jobs_work(interval, database_object, sql, db_http_host, db_url, db_info, 
 
                             ''' Check DATA PIPELINE PROCESS If the processing time is greator than 30 minutes, we believe there may be a problem with the process.'''
                             ''' 1.0 : 1 hour'''
-                            if time_difference_to_hours > DATA_PIPELINE_THRESHOLD:
+                            # if time_difference_to_hours > DATA_PIPELINE_THRESHOLD:
+                            print(f"ES_DATA_PIPELINE_THRESHOLD : {os.getenv('ES_DATA_PIPELINE_THRESHOLD', DATA_PIPELINE_THRESHOLD)}")
+                            if time_difference_to_hours > float(os.getenv("ES_DATA_PIPELINE_THRESHOLD", DATA_PIPELINE_THRESHOLD)):
                                 ''' red'''
                                 logging.info(f"Time Difference with warning from the process - {time_difference_to_hours}")
                                 all_envs_status_gauge_g.labels(server_job=domain_name_as_nick_name, type='data_pipeline').set(2)
